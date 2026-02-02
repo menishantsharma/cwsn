@@ -45,7 +45,7 @@ class PillNavbar extends StatelessWidget {
         child: Icon(
           isSelected ? filledIcon : icon,
           color: isSelected ? Colors.white : Colors.black,
-          size: 26,
+          size: 20,
         ),
       ),
     );

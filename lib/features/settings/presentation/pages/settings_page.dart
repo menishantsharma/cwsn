@@ -1,3 +1,4 @@
+import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/settings/presentation/widgets/settings_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -30,10 +31,10 @@ class SettingsPage extends StatelessWidget {
       },
     ];
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: GridView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+    return PillScaffold(
+      title: 'Profile',
+      body: (context, padding) => GridView.builder(
+        padding: padding.copyWith(left: 20, right: 20),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           mainAxisSpacing: 24,
