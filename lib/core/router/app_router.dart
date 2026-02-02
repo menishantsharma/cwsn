@@ -1,0 +1,98 @@
+import 'package:cwsn/core/widgets/scaffold_with_navbar.dart';
+import 'package:cwsn/features/caregivers/presentation/pages/caregiver_profile_page.dart';
+import 'package:cwsn/features/caregivers/presentation/pages/caregivers_list_page.dart';
+import 'package:cwsn/features/notifications/pages/notifications_page.dart';
+import 'package:cwsn/features/services/presentation/pages/services_page.dart';
+import 'package:cwsn/features/settings/presentation/pages/settings_page.dart';
+import 'package:cwsn/features/special_needs/pages/special_needs_page.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+class AppRoutes {
+  // Route names
+  static const String home = '/';
+  static const String specialNeeds = 'special-needs';
+  static const String caregiversList = 'caregivers';
+  static const String caregiverProfile = 'caregiver-profile';
+  static const String notifications = 'notifications';
+  static const String profile = 'profile';
+
+  // Route paths
+  static const String specialNeedsPath = '/special-needs';
+  static const String caregiversListPath = '/caregivers';
+  static const String caregiverProfilePath = '/caregiver-profile';
+
+  AppRoutes._();
+}
+
+final goRouter = GoRouter(
+  initialLocation: AppRoutes.home,
+  routes: [
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return ScaffoldWithNavbar(navigationShell: navigationShell);
+      },
+      branches: [
+        // BRANCH 1: HOME (The main flow)
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/',
+              name: AppRoutes.home,
+              builder: (context, state) => const ServicesPage(),
+            ),
+          ],
+        ),
+
+        // BRANCH 2: Notifications
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/notifications',
+              name: AppRoutes.notifications,
+              builder: (context, state) {
+                return Scaffold(body: const NotificationsPage());
+              },
+            ),
+          ],
+        ),
+
+        // BRANCH 3: Profile
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              name: AppRoutes.profile,
+              builder: (context, state) {
+                return SettingsPage();
+              },
+            ),
+          ],
+        ),
+      ],
+    ),
+
+    // Additional routes outside the bottom navigation
+    GoRoute(
+      name: AppRoutes.specialNeeds,
+      path: AppRoutes.specialNeedsPath,
+      // Page displaying special needs categories
+      builder: (context, state) => const SpecialNeedsPage(),
+    ),
+    GoRoute(
+      name: AppRoutes.caregiversList,
+      path: AppRoutes.caregiversListPath,
+      // Page displaying list of caregivers
+      builder: (context, state) => const CaregiversListPage(),
+    ),
+    GoRoute(
+      name: AppRoutes.caregiverProfile,
+      path: AppRoutes.caregiverProfilePath,
+      // Page displaying caregiver profile details
+      builder: (context, state) {
+        final caregiverId = state.extra as String? ?? '';
+        return CaregiverProfilePage(caregiverId: caregiverId);
+      },
+    ),
+  ],
+);
