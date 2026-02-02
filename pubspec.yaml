@@ -3,6 +3,18 @@ description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/images/logo.png
+  android: true
+  ios: true
+  fullscreen: true
+
 environment:
   sdk: ^3.10.7
 
@@ -14,6 +26,8 @@ dependencies:
   go_router: ^17.0.1
   google_fonts: ^8.0.0
   shimmer: ^3.0.0
+  flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
