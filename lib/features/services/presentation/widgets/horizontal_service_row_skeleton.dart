@@ -19,18 +19,24 @@ class HorizontalServiceRowSkeleton extends StatelessWidget {
           child: Shimmer.fromColors(
             baseColor: baseColor,
             highlightColor: highlightColor,
-            child: Container(
-              width: 150,
-              height: 20,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 150,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
         SizedBox(
-          height: 188,
+          height: 170,
           child: ListView.separated(
             itemBuilder: (_, _) => const ServiceCardSkeleton(),
             separatorBuilder: (_, _) => const SizedBox(width: 16),
@@ -41,7 +47,7 @@ class HorizontalServiceRowSkeleton extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 28),
       ],
     );
   }
