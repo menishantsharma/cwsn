@@ -18,15 +18,18 @@ class HorizontalServiceRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 16.0, bottom: 12),
+          padding: const EdgeInsets.fromLTRB(20, 0, 4, 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 section.title,
-                style: context.textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.w600,
+                style: context.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  color: Colors.black87,
+                  letterSpacing: -0.5,
                 ),
               ),
               InkWell(
@@ -36,9 +39,21 @@ class HorizontalServiceRow extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                   child: Row(
                     children: [
-                      Text('View all', style: context.textTheme.bodySmall),
+                      Text(
+                        'View all',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          // Text matches brand color
+                          color: context.colorScheme.primary,
+                        ),
+                      ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.arrow_forward_ios_rounded, size: 12),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: context.colorScheme.primary,
+                      ),
                     ],
                   ),
                 ),
@@ -53,7 +68,7 @@ class HorizontalServiceRow extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             separatorBuilder: (_, _) => const SizedBox(width: 16),
             itemCount: section.items.length,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             itemBuilder: (_, index) => ServiceCard(
               item: section.items[index],
               onTap: () {
@@ -62,7 +77,7 @@ class HorizontalServiceRow extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 32),
       ],
     );
   }

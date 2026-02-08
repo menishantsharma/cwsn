@@ -43,11 +43,11 @@ class HorizontalServiceRowSkeleton extends StatelessWidget {
             itemCount: 3,
             scrollDirection: Axis.horizontal,
             physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
           ),
         ),
 
-        const SizedBox(height: 28),
+        const SizedBox(height: 32),
       ],
     );
   }
