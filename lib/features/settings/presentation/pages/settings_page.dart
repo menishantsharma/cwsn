@@ -1,3 +1,4 @@
+import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/settings/presentation/widgets/settings_tile.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,9 @@ class SettingsPage extends StatelessWidget {
       {
         'icon': Icons.groups_outlined,
         'label': 'Start Caregiving',
-        'onTap': () {},
+        'onTap': () {
+          context.goNamed(AppRoutes.switching);
+        },
       },
     ];
 

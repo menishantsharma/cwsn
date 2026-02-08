@@ -1,7 +1,9 @@
 import 'package:cwsn/core/widgets/scaffold_with_navbar.dart';
+import 'package:cwsn/core/widgets/switching_screen.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregiver_profile_page.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregivers_list_page.dart';
 import 'package:cwsn/features/notifications/pages/notifications_page.dart';
+import 'package:cwsn/features/requests/presentation/pages/requests_page.dart';
 import 'package:cwsn/features/services/presentation/pages/services_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/settings_page.dart';
 import 'package:cwsn/features/special_needs/pages/special_needs_page.dart';
@@ -16,12 +18,15 @@ class AppRoutes {
   static const String caregiverProfile = 'caregiver-profile';
   static const String notifications = 'notifications';
   static const String profile = 'profile';
+  static const String requests = 'requests';
+  static const String switching = 'switching';
 
   // Route paths
   static const String specialNeedsPath = '/special-needs';
   static const String caregiversListPath = '/caregivers';
   static const String caregiverProfilePath = '/caregiver-profile';
-
+  static const String requestsPath = '/requests';
+  static const String switchingPath = '/switching';
   AppRoutes._();
 }
 
@@ -93,6 +98,18 @@ final goRouter = GoRouter(
         final caregiverId = state.extra as String? ?? '';
         return CaregiverProfilePage(caregiverId: caregiverId);
       },
+    ),
+
+    GoRoute(
+      name: AppRoutes.switching,
+      path: AppRoutes.switchingPath,
+      builder: (context, state) => const SwitchingScreen(),
+    ),
+
+    GoRoute(
+      name: AppRoutes.requests,
+      path: AppRoutes.requestsPath,
+      builder: (context, state) => const RequestsPage(),
     ),
   ],
 );
