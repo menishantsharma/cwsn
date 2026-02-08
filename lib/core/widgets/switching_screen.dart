@@ -2,6 +2,7 @@ import 'package:cwsn/core/providers/user_mode_provider.dart';
 import 'package:cwsn/core/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 
 class SwitchingScreen extends ConsumerStatefulWidget {
@@ -31,6 +32,25 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: CircularProgressIndicator()));
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SpinKitThreeBounce(
+              color: Theme.of(context).primaryColor,
+              size: 30.0,
+            ),
+
+            const SizedBox(height: 20),
+
+            Text(
+              'Switching Mode...',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
