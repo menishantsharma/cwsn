@@ -5,7 +5,6 @@ import 'package:cwsn/features/caregivers/presentation/pages/caregivers_list_page
 import 'package:cwsn/features/notifications/pages/notifications_page.dart';
 import 'package:cwsn/features/requests/presentation/pages/requests_page.dart';
 import 'package:cwsn/features/services/presentation/pages/services_page.dart';
-import 'package:cwsn/features/settings/models/setting_model.dart';
 import 'package:cwsn/features/settings/presentation/pages/settings_page.dart';
 import 'package:cwsn/features/special_needs/pages/special_needs_page.dart';
 import 'package:flutter/material.dart';
