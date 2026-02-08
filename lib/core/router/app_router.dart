@@ -40,8 +40,18 @@ final goRouter = GoRouter(
   initialLocation: AppRoutes.home,
   routes: [
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) {
-        return ScaffoldWithNavbar(navigationShell: navigationShell);
+      pageBuilder: (context, state, navigationShell) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: ScaffoldWithNavbar(navigationShell: navigationShell),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 600),
+        );
       },
       branches: [
         // BRANCH 1: HOME (The main flow)
@@ -84,8 +94,18 @@ final goRouter = GoRouter(
     ),
 
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) {
-        return ScaffoldWithNavbar(navigationShell: navigationShell);
+      pageBuilder: (context, state, navigationShell) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: ScaffoldWithNavbar(navigationShell: navigationShell),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 600),
+        );
       },
       branches: [
         StatefulShellBranch(
@@ -146,7 +166,17 @@ final goRouter = GoRouter(
     GoRoute(
       name: AppRoutes.switching,
       path: AppRoutes.switchingPath,
-      builder: (context, state) => const SwitchingScreen(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const SwitchingScreen(),
+        key: state.pageKey,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
     ),
   ],
 );
