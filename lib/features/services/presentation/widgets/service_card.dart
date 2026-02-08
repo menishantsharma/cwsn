@@ -17,7 +17,6 @@ class ServiceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF1D1617).withValues(alpha: 0.07),
@@ -33,39 +32,63 @@ class ServiceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Expanded(
-                child: CachedNetworkImage(
-                  imageUrl: item.imgUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (_, _) => Container(
-                    color: context.colorScheme.surfaceDim,
-                    child: Center(
-                      child: SpinKitThreeBounce(
-                        color: context.colorScheme.primary.withValues(
-                          alpha: 0.5,
-                        ),
-                        size: 20.0,
-                      ),
+              CachedNetworkImage(
+                imageUrl: item.imgUrl,
+                fit: BoxFit.cover,
+                placeholder: (_, _) => Container(
+                  color: context.colorScheme.surfaceDim,
+                  child: Center(
+                    child: SpinKitThreeBounce(
+                      color: context.colorScheme.primary.withValues(alpha: 0.5),
+                      size: 20.0,
                     ),
                   ),
-                  errorWidget: (_, _, _) => const Center(
-                    child: Icon(Icons.error_outline, color: Colors.grey),
+                ),
+                errorWidget: (_, _, _) => const Center(
+                  child: Icon(Icons.error_outline, color: Colors.grey),
+                ),
+              ),
+
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 80,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.8),
+                      ],
+                    ),
                   ),
                 ),
               ),
 
-              Padding(
-                padding: const EdgeInsets.all(12.0),
+              Positioned(
+                bottom: 12,
+                left: 12,
+                right: 12,
                 child: Text(
                   item.title,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: context.textTheme.labelLarge?.copyWith(
-                    color: Colors.black87,
+                    color: Colors.white,
                     fontWeight: FontWeight.w600,
+                    shadows: [
+                      Shadow(
+                        offset: const Offset(0, 1),
+                        blurRadius: 2,
+                        color: Colors.black.withValues(alpha: 0.5),
+                      ),
+                    ],
                   ),
                 ),
               ),

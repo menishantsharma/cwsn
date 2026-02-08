@@ -1,4 +1,3 @@
-import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -7,38 +6,62 @@ class ServiceCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = context.colorScheme.surfaceContainerHighest;
-    final highlightColor = context.colorScheme.surfaceContainerHigh;
+    final baseColor = Colors.grey[300]!;
+    final highlightColor = Colors.grey[100]!;
 
     return Container(
       width: 143,
-      height: 188,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D1617).withValues(alpha: 0.07),
+            offset: const Offset(0, 10),
+            blurRadius: 20,
+            spreadRadius: 0,
+          ),
+        ],
       ),
-      clipBehavior: Clip.antiAlias,
       child: Shimmer.fromColors(
         baseColor: baseColor,
         highlightColor: highlightColor,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: Container(color: Colors.white)),
-
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Container(
-                height: 14,
-                width: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(4),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                bottom: 12,
+                left: 12,
+                right: 12,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 10,
+                      width: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 10,
+                      width: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
