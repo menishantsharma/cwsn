@@ -20,6 +20,8 @@ class AppRoutes {
   static const String profile = 'profile';
   static const String requests = 'requests';
   static const String switching = 'switching';
+  static const String caregiverNotifications = 'caregiver-notifications';
+  static const String caregiverSettings = 'caregiver-settings';
 
   // Route paths
   static const String specialNeedsPath = '/special-needs';
@@ -27,6 +29,10 @@ class AppRoutes {
   static const String caregiverProfilePath = '/caregiver-profile';
   static const String requestsPath = '/requests';
   static const String switchingPath = '/switching';
+  static const String notificationsPath = '/notifications';
+  static const String caregiverNotificationsPath = '/caregiver-notifications';
+  static const String caregiverSettingsPath = '/caregiver-settings';
+
   AppRoutes._();
 }
 
@@ -53,7 +59,7 @@ final goRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/notifications',
+              path: AppRoutes.notificationsPath,
               name: AppRoutes.notifications,
               builder: (context, state) {
                 return Scaffold(body: const NotificationsPage());
@@ -71,6 +77,43 @@ final goRouter = GoRouter(
               builder: (context, state) {
                 return SettingsPage();
               },
+            ),
+          ],
+        ),
+      ],
+    ),
+
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return ScaffoldWithNavbar(navigationShell: navigationShell);
+      },
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.requestsPath,
+              name: AppRoutes.requests,
+              builder: (context, state) => const RequestsPage(),
+            ),
+          ],
+        ),
+
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.caregiverNotificationsPath,
+              name: AppRoutes.caregiverNotifications,
+              builder: (context, state) => const NotificationsPage(),
+            ),
+          ],
+        ),
+
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.caregiverSettingsPath,
+              name: AppRoutes.caregiverSettings,
+              builder: (context, state) => const NotificationsPage(),
             ),
           ],
         ),
@@ -104,12 +147,6 @@ final goRouter = GoRouter(
       name: AppRoutes.switching,
       path: AppRoutes.switchingPath,
       builder: (context, state) => const SwitchingScreen(),
-    ),
-
-    GoRoute(
-      name: AppRoutes.requests,
-      path: AppRoutes.requestsPath,
-      builder: (context, state) => const RequestsPage(),
     ),
   ],
 );
