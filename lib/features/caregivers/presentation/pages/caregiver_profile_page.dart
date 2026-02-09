@@ -73,7 +73,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
                     Expanded(
                       child: _buildStatBox(
                         "Recommended",
-                        "${caregiver.rating}",
+                        "${caregiver.rating / 1000}k",
                         Icons.thumb_up_rounded,
                         Colors.orange,
                       ),
