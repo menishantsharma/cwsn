@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/models/caregiver_model.dart';
@@ -52,12 +51,10 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- 1. HERO PROFILE CARD ---
                 _buildProfileHeader(caregiver),
 
                 const SizedBox(height: 24),
 
-                // --- 2. STATS ROW ---
                 Row(
                   children: [
                     Expanded(
@@ -80,8 +77,8 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildStatBox(
-                        "Parents Connected", // CHANGED HERE
-                        "50+", // Mock data
+                        "Parents Connected",
+                        "50+",
                         Icons.family_restroom_rounded,
                         Colors.green,
                       ),
@@ -154,7 +151,6 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
     );
   }
 
-  // --- WIDGETS ---
 
   Widget _buildProfileHeader(Caregiver caregiver) {
     return Container(
@@ -172,7 +168,6 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
       ),
       child: Row(
         children: [
-          // Avatar
           Container(
             width: 80,
             height: 80,
@@ -190,7 +185,6 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // CONDITIONAL VERIFIED BADGE
                 if (caregiver.isVerified) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -341,37 +335,37 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
     );
   }
 
-  Widget _buildBookButton(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF535CE8),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF535CE8).withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Text(
-            "Request Service",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          SizedBox(width: 8),
-          Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
-        ],
-      ),
-    ).animate().fade(delay: 500.ms).slideY(begin: 1, end: 0);
-  }
-}
+//   Widget _buildBookButton(BuildContext context) {
+//     return Container(
+//       width: double.infinity,
+//       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+//       margin: const EdgeInsets.symmetric(horizontal: 24),
+//       decoration: BoxDecoration(
+//         color: const Color(0xFF535CE8),
+//         borderRadius: BorderRadius.circular(30),
+//         boxShadow: [
+//           BoxShadow(
+//             color: const Color(0xFF535CE8).withValues(alpha: 0.4),
+//             blurRadius: 20,
+//             offset: const Offset(0, 10),
+//           ),
+//         ],
+//       ),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: const [
+//           Text(
+//             "Request Service",
+//             style: TextStyle(
+//               color: Colors.white,
+//               fontWeight: FontWeight.bold,
+//               fontSize: 16,
+//             ),
+//           ),
+//           SizedBox(width: 8),
+//           Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+//         ],
+//       ),
+//     ).animate().fade(delay: 500.ms).slideY(begin: 1, end: 0);
+//   }
+// }
