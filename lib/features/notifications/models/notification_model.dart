@@ -1,17 +1,21 @@
-import 'package:cwsn/features/caregivers/models/caregiver_model.dart';
+enum NotificationType { message, request, alert, system }
 
 class NotificationItem {
   final String id;
-  final Caregiver caregiver;
-  final String message;
+  final String title;
+  final String subtitle;
+  final String imageUrl;
   final DateTime timestamp;
   final bool isRead;
+  final NotificationType type;
 
   NotificationItem({
     required this.id,
-    required this.caregiver,
-    required this.message,
+    required this.title,
+    required this.subtitle,
+    required this.imageUrl,
     required this.timestamp,
     this.isRead = false,
+    this.type = NotificationType.system,
   });
 }

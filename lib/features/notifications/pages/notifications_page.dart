@@ -1,95 +1,122 @@
+import 'package:cwsn/core/providers/user_mode_provider.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/notifications/data/notification_repository.dart';
 import 'package:cwsn/features/notifications/models/notification_model.dart';
-import 'package:cwsn/features/notifications/widgets/notification_skeleton_tile.dart';
 import 'package:cwsn/features/notifications/widgets/notification_tile.dart';
+// Create a skeleton similar to previous examples if needed
+import 'package:cwsn/features/notifications/widgets/notification_skeleton_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class NotificationsPage extends StatefulWidget {
+class NotificationsPage extends ConsumerStatefulWidget {
   const NotificationsPage({super.key});
 
   @override
-  State<NotificationsPage> createState() => _NotificationsPageState();
+  ConsumerState<NotificationsPage> createState() => _NotificationsPageState();
 }
 
-class _NotificationsPageState extends State<NotificationsPage> {
+class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   final NotificationRepository _repository = NotificationRepository();
-  late Future<List<NotificationItem>> _notificationsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _notificationsFuture = _repository.fetchNotifications();
-  }
 
   @override
   Widget build(BuildContext context) {
+    final isCaregiverMode = ref.watch(userModeProvider);
+
     return PillScaffold(
       title: 'Notifications',
+      actionIcon: Icons.done_all_rounded, // "Mark all read" button
+      onActionPressed: () {},
+
       body: (context, padding) {
-        return FutureBuilder(
-          future: _notificationsFuture,
+        return FutureBuilder<List<NotificationItem>>(
+          future: _repository.fetchNotifications(isCaregiver: isCaregiverMode),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return ListView.builder(
-                padding: padding,
-                itemBuilder: (context, index) =>
-                    const NotificationSkeletonTile(),
+                padding: padding.copyWith(left: 20, right: 20),
                 itemCount: 6,
+                itemBuilder: (_, __) => const NotificationSkeletonTile()
+                    .animate(onPlay: (c) => c.repeat())
+                    .shimmer(color: Colors.grey.shade200, duration: 1200.ms),
               );
             }
+
             if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             }
 
-            if (snapshot.data == null || snapshot.data!.isEmpty) {
-              return const Center(child: Text('No notifications available.'));
+            final notifications = snapshot.data ?? [];
+
+            if (notifications.isEmpty) {
+              return _buildEmptyState(isCaregiverMode);
             }
 
-            final notifications = snapshot.data!;
-
             return ListView.builder(
-              padding: padding.copyWith(left: 0, right: 0),
-              itemBuilder: (context, index) => NotificationTile(
-                notification: notifications[index],
-                onTap: () {},
-              ),
+              padding: padding.copyWith(left: 20, right: 20, bottom: 80),
               itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                return NotificationTile(
+                      notification: notifications[index],
+                      onTap: () {
+                        // Handle tap
+                      },
+                    )
+                    .animate()
+                    .fade(duration: 400.ms, delay: (50 * index).ms)
+                    .slideX(
+                      begin: 0.1, // Slide in from right slightly
+                      end: 0,
+                      duration: 400.ms,
+                      curve: Curves.easeOutQuad,
+                      delay: (50 * index).ms,
+                    );
+              },
             );
           },
         );
       },
     );
-    // return Scaffold(
-    //   appBar: AppBar(title: const Text('Notifications')),
-    //   body: FutureBuilder(
-    //     future: _notificationsFuture,
-    //     builder: (context, snapshot) {
-    //       if (snapshot.connectionState == ConnectionState.waiting) {
-    //         return ListView.builder(
-    //           itemBuilder: (context, index) => const NotificationSkeletonTile(),
-    //           itemCount: 6,
-    //         );
-    //       }
-    //       if (snapshot.hasError) {
-    //         return Center(child: Text('Error: ${snapshot.error}'));
-    //       }
+  }
 
-    //       if (snapshot.data == null || snapshot.data!.isEmpty) {
-    //         return const Center(child: Text('No notifications available.'));
-    //       }
-
-    //       final notifications = snapshot.data!;
-
-    //       return ListView.builder(
-    //         itemBuilder: (context, index) => NotificationTile(
-    //           notification: notifications[index],
-    //           onTap: () {},
-    //         ),
-    //         itemCount: notifications.length,
-    //       );
-    //     },
-    //   ),
-    // );
+  Widget _buildEmptyState(bool isCaregiver) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F7FF), // Soft Blue
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isCaregiver
+                  ? Icons.work_off_rounded
+                  : Icons.notifications_off_rounded,
+              size: 48,
+              color: const Color(0xFF535CE8).withOpacity(0.5),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'All caught up!',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isCaregiver
+                ? 'You have no new requests from parents.'
+                : 'You have no new updates from caregivers.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade500),
+          ),
+        ],
+      ).animate().fade().scale(),
+    );
   }
 }

@@ -1,4 +1,3 @@
-import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -7,11 +6,24 @@ class NotificationSkeletonTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = context.colorScheme.surfaceContainerHighest;
-    final highlightColor = context.colorScheme.surfaceContainerHigh;
+    final baseColor = Colors.grey.shade300;
+    final highlightColor = Colors.grey.shade100;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 16,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       child: Shimmer.fromColors(
         baseColor: baseColor,
         highlightColor: highlightColor,
@@ -33,19 +45,44 @@ class NotificationSkeletonTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 30,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
                   Container(
                     width: double.infinity,
-                    height: 16,
+                    height: 12,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
 
                   Container(
-                    width: 60,
+                    width: 180,
                     height: 12,
                     decoration: BoxDecoration(
                       color: Colors.white,
