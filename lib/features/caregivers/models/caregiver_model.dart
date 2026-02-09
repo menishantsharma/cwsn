@@ -1,4 +1,3 @@
-// Model class representing a Caregiver
 class Caregiver {
   final String id;
   final String name;
@@ -10,6 +9,8 @@ class Caregiver {
   final String joinedDate;
   final List<String> services;
   final List<String> languages;
+  final bool isVerified;
+  final bool isAvailable;
 
   const Caregiver({
     required this.id,
@@ -22,5 +23,7 @@ class Caregiver {
     this.joinedDate = 'January 2020',
     this.services = const ['Elderly Care', 'Child Care', 'Disability Support'],
     this.languages = const ['English', 'Hindi'],
+    this.isVerified = false,
+    this.isAvailable = true,
   });
 }

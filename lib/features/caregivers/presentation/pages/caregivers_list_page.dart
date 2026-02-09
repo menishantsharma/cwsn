@@ -44,16 +44,10 @@ class _CaregiversListPageState extends State<CaregiversListPage> {
           future: _caregiversFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return GridView.builder(
-                padding: padding.copyWith(left: 20, right: 20),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.75,
-                ),
+              return ListView.builder(
+                padding: padding.copyWith(left: 20, right: 20, bottom: 20),
                 itemCount: 6,
-                itemBuilder: (context, index) => const CaregiverSkeletonCard(),
+                itemBuilder: (_, _) => const CaregiverSkeletonCard(),
               );
             }
 
@@ -67,22 +61,18 @@ class _CaregiversListPageState extends State<CaregiversListPage> {
               return _buildEmptyState();
             }
 
-            return GridView.builder(
+            return ListView.builder(
               padding: padding.copyWith(left: 20, right: 20, bottom: 20),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                childAspectRatio: 0.75,
-              ),
               itemCount: caregivers.length,
-              itemBuilder: (context, index) => CaregiverCard(
-                caregiver: caregivers[index],
-                onCardTap: () => context.pushNamed(
-                  AppRoutes.caregiverProfile,
-                  extra: caregivers[index].id,
-                ),
-              ),
+              itemBuilder: (context, index) {
+                return CaregiverCard(
+                  caregiver: caregivers[index],
+                  onCardTap: () => context.pushNamed(
+                    AppRoutes.caregiverProfile,
+                    extra: caregivers[index].id,
+                  ),
+                );
+              },
             );
           },
         );
