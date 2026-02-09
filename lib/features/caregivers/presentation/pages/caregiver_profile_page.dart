@@ -4,6 +4,7 @@ import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/models/caregiver_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class CaregiverProfilePage extends StatefulWidget {
   final String caregiverId;
@@ -26,15 +27,18 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
   @override
   Widget build(BuildContext context) {
     return PillScaffold(
-      title: 'Caregiver Profile',
-      actionIcon: Icons.ios_share_outlined,
+      title: 'Profile',
+      actionIcon: Icons.share_rounded,
       onActionPressed: () {},
 
+      // Floating Button for Booking
+      // floatingActionButton: _buildBookButton(context),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: (context, padding) => FutureBuilder<Caregiver>(
         future: _profileFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: const CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -44,130 +48,104 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
           final caregiver = snapshot.data!;
 
           return SingleChildScrollView(
-            padding: padding.copyWith(left: 20, right: 20),
+            padding: padding.copyWith(left: 24, right: 24, bottom: 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundImage: CachedNetworkImageProvider(
-                          caregiver.imageUrl,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                // --- 1. HERO PROFILE CARD ---
+                _buildProfileHeader(caregiver),
 
-                      Text(
-                        caregiver.name,
-                        style: context.textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
+                const SizedBox(height: 24),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildIconText(Icons.wifi, 'Online', context),
-                          const SizedBox(width: 16),
-                          _buildIconText(
-                            Icons.thumb_up_outlined,
-                            '${caregiver.rating}',
-                            context,
-                          ),
-                        ],
+                // --- 2. STATS ROW ---
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatBox(
+                        "Recommended",
+                        "${caregiver.rating}",
+                        Icons.thumb_up_rounded,
+                        Colors.orange,
                       ),
-
-                      const SizedBox(height: 8),
-
-                      Text(
-                        'Joined in ${caregiver.joinedDate}',
-                        style: context.textTheme.labelSmall?.copyWith(
-                          color: context.colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.65),
-                        ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatBox(
+                        "Experience",
+                        "5 Yrs", // Mock data
+                        Icons.work_history_rounded,
+                        Colors.blue,
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatBox(
+                        "Parents Connected", // CHANGED HERE
+                        "50+", // Mock data
+                        Icons.family_restroom_rounded,
+                        Colors.green,
+                      ),
+                    ),
+                  ],
+                ).animate().fade().slideY(begin: 0.2, end: 0, delay: 100.ms),
 
                 const SizedBox(height: 32),
 
-                // ------------- SECTIONS BELOW ----------------
-
-                // Location Section
-                _buildSectionHeader(Icons.location_pin, 'Location', context),
-                Text(
-                  caregiver.location,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant.withValues(
-                      alpha: 0.85,
-                    ),
-                  ),
-                ),
-                _buildDivider(),
-
-                // Services Section
-                _buildSectionHeader(
-                  Icons.handshake_outlined,
-                  'Services Provided',
-                  context,
-                ),
-
-                Wrap(
-                  spacing: 8,
-                  children: caregiver.services
-                      .map(
-                        (s) => Chip(
-                          label: Text(
-                            s,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.bodySmall?.copyWith(
-                              color: context.colorScheme.onSurfaceVariant
-                                  .withValues(alpha: 0.85),
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-
-                const SizedBox(height: 12),
-
-                _buildDivider(),
-
-                // About Section
-                _buildSectionHeader(Icons.person_outline, 'About', context),
+                _buildSectionTitle("About"),
                 Text(
                   caregiver.about,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant.withValues(
-                      alpha: 0.85,
-                    ),
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.6,
+                    color: Colors.grey.shade700,
                   ),
-                ),
-                _buildDivider(),
+                ).animate().fade(delay: 200.ms),
 
-                // Languages Section
-                _buildSectionHeader(Icons.translate, 'Languages', context),
+                const SizedBox(height: 24),
+
+                _buildSectionTitle("Specialties"),
                 Wrap(
-                  spacing: 12,
-                  children: caregiver.languages
-                      .map(
-                        (l) => Text(
-                          l,
-                          style: context.textTheme.bodyMedium?.copyWith(
-                            color: context.colorScheme.onSurfaceVariant
-                                .withValues(alpha: 0.85),
-                          ),
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: caregiver.services.map((service) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF535CE8).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF535CE8).withValues(alpha: 0.1),
                         ),
-                      )
-                      .toList(),
-                ),
+                      ),
+                      child: Text(
+                        service,
+                        style: const TextStyle(
+                          color: Color(0xFF535CE8),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ).animate().fade(delay: 300.ms),
 
-                // For bottom padding
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
+
+                _buildSectionTitle("Details"),
+                _buildDetailRow(
+                  Icons.location_on_outlined,
+                  "Location",
+                  caregiver.location,
+                ),
+                const SizedBox(height: 16),
+                _buildDetailRow(
+                  Icons.translate_rounded,
+                  "Languages",
+                  caregiver.languages.join(", "),
+                ),
               ],
             ),
           );
@@ -175,34 +153,225 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
       ),
     );
   }
-}
 
-Widget _buildSectionHeader(IconData icon, String title, BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Row(
+  // --- WIDGETS ---
+
+  Widget _buildProfileHeader(Caregiver caregiver) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D1617).withValues(alpha: 0.06),
+            offset: const Offset(0, 8),
+            blurRadius: 16,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(20),
+              image: DecorationImage(
+                image: CachedNetworkImageProvider(caregiver.imageUrl),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // CONDITIONAL VERIFIED BADGE
+                if (caregiver.isVerified) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.verified_rounded,
+                          size: 12,
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          "Verified Account",
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                Text(
+                  caregiver.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Certified Caregiver",
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
+  }
+
+  Widget _buildStatBox(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20),
-        const SizedBox(width: 8),
-        Text(title, style: context.textTheme.headlineSmall),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 20, color: Colors.grey.shade600),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildIconText(IconData icon, String text, BuildContext context) {
-  return Row(
-    children: [
-      Icon(icon, size: 16),
-      const SizedBox(width: 4),
-      Text(text, style: context.textTheme.labelMedium),
-    ],
-  );
-}
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
 
-Widget _buildDivider() {
-  return Padding(
-    padding: EdgeInsets.symmetric(vertical: 24),
-    child: Divider(height: 1, color: Colors.grey[200]),
-  );
+  Widget _buildBookButton(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF535CE8),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF535CE8).withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Text(
+            "Request Service",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          SizedBox(width: 8),
+          Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+        ],
+      ),
+    ).animate().fade(delay: 500.ms).slideY(begin: 1, end: 0);
+  }
 }

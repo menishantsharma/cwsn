@@ -10,7 +10,7 @@ final List<Caregiver> mockCaregivers = List.generate(10, (index) {
         'https://randomuser.me/api/portraits/${isMale ? 'men' : 'women'}/$index.jpg',
     rating: 2000 + index * 10,
     isOnline: index % 3 == 0,
-    isVerified: index % 4 == 0,
+    isVerified: index % 2 == 0,
     isAvailable: index % 5 != 0,
   );
 });

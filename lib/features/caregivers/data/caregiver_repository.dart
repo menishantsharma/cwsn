@@ -34,6 +34,8 @@ class CaregiverRepository {
         'Therapy Asst',
       ],
       languages: ['Hindi', 'English', 'Marathi'],
+      isVerified: index % 2 == 0,
+      isAvailable: index % 3 != 0,
     );
   }
 }
