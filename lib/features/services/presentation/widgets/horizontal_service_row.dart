@@ -18,7 +18,7 @@ class HorizontalServiceRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 4, 16),
+          padding: const EdgeInsets.fromLTRB(20, 0, 16, 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -32,29 +32,40 @@ class HorizontalServiceRow extends StatelessWidget {
                   letterSpacing: -0.5,
                 ),
               ),
-              InkWell(
-                onTap: () {},
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                  child: Row(
-                    children: [
-                      Text(
-                        'View all',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          // Text matches brand color
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => context.pushNamed(AppRoutes.specialNeeds),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.colorScheme.primary.withValues(
+                        alpha: 0.08,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          'View all',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: context.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14,
                           color: context.colorScheme.primary,
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 14,
-                        color: context.colorScheme.primary,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -62,7 +73,7 @@ class HorizontalServiceRow extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 170,
+          height: 190,
           child: ListView.separated(
             clipBehavior: Clip.none,
             scrollDirection: Axis.horizontal,

@@ -4,6 +4,7 @@ import 'package:cwsn/features/services/models/service_model.dart';
 import 'package:cwsn/features/services/presentation/widgets/horizontal_service_row.dart';
 import 'package:cwsn/features/services/presentation/widgets/horizontal_service_row_skeleton.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class ServicesPage extends StatefulWidget {
   const ServicesPage({super.key});
@@ -33,27 +34,40 @@ class _ServicesPageState extends State<ServicesPage> {
             return ListView.builder(
               padding: padding.copyWith(left: 0, right: 0),
               itemCount: 3,
-              itemBuilder: (_, _) => const HorizontalServiceRowSkeleton(),
+              itemBuilder: (_, _) => const HorizontalServiceRowSkeleton()
+                  .animate(onPlay: (controller) => controller.repeat())
+                  .shimmer(
+                    duration: 1200.ms,
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
             );
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Error loading services'));
+            return const Center(child: Text('Error loading services'));
           }
 
           final sections = snapshot.data ?? [];
 
           if (sections.isEmpty) {
-            return Center(child: Text('No services available'));
+            return const Center(child: Text('No services available'));
           }
 
           return ListView.builder(
-            padding: padding.copyWith(left: 0, right: 0),
+            padding: padding.copyWith(left: 0, right: 0, bottom: 100),
             itemCount: sections.length,
             itemBuilder: (_, index) {
               final section = sections[index];
 
-              return HorizontalServiceRow(section: section);
+              return HorizontalServiceRow(section: section)
+                  .animate()
+                  .fade(duration: 600.ms, curve: Curves.easeOutQuad)
+                  .slideY(
+                    begin: 0.2,
+                    end: 0,
+                    duration: 500.ms,
+                    curve: Curves.easeOutQuad,
+                  );
             },
           );
         },

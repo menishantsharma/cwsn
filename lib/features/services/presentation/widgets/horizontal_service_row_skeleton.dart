@@ -36,7 +36,7 @@ class HorizontalServiceRowSkeleton extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 170,
+          height: 190,
           child: ListView.separated(
             itemBuilder: (_, _) => const ServiceCardSkeleton(),
             separatorBuilder: (_, _) => const SizedBox(width: 16),

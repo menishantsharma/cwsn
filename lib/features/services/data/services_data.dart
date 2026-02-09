@@ -125,4 +125,108 @@ final List<ServiceSection> mockServiceSections = [
       ),
     ],
   ),
+
+  ServiceSection(
+    title: 'Medical & Health',
+    items: [
+      ServiceItem(
+        title: 'Pediatric Neuro',
+        imgUrl:
+            'https://mir-s3-cdn-cf.behance.net/projects/404/d1aa66240960689.Y3JvcCwxMDIyLDc5OSwxODcsODM0.png',
+      ),
+      ServiceItem(
+        title: 'Dietician',
+        imgUrl:
+            'https://img.freepik.com/free-vector/gradient-level-up-illustration_23-2150130793.jpg',
+      ),
+      ServiceItem(
+        title: 'Psychologist',
+        imgUrl:
+            'https://mir-s3-cdn-cf.behance.net/project_modules/fs/046cf1113605001.602b92cbac318.jpg',
+      ),
+      ServiceItem(
+        title: 'Dental Care',
+        imgUrl:
+            'https://cdn.dribbble.com/userupload/16566774/file/original-db228ce3f4ec8586d638dd2dc87be3c9.jpg?resize=400x0',
+      ),
+    ],
+  ),
+
+  ServiceSection(
+    title: 'Medical & Health',
+    items: [
+      ServiceItem(
+        title: 'Pediatric Neuro',
+        imgUrl:
+            'https://mir-s3-cdn-cf.behance.net/projects/404/d1aa66240960689.Y3JvcCwxMDIyLDc5OSwxODcsODM0.png',
+      ),
+      ServiceItem(
+        title: 'Dietician',
+        imgUrl:
+            'https://img.freepik.com/free-vector/gradient-level-up-illustration_23-2150130793.jpg',
+      ),
+      ServiceItem(
+        title: 'Psychologist',
+        imgUrl:
+            'https://mir-s3-cdn-cf.behance.net/project_modules/fs/046cf1113605001.602b92cbac318.jpg',
+      ),
+      ServiceItem(
+        title: 'Dental Care',
+        imgUrl:
+            'https://cdn.dribbble.com/userupload/16566774/file/original-db228ce3f4ec8586d638dd2dc87be3c9.jpg?resize=400x0',
+      ),
+    ],
+  ),
+
+  ServiceSection(
+    title: 'Medical & Health',
+    items: [
+      ServiceItem(
+        title: 'Pediatric Neuro',
+        imgUrl:
+            'https://mir-s3-cdn-cf.behance.net/projects/404/d1aa66240960689.Y3JvcCwxMDIyLDc5OSwxODcsODM0.png',
+      ),
+      ServiceItem(
+        title: 'Dietician',
+        imgUrl:
+            'https://img.freepik.com/free-vector/gradient-level-up-illustration_23-2150130793.jpg',
+      ),
+      ServiceItem(
+        title: 'Psychologist',
+        imgUrl:
+            'https://mir-s3-cdn-cf.behance.net/project_modules/fs/046cf1113605001.602b92cbac318.jpg',
+      ),
+      ServiceItem(
+        title: 'Dental Care',
+        imgUrl:
+            'https://cdn.dribbble.com/userupload/16566774/file/original-db228ce3f4ec8586d638dd2dc87be3c9.jpg?resize=400x0',
+      ),
+    ],
+  ),
+
+  ServiceSection(
+    title: 'Medical & Health',
+    items: [
+      ServiceItem(
+        title: 'Pediatric Neuro',
+        imgUrl:
+            'https://mir-s3-cdn-cf.behance.net/projects/404/d1aa66240960689.Y3JvcCwxMDIyLDc5OSwxODcsODM0.png',
+      ),
+      ServiceItem(
+        title: 'Dietician',
+        imgUrl:
+            'https://img.freepik.com/free-vector/gradient-level-up-illustration_23-2150130793.jpg',
+      ),
+      ServiceItem(
+        title: 'Psychologist',
+        imgUrl:
+            'https://mir-s3-cdn-cf.behance.net/project_modules/fs/046cf1113605001.602b92cbac318.jpg',
+      ),
+      ServiceItem(
+        title: 'Dental Care',
+        imgUrl:
+            'https://cdn.dribbble.com/userupload/16566774/file/original-db228ce3f4ec8586d638dd2dc87be3c9.jpg?resize=400x0',
+      ),
+    ],
+  ),
 ];
