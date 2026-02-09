@@ -19,7 +19,7 @@ class CaregiverSkeletonCard extends StatelessWidget {
         // Keep shadow so it floats like the real card
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1D1617).withOpacity(0.06),
+            color: const Color(0xFF1D1617).withValues(alpha: 0.06),
             offset: const Offset(0, 4),
             blurRadius: 16,
             spreadRadius: 0,

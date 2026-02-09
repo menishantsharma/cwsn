@@ -36,7 +36,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
               return ListView.builder(
                 padding: padding.copyWith(left: 20, right: 20),
                 itemCount: 6,
-                itemBuilder: (_, __) => const NotificationSkeletonTile()
+                itemBuilder: (_, _) => const NotificationSkeletonTile()
                     .animate(onPlay: (c) => c.repeat())
                     .shimmer(color: Colors.grey.shade200, duration: 1200.ms),
               );
@@ -95,7 +95,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                   ? Icons.work_off_rounded
                   : Icons.notifications_off_rounded,
               size: 48,
-              color: const Color(0xFF535CE8).withOpacity(0.5),
+              color: const Color(0xFF535CE8).withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 16),

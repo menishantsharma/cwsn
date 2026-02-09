@@ -49,9 +49,9 @@ class RequestTile extends StatelessWidget {
                     child: CachedNetworkImage(
                       imageUrl: request.parentImageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) =>
+                      placeholder: (_, _) =>
                           Container(color: Colors.grey.shade200),
-                      errorWidget: (_, __, ___) =>
+                      errorWidget: (_, _, _) =>
                           const Icon(Icons.person, color: Colors.grey),
                     ),
                   ),

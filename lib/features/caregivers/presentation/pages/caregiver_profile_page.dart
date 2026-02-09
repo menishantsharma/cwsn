@@ -371,11 +371,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(30),
         child: InkWell(
-          onTap: isAvailable
-              ? () {
-                  print("Booking requested");
-                }
-              : null,
+          onTap: isAvailable ? () {} : null,
           borderRadius: BorderRadius.circular(30),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),

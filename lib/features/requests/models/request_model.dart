@@ -32,4 +32,20 @@ class CaregiverRequest {
 
   String get childDescription => "For $childGender Child of $childAge years";
   String get serviceDescription => "$specialNeed | $serviceName";
+
+  CaregiverRequest copyWith({RequestStatus? status}) {
+    return CaregiverRequest(
+      id: id,
+      parentId: parentId,
+      parentName: parentName,
+      parentImageUrl: parentImageUrl,
+      parentLocation: parentLocation,
+      childName: childName,
+      childAge: childAge,
+      childGender: childGender,
+      specialNeed: specialNeed,
+      serviceName: serviceName,
+      status: status ?? this.status,
+    );
+  }
 }
