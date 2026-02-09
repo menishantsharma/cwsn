@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/models/caregiver_model.dart';
@@ -25,28 +26,37 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return PillScaffold(
-      title: 'Profile',
-      actionIcon: Icons.share_rounded,
-      onActionPressed: () {},
+    return FutureBuilder<Caregiver>(
+      future: _profileFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return PillScaffold(
+            title: 'Profile',
+            body: (context, padding) =>
+                const Center(child: CircularProgressIndicator()),
+          );
+        }
 
-      // Floating Button for Booking
-      // floatingActionButton: _buildBookButton(context),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      body: (context, padding) => FutureBuilder<Caregiver>(
-        future: _profileFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        if (snapshot.hasError) {
+          return PillScaffold(
+            title: 'Profile',
+            body: (context, padding) =>
+                Center(child: Text('Error: ${snapshot.error}')),
+          );
+        }
 
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+        final caregiver = snapshot.data!;
 
-          final caregiver = snapshot.data!;
+        return PillScaffold(
+          title: 'Profile',
+          actionIcon: Icons.share_rounded,
+          onActionPressed: () {},
 
-          return SingleChildScrollView(
+          // Floating Button for Booking
+          floatingActionButton: _buildBookButton(context),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
+          body: (context, padding) => SingleChildScrollView(
             padding: padding.copyWith(left: 24, right: 24, bottom: 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,9 +155,9 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
                 ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -333,39 +343,38 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
       ),
     );
   }
-}
 
-//   Widget _buildBookButton(BuildContext context) {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-//       margin: const EdgeInsets.symmetric(horizontal: 24),
-//       decoration: BoxDecoration(
-//         color: const Color(0xFF535CE8),
-//         borderRadius: BorderRadius.circular(30),
-//         boxShadow: [
-//           BoxShadow(
-//             color: const Color(0xFF535CE8).withValues(alpha: 0.4),
-//             blurRadius: 20,
-//             offset: const Offset(0, 10),
-//           ),
-//         ],
-//       ),
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: const [
-//           Text(
-//             "Request Service",
-//             style: TextStyle(
-//               color: Colors.white,
-//               fontWeight: FontWeight.bold,
-//               fontSize: 16,
-//             ),
-//           ),
-//           SizedBox(width: 8),
-//           Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
-//         ],
-//       ),
-//     ).animate().fade(delay: 500.ms).slideY(begin: 1, end: 0);
-//   }
-// }
+  Widget _buildBookButton(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: context.colorScheme.primary,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: context.colorScheme.primary.withAlpha(102),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Text(
+            "Request Service",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          SizedBox(width: 8),
+          Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+        ],
+      ),
+    ).animate().fade(delay: 500.ms).slideY(begin: 1, end: 0);
+  }
+}

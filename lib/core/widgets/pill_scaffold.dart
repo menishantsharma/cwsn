@@ -7,6 +7,8 @@ class PillScaffold extends StatelessWidget {
   final IconData? actionIcon;
   final VoidCallback? onActionPressed;
   final bool? showBack;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
 
   const PillScaffold({
     super.key,
@@ -15,6 +17,8 @@ class PillScaffold extends StatelessWidget {
     this.actionIcon,
     this.onActionPressed,
     this.showBack,
+    this.floatingActionButton,
+    this.floatingActionButtonLocation,
   });
 
   @override
@@ -28,6 +32,8 @@ class PillScaffold extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      floatingActionButton: floatingActionButton,
+      floatingActionButtonLocation: floatingActionButtonLocation,
       body: Stack(
         children: [
           Positioned.fill(
