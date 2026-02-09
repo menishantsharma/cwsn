@@ -151,7 +151,6 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
     );
   }
 
-
   Widget _buildProfileHeader(Caregiver caregiver) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -334,6 +333,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
       ),
     );
   }
+}
 
 //   Widget _buildBookButton(BuildContext context) {
 //     return Container(
