@@ -3,6 +3,7 @@ import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/models/caregiver_model.dart';
+import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_skeleton_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -33,7 +34,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
           return PillScaffold(
             title: 'Profile',
             body: (context, padding) =>
-                const Center(child: CircularProgressIndicator()),
+                CaregiverProfileSkeleton(padding: padding),
           );
         }
 
@@ -52,7 +53,6 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
           actionIcon: Icons.share_rounded,
           onActionPressed: () {},
 
-          // Floating Button for Booking
           floatingActionButton: _buildBookButton(
             context,
             isAvailable: caregiver.isAvailable,
@@ -82,7 +82,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
                     Expanded(
                       child: _buildStatBox(
                         "Experience",
-                        "5 Yrs", // Mock data
+                        "5 Yrs",
                         Icons.work_history_rounded,
                         Colors.blue,
                       ),
