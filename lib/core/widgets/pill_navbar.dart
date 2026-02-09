@@ -1,4 +1,6 @@
+import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PillNavbar extends StatelessWidget {
   final int selectedIndex;
@@ -12,40 +14,85 @@ class PillNavbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 90,
-      padding: const EdgeInsets.only(bottom: 20, top: 10),
-      color: Colors.transparent,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildNavButton(0, Icons.home_outlined, Icons.home),
-          const SizedBox(width: 24),
-          _buildNavButton(1, Icons.notifications_outlined, Icons.notifications),
-          const SizedBox(width: 24),
-          _buildNavButton(2, Icons.person_outline, Icons.person),
-        ],
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        // 1. Floating Margin (Lifts it off the bottom)
+        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 30),
+        height: 64,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1D1617).withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNavItem(
+              0,
+              Icons.home_rounded,
+              Icons.home_outlined,
+              primaryColor: context.colorScheme.primary,
+            ),
+            _buildNavItem(
+              1,
+              Icons.notifications_rounded,
+              Icons.notifications_outlined,
+              primaryColor: context.colorScheme.primary,
+            ),
+            _buildNavItem(
+              2,
+              Icons.person_rounded,
+              Icons.person_outline,
+              primaryColor: context.colorScheme.primary,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildNavButton(int index, IconData icon, IconData filledIcon) {
+  Widget _buildNavItem(
+    int index,
+    IconData activeIcon,
+    IconData inactiveIcon, {
+    Color? primaryColor,
+  }) {
     final isSelected = index == selectedIndex;
 
     return GestureDetector(
-      onTap: () => onTap(index),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
+      onTap: () {
+        if (!isSelected) {
+          HapticFeedback.lightImpact();
+          onTap(index);
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
         width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.grey.shade200,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          isSelected ? filledIcon : icon,
-          color: isSelected ? Colors.white : Colors.black,
-          size: 20,
+        height: 64,
+        alignment: Alignment.center,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutQuint,
+          width: isSelected ? 44 : 24,
+          height: isSelected ? 44 : 24,
+          decoration: BoxDecoration(
+            color: isSelected ? primaryColor : Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isSelected ? activeIcon : inactiveIcon,
+            color: isSelected ? Colors.white : Colors.grey.shade400,
+            size: 22,
+          ),
         ),
       ),
     );
