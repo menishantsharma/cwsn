@@ -53,7 +53,10 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
           onActionPressed: () {},
 
           // Floating Button for Booking
-          floatingActionButton: _buildBookButton(context),
+          floatingActionButton: _buildBookButton(
+            context,
+            isAvailable: caregiver.isAvailable,
+          ),
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerFloat,
           body: (context, padding) => SingleChildScrollView(
@@ -344,36 +347,61 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
     );
   }
 
-  Widget _buildBookButton(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: context.colorScheme.primary,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: context.colorScheme.primary.withAlpha(102),
+  Widget _buildBookButton(BuildContext context, {required bool isAvailable}) {
+    final backgroundColor = isAvailable
+        ? context.colorScheme.primary
+        : Colors.grey.shade300;
+    final textColor = isAvailable ? Colors.white : Colors.grey.shade500;
+    final shadow = isAvailable
+        ? BoxShadow(
+            color: context.colorScheme.primary.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 10),
-          ),
-        ],
+          )
+        : null;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [if (shadow != null) shadow],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Text(
-            "Request Service",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+      child: Material(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(30),
+        child: InkWell(
+          onTap: isAvailable
+              ? () {
+                  print("Booking requested");
+                }
+              : null,
+          borderRadius: BorderRadius.circular(30),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  isAvailable ? "Request Service" : "Currently Unavailable",
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                if (isAvailable) ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ],
+              ],
             ),
           ),
-          SizedBox(width: 8),
-          Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
-        ],
+        ),
       ),
     ).animate().fade(delay: 500.ms).slideY(begin: 1, end: 0);
   }
