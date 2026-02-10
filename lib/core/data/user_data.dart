@@ -1,6 +1,10 @@
 import 'package:cwsn/core/models/user_model.dart';
 
-final user = User(id: '1', firstName: 'Nishant Sharma');
+final user = User(
+  id: '1',
+  firstName: 'Nishant Sharma',
+  imageUrl: 'https://randomuser.me/api/portraits/men/0.jpg',
+);
 
 final caregivers = [
   User(

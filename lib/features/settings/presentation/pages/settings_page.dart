@@ -1,3 +1,5 @@
+import 'package:cwsn/core/data/user_data.dart';
+import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/providers/user_mode_provider.dart';
 import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
@@ -23,7 +25,7 @@ class SettingsPage extends ConsumerWidget {
         child: Column(
           children:
               [
-                    _buildProfileHeader(context),
+                    _buildProfileHeader(context, user),
 
                     const SizedBox(height: 30),
 
@@ -93,7 +95,7 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context) {
+  Widget _buildProfileHeader(BuildContext context, User user) {
     return Column(
       children: [
         Stack(
@@ -113,9 +115,7 @@ class SettingsPage extends ConsumerWidget {
               child: CircleAvatar(
                 radius: 50,
                 backgroundColor: Colors.grey.shade200,
-                backgroundImage: const CachedNetworkImageProvider(
-                  'https://i.pravatar.cc/300',
-                ),
+                backgroundImage: CachedNetworkImageProvider(user.imageUrl),
               ),
             ),
             Positioned(
@@ -133,15 +133,15 @@ class SettingsPage extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
-        const Text(
-          "Nishant Sharma",
+        Text(
+          "${user.firstName} ${user.lastName ?? ''}".trim(),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
-          "nishant@example.com",
+          user.email,
           style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
         ),
       ],
