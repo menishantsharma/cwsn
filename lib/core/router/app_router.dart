@@ -5,6 +5,8 @@ import 'package:cwsn/features/caregivers/presentation/pages/caregivers_list_page
 import 'package:cwsn/features/notifications/pages/notifications_page.dart';
 import 'package:cwsn/features/requests/presentation/pages/requests_page.dart';
 import 'package:cwsn/features/services/presentation/pages/services_page.dart';
+import 'package:cwsn/features/settings/presentation/pages/add_child_page.dart';
+import 'package:cwsn/features/settings/presentation/pages/parent_edit_profile_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/settings_page.dart';
 import 'package:cwsn/features/special_needs/pages/special_needs_page.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +24,8 @@ class AppRoutes {
   static const String switching = 'switching';
   static const String caregiverNotifications = 'caregiver-notifications';
   static const String caregiverSettings = 'caregiver-settings';
+  static const String parentEditProfile = 'parent-edit-profile';
+  static const String addChild = 'add-child';
 
   // Route paths
   static const String specialNeedsPath = '/special-needs';
@@ -32,6 +36,8 @@ class AppRoutes {
   static const String notificationsPath = '/notifications';
   static const String caregiverNotificationsPath = '/caregiver-notifications';
   static const String caregiverSettingsPath = '/caregiver-settings';
+  static const String parentEditProfilePath = '/parent-edit-profile';
+  static const String addChildPath = '/add-child';
 
   AppRoutes._();
 }
@@ -177,6 +183,18 @@ final goRouter = GoRouter(
         },
         transitionDuration: const Duration(milliseconds: 500),
       ),
+    ),
+
+    GoRoute(
+      name: AppRoutes.parentEditProfile,
+      path: AppRoutes.parentEditProfilePath,
+      builder: (context, state) => const ParentEditProfilePage(),
+    ),
+
+    GoRoute(
+      name: AppRoutes.addChild,
+      path: AppRoutes.addChildPath,
+      builder: (context, state) => const AddChildPage(),
     ),
   ],
 );

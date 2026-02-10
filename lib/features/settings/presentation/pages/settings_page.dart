@@ -46,7 +46,8 @@ class SettingsPage extends ConsumerWidget {
                     SettingsTile(
                       icon: Icons.person_outline_rounded,
                       label: 'Edit Profile',
-                      onTap: () => context.pushNamed('edit-profile'),
+                      onTap: () =>
+                          context.pushNamed(AppRoutes.parentEditProfile),
                     ),
 
                     if (!isCaregiverMode)
@@ -54,7 +55,7 @@ class SettingsPage extends ConsumerWidget {
                         icon: Icons.child_care_rounded,
                         label: 'Add Child',
                         iconColor: Colors.orange,
-                        onTap: () => context.pushNamed('add-child'),
+                        onTap: () => context.pushNamed(AppRoutes.addChild),
                       ),
 
                     const SizedBox(height: 24),
