@@ -1,20 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cwsn/features/caregivers/models/caregiver_model.dart';
+import 'package:cwsn/core/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 class CaregiverCard extends StatelessWidget {
-  final Caregiver caregiver;
+  final User user;
   final VoidCallback onCardTap;
 
-  const CaregiverCard({
-    super.key,
-    required this.onCardTap,
-    required this.caregiver,
-  });
+  const CaregiverCard({super.key, required this.onCardTap, required this.user});
 
   @override
   Widget build(BuildContext context) {
-    final contentOpacity = caregiver.isAvailable ? 1.0 : 0.4;
+    final contentOpacity = user.caregiverProfile?.isAvailable ?? false
+        ? 1.0
+        : 0.4;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -52,7 +50,8 @@ class CaregiverCard extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: ColorFiltered(
-                          colorFilter: caregiver.isAvailable
+                          colorFilter:
+                              user.caregiverProfile?.isAvailable ?? false
                               ? const ColorFilter.mode(
                                   Colors.transparent,
                                   BlendMode.dst,
@@ -62,7 +61,7 @@ class CaregiverCard extends StatelessWidget {
                                   BlendMode.saturation,
                                 ),
                           child: CachedNetworkImage(
-                            imageUrl: caregiver.imageUrl,
+                            imageUrl: user.imageUrl,
                             fit: BoxFit.cover,
                             placeholder: (_, _) =>
                                 Container(color: Colors.grey.shade100),
@@ -80,7 +79,7 @@ class CaregiverCard extends StatelessWidget {
                         width: 14,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: caregiver.isAvailable
+                          color: user.caregiverProfile!.isAvailable
                               ? const Color(0xFF4CAF50) // Green
                               : Colors.grey, // Grey
                           shape: BoxShape.circle,
@@ -104,7 +103,8 @@ class CaregiverCard extends StatelessWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                caregiver.name,
+                                "${user.firstName} ${user.lastName ?? ''}"
+                                    .trim(),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -115,7 +115,7 @@ class CaregiverCard extends StatelessWidget {
                               ),
                             ),
 
-                            if (caregiver.isVerified) ...[
+                            if (user.caregiverProfile!.isVerified) ...[
                               const SizedBox(width: 4),
                               const Icon(
                                 Icons.verified_rounded,
@@ -147,7 +147,7 @@ class CaregiverCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              "${caregiver.rating / 1000}k",
+                              "${user.caregiverProfile!.rating / 1000}k",
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 11,

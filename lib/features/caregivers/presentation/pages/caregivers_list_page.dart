@@ -1,7 +1,7 @@
+import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
-import 'package:cwsn/features/caregivers/models/caregiver_model.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_card.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_filter_sheet.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_skeleton_card.dart';
@@ -18,7 +18,7 @@ class CaregiversListPage extends StatefulWidget {
 
 class _CaregiversListPageState extends State<CaregiversListPage> {
   final CaregiverRepository _repository = CaregiverRepository();
-  late Future<List<Caregiver>> _caregiversFuture;
+  late Future<List<User>> _caregiversFuture;
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _CaregiversListPageState extends State<CaregiversListPage> {
       },
 
       body: (context, padding) {
-        return FutureBuilder<List<Caregiver>>(
+        return FutureBuilder<List<User>>(
           future: _caregiversFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -62,21 +62,21 @@ class _CaregiversListPageState extends State<CaregiversListPage> {
               return Center(child: Text('Error: ${snapshot.error}'));
             }
 
-            final caregivers = snapshot.data ?? [];
+            final users = snapshot.data ?? [];
 
-            if (caregivers.isEmpty) {
+            if (users.isEmpty) {
               return _buildEmptyState().animate().fade().scale();
             }
 
             return ListView.builder(
               padding: padding.copyWith(left: 20, right: 20, bottom: 100),
-              itemCount: caregivers.length,
+              itemCount: users.length,
               itemBuilder: (context, index) {
                 return CaregiverCard(
-                      caregiver: caregivers[index],
+                      user: users[index],
                       onCardTap: () => context.pushNamed(
                         AppRoutes.caregiverProfile,
-                        extra: caregivers[index].id,
+                        extra: users[index].id,
                       ),
                     )
                     .animate()

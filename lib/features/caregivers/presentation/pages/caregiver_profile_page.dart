@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
-import 'package:cwsn/features/caregivers/models/caregiver_model.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_skeleton_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -17,7 +17,7 @@ class CaregiverProfilePage extends StatefulWidget {
 
 class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
   final CaregiverRepository _repository = CaregiverRepository();
-  late Future<Caregiver> _profileFuture;
+  late Future<User> _profileFuture;
 
   @override
   void initState() {
@@ -27,7 +27,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Caregiver>(
+    return FutureBuilder<User>(
       future: _profileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -46,7 +46,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
           );
         }
 
-        final caregiver = snapshot.data!;
+        final user = snapshot.data!;
 
         return PillScaffold(
           title: 'Profile',
@@ -55,7 +55,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
 
           floatingActionButton: _buildBookButton(
             context,
-            isAvailable: caregiver.isAvailable,
+            isAvailable: user.caregiverProfile!.isAvailable,
           ),
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerFloat,
@@ -64,7 +64,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProfileHeader(caregiver),
+                _buildProfileHeader(user),
 
                 const SizedBox(height: 24),
 
@@ -73,7 +73,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
                     Expanded(
                       child: _buildStatBox(
                         "Recommended",
-                        "${caregiver.rating / 1000}k",
+                        "${user.caregiverProfile!.rating / 1000}k",
                         Icons.thumb_up_rounded,
                         Colors.orange,
                       ),
@@ -103,7 +103,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
 
                 _buildSectionTitle("About"),
                 Text(
-                  caregiver.about,
+                  user.caregiverProfile!.about,
                   style: TextStyle(
                     fontSize: 14,
                     height: 1.6,
@@ -117,7 +117,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
-                  children: caregiver.services.map((service) {
+                  children: user.caregiverProfile!.services.map((service) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -148,13 +148,15 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
                 _buildDetailRow(
                   Icons.location_on_outlined,
                   "Location",
-                  caregiver.location,
+                  user.location ?? "Not specified",
                 ),
                 const SizedBox(height: 16),
                 _buildDetailRow(
                   Icons.translate_rounded,
                   "Languages",
-                  caregiver.languages.join(", "),
+                  user.caregiverProfile!.languages.isNotEmpty
+                      ? user.caregiverProfile!.languages.join(", ")
+                      : "Not specified",
                 ),
               ],
             ),
@@ -164,7 +166,9 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
     );
   }
 
-  Widget _buildProfileHeader(Caregiver caregiver) {
+  Widget _buildProfileHeader(User user) {
+    final caregiver = user.caregiverProfile!;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -187,7 +191,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
               color: Colors.grey.shade50,
               borderRadius: BorderRadius.circular(20),
               image: DecorationImage(
-                image: CachedNetworkImageProvider(caregiver.imageUrl),
+                image: CachedNetworkImageProvider(user.imageUrl),
                 fit: BoxFit.cover,
               ),
             ),
@@ -231,7 +235,7 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
                 ],
 
                 Text(
-                  caregiver.name,
+                  "${user.firstName} ${user.lastName ?? ''}",
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

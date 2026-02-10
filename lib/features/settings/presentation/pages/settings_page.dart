@@ -19,7 +19,7 @@ class SettingsPage extends ConsumerWidget {
     return PillScaffold(
       title: 'Profile',
       body: (context, padding) => SingleChildScrollView(
-        padding: padding.copyWith(left: 20, right: 20, bottom: 80),
+        padding: padding.copyWith(left: 20, right: 20, bottom: 100),
         child: Column(
           children:
               [
