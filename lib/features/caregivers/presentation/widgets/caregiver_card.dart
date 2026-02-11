@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:cwsn/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class CaregiverCard extends StatelessWidget {
@@ -147,7 +148,9 @@ class CaregiverCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              "${user.caregiverProfile!.rating / 1000}k",
+                              numberOfRecommendationsToK(
+                                user.caregiverProfile!.totalRecommendations,
+                              ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 11,

@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
+import 'package:cwsn/core/utils/utils.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_skeleton_profile.dart';
@@ -73,7 +74,9 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
                     Expanded(
                       child: _buildStatBox(
                         "Recommended",
-                        "${user.caregiverProfile!.rating / 1000}k",
+                        numberOfRecommendationsToK(
+                          user.caregiverProfile!.totalRecommendations,
+                        ),
                         Icons.thumb_up_rounded,
                         Colors.orange,
                       ),

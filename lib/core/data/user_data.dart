@@ -20,7 +20,7 @@ final caregivers = [
       languages: ['English', 'Hindi'],
       joinedDate: DateTime(2020, 1, 15),
       yearsOfExperience: 5,
-      totalRecommendations: 20,
+      totalRecommendations: 20000,
     ),
   ),
   User(
@@ -36,7 +36,7 @@ final caregivers = [
       languages: ['English', 'Hindi', 'Marathi'],
       joinedDate: DateTime(2021, 6, 10),
       yearsOfExperience: 3,
-      totalRecommendations: 15,
+      totalRecommendations: 1500,
     ),
   ),
   User(
@@ -52,7 +52,7 @@ final caregivers = [
       languages: ['English', 'Hindi'],
       joinedDate: DateTime(2019, 3, 5),
       yearsOfExperience: 7,
-      totalRecommendations: 10,
+      totalRecommendations: 1000000,
     ),
   ),
 ];
