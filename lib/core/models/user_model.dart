@@ -48,6 +48,8 @@ class User {
   final String? location;
   final String email;
   final bool isGuest;
+  final String? phoneNumber;
+  final Gender? gender;
 
   final CaregiverProfile? caregiverProfile;
   final ParentModel? parentProfile;
@@ -62,6 +64,8 @@ class User {
     this.parentProfile,
     this.email = 'abc@example.com',
     this.isGuest = false,
+    this.phoneNumber,
+    this.gender,
   });
 
   bool get isParentSetup => parentProfile != null;
