@@ -27,6 +27,7 @@ class _ServicesPageState extends State<ServicesPage> {
   Widget build(BuildContext context) {
     return PillScaffold(
       title: 'Services',
+      showBack: false,
       body: (context, padding) => FutureBuilder(
         future: _servicesFuture,
         builder: (context, snapshot) {
