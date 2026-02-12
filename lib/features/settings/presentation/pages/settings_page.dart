@@ -1,9 +1,10 @@
-import 'package:cwsn/core/data/user_data.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/providers/user_mode_provider.dart';
 import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
+import 'package:cwsn/core/widgets/guest_placeholder.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
+import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/settings/presentation/widgets/settings_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -17,6 +18,21 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isCaregiverMode = ref.read(userModeProvider);
+    final user = ref.watch(currentUserProvider);
+
+    if (user == null) return const SizedBox.shrink();
+
+    if (user.isGuest) {
+      return PillScaffold(
+        title: 'Profile',
+        body: (context, padding) => GuestPlaceholder(
+          message:
+              "Sign in to manage your profile, children details, and app preferences.",
+          onLoginPressed: () =>
+              ref.read(currentUserProvider.notifier).state = null,
+        ),
+      );
+    }
 
     return PillScaffold(
       title: 'Profile',
@@ -78,7 +94,9 @@ class SettingsPage extends ConsumerWidget {
                       icon: Icons.logout_rounded,
                       label: 'Logout',
                       isDestructive: true,
-                      onTap: () {},
+                      onTap: () {
+                        ref.read(currentUserProvider.notifier).state = null;
+                      },
                     ),
                     SettingsTile(
                       icon: Icons.delete_outline_rounded,

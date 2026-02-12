@@ -47,6 +47,7 @@ class User {
   final String imageUrl;
   final String? location;
   final String email;
+  final bool isGuest;
 
   final CaregiverProfile? caregiverProfile;
   final ParentModel? parentProfile;
@@ -60,6 +61,7 @@ class User {
     this.caregiverProfile,
     this.parentProfile,
     this.email = 'abc@example.com',
+    this.isGuest = false,
   });
 
   bool get isParentSetup => parentProfile != null;

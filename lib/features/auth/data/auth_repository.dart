@@ -19,6 +19,6 @@ class AuthRepository {
 
   Future<User> signInAsGuest() async {
     await Future.delayed(Duration(seconds: 2));
-    return User(id: 'guest', firstName: 'Guest User');
+    return User(id: 'guest', firstName: 'Guest User', isGuest: true);
   }
 }

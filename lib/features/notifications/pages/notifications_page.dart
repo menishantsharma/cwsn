@@ -1,5 +1,7 @@
 import 'package:cwsn/core/providers/user_mode_provider.dart';
+import 'package:cwsn/core/widgets/guest_placeholder.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
+import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/notifications/data/notification_repository.dart';
 import 'package:cwsn/features/notifications/models/notification_model.dart';
 import 'package:cwsn/features/notifications/widgets/notification_tile.dart';
@@ -22,6 +24,23 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     final isCaregiverMode = ref.watch(userModeProvider);
+    final user = ref.watch(currentUserProvider);
+
+    if (user == null) return const SizedBox.shrink();
+
+    // 1. CHECK IF GUEST
+    if (user.isGuest) {
+      return PillScaffold(
+        title: 'Notifications',
+        body: (context, padding) => GuestPlaceholder(
+          title: "No Notifications",
+          message: "Please login to see your updates and messages.",
+          onLoginPressed: () {
+            ref.read(currentUserProvider.notifier).state = null;
+          },
+        ),
+      );
+    }
 
     return PillScaffold(
       title: 'Notifications',

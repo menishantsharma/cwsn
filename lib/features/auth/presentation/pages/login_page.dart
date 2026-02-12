@@ -1,11 +1,9 @@
 import 'package:cwsn/core/models/user_model.dart';
-import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
 
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
@@ -21,7 +19,6 @@ class LoginPage extends ConsumerWidget {
       try {
         final user = await loginMethod();
         ref.read(currentUserProvider.notifier).state = user;
-        if (context.mounted) context.goNamed(AppRoutes.home);
       } finally {
         ref.read(authLoadingProvider.notifier).state = false;
       }
