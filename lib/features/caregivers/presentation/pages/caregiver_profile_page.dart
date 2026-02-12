@@ -3,20 +3,23 @@ import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/utils/utils.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
+import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_skeleton_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CaregiverProfilePage extends StatefulWidget {
+class CaregiverProfilePage extends ConsumerStatefulWidget {
   final String caregiverId;
   const CaregiverProfilePage({super.key, required this.caregiverId});
 
   @override
-  State<CaregiverProfilePage> createState() => _CaregiverProfilePageState();
+  ConsumerState<CaregiverProfilePage> createState() =>
+      _CaregiverProfilePageState();
 }
 
-class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
+class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
   final CaregiverRepository _repository = CaregiverRepository();
   late Future<User> _profileFuture;
 
@@ -54,9 +57,10 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
           actionIcon: Icons.share_rounded,
           onActionPressed: () {},
 
-          floatingActionButton: _buildBookButton(
+          floatingActionButton: _buildBottomAction(
             context,
-            isAvailable: user.caregiverProfile!.isAvailable,
+            caregiverProfile: user.caregiverProfile!,
+            currentUser: ref.watch(currentUserProvider),
           ),
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerFloat,
@@ -354,31 +358,79 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
     );
   }
 
-  Widget _buildBookButton(BuildContext context, {required bool isAvailable}) {
-    final backgroundColor = isAvailable
-        ? context.colorScheme.primary
-        : Colors.grey.shade300;
-    final textColor = isAvailable ? Colors.white : Colors.grey.shade500;
-    final shadow = isAvailable
-        ? BoxShadow(
-            color: context.colorScheme.primary.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        : null;
+  Widget _buildBottomAction(
+    BuildContext context, {
+    required CaregiverProfile caregiverProfile,
+    required User? currentUser, // Use your actual User Model type
+  }) {
+    // CASE 1: GUEST USER -> Show "Login to Request"
+    if (currentUser == null || currentUser.isGuest) {
+      return _buildStyledButton(
+        context,
+        text: "Login to Request Service",
+        icon: Icons.login_rounded,
+        color: context.colorScheme.primary,
+        onTap: () {
+          // Setting state to null triggers AppRouter to redirect to Login Page
+          ref.read(currentUserProvider.notifier).state = null;
+        },
+      );
+    }
+
+    // CASE 2: REAL USER -> Check Availability
+    if (caregiverProfile.isAvailable) {
+      return _buildStyledButton(
+        context,
+        text: "Request Service",
+        icon: Icons.arrow_forward_rounded,
+        color: context.colorScheme.primary,
+        onTap: () {
+          // Handle Request Logic
+        },
+      );
+    }
+    // CASE 3: UNAVAILABLE
+    else {
+      return _buildStyledButton(
+        context,
+        text: "Currently Unavailable",
+        icon: null, // No icon for disabled state
+        color: Colors.grey.shade400,
+        onTap: null, // Disable tap
+      );
+    }
+  }
+
+  // Helper for consistent button styling
+  Widget _buildStyledButton(
+    BuildContext context, {
+    required String text,
+    required Color color,
+    IconData? icon,
+    VoidCallback? onTap,
+  }) {
+    final isEnabled = onTap != null;
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [if (shadow != null) shadow],
+        boxShadow: isEnabled
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ]
+            : null,
       ),
       child: Material(
-        color: backgroundColor,
+        color: color,
         borderRadius: BorderRadius.circular(30),
         child: InkWell(
-          onTap: isAvailable ? () {} : null,
+          onTap: onTap,
           borderRadius: BorderRadius.circular(30),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -386,20 +438,16 @@ class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  isAvailable ? "Request Service" : "Currently Unavailable",
-                  style: TextStyle(
-                    color: textColor,
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-                if (isAvailable) ...[
+                if (icon != null) ...[
                   const SizedBox(width: 8),
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  Icon(icon, color: Colors.white, size: 20),
                 ],
               ],
             ),
