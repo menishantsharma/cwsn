@@ -1,3 +1,4 @@
+import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/scaffold_with_navbar.dart';
 import 'package:cwsn/core/widgets/switching_screen.dart';
 import 'package:cwsn/features/auth/presentation/pages/login_page.dart';
@@ -52,11 +53,17 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(currentUserProvider);
+  final routerNotifier = ValueNotifier<User?>(ref.read(currentUserProvider));
+  ref.listen<User?>(currentUserProvider, (previous, next) {
+    routerNotifier.value = next;
+  });
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.home,
+    refreshListenable: routerNotifier,
     redirect: (context, state) {
+      final authState = ref.read(currentUserProvider);
       final isLoggedIn = authState != null;
       final goingToLogin = state.matchedLocation == AppRoutes.loginPath;
       if (!isLoggedIn && !goingToLogin) {

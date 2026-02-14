@@ -1,11 +1,26 @@
 enum Gender { male, female, other }
 
 class ChildModel {
-  final String name;
+  final String id;
   final int age;
+  final String name;
   final Gender gender;
 
-  ChildModel({required this.name, required this.age, required this.gender});
+  ChildModel({
+    required this.id,
+    required this.name,
+    required this.age,
+    required this.gender,
+  });
+
+  ChildModel copyWith({String? id, int? age, String? name, Gender? gender}) {
+    return ChildModel(
+      id: id ?? this.id,
+      age: age ?? this.age,
+      name: name ?? this.name,
+      gender: gender ?? this.gender,
+    );
+  }
 }
 
 class ParentModel {
@@ -14,6 +29,13 @@ class ParentModel {
 
   ParentModel({this.children = const [], DateTime? joinedDate})
     : joinedDate = joinedDate ?? DateTime.now();
+
+  ParentModel copyWith({List<ChildModel>? children, DateTime? joinedDate}) {
+    return ParentModel(
+      children: children ?? this.children,
+      joinedDate: joinedDate ?? this.joinedDate,
+    );
+  }
 }
 
 class CaregiverProfile {
@@ -38,6 +60,30 @@ class CaregiverProfile {
     this.yearsOfExperience = 0,
     this.totalRecommendations = 0,
   }) : joinedDate = joinedDate ?? DateTime.now();
+
+  CaregiverProfile copyWith({
+    String? about,
+    int? rating,
+    List<String>? services,
+    bool? isVerified,
+    bool? isAvailable,
+    List<String>? languages,
+    DateTime? joinedDate,
+    int? yearsOfExperience,
+    int? totalRecommendations,
+  }) {
+    return CaregiverProfile(
+      about: about ?? this.about,
+      rating: rating ?? this.rating,
+      services: services ?? this.services,
+      isVerified: isVerified ?? this.isVerified,
+      isAvailable: isAvailable ?? this.isAvailable,
+      languages: languages ?? this.languages,
+      joinedDate: joinedDate ?? this.joinedDate,
+      yearsOfExperience: yearsOfExperience ?? this.yearsOfExperience,
+      totalRecommendations: totalRecommendations ?? this.totalRecommendations,
+    );
+  }
 }
 
 class User {
@@ -70,4 +116,32 @@ class User {
 
   bool get isParentSetup => parentProfile != null;
   bool get isCaregiverSetup => caregiverProfile != null;
+
+  User copyWith({
+    String? id,
+    String? firstName,
+    String? lastName,
+    String? imageUrl,
+    String? location,
+    String? email,
+    bool? isGuest,
+    String? phoneNumber,
+    Gender? gender,
+    CaregiverProfile? caregiverProfile,
+    ParentModel? parentProfile,
+  }) {
+    return User(
+      id: id ?? this.id,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      imageUrl: imageUrl ?? this.imageUrl,
+      location: location ?? this.location,
+      email: email ?? this.email,
+      isGuest: isGuest ?? this.isGuest,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      gender: gender ?? this.gender,
+      caregiverProfile: caregiverProfile ?? this.caregiverProfile,
+      parentProfile: parentProfile ?? this.parentProfile,
+    );
+  }
 }
