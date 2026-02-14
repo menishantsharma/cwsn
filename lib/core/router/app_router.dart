@@ -5,7 +5,7 @@ import 'package:cwsn/features/auth/presentation/pages/login_page.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregiver_profile_page.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregivers_list_page.dart';
-import 'package:cwsn/features/notifications/pages/notifications_page.dart';
+import 'package:cwsn/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:cwsn/features/requests/presentation/pages/requests_page.dart';
 import 'package:cwsn/features/services/presentation/pages/services_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/add_child_page.dart';
