@@ -3,6 +3,7 @@ import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
+import 'package:cwsn/features/auth/data/user_repository.dart';
 import 'package:cwsn/features/settings/presentation/widgets/language_selection_dialog.dart';
 import 'package:cwsn/features/settings/presentation/widgets/phone_verification_sheet.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,8 @@ class ParentEditProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
+  final UserRepository _userRepository = UserRepository();
+
   // Controllers
   late TextEditingController _nameController;
   late TextEditingController _locationController;
@@ -28,6 +31,9 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
   Gender? _selectedGender;
   List<String> _selectedLanguages = [];
   bool _isLoading = false;
+
+  // Store avatar URL locally so we don't need ref.watch in the build method
+  String? _avatarUrl;
 
   final List<String> _allLanguages = [
     "Hindi",
@@ -51,6 +57,7 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
     _locationController = TextEditingController(text: user?.location ?? "");
     _phoneController = TextEditingController(text: user?.phoneNumber ?? "");
     _selectedGender = user?.gender;
+    _avatarUrl = user?.imageUrl;
   }
 
   @override
@@ -73,13 +80,35 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
       return;
     }
 
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser == null) return;
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      _showSnack("Profile Updated Successfully!");
-      Navigator.pop(context);
+    setState(() => _isLoading = true);
+
+    try {
+      final updatedUser = currentUser.copyWith(
+        firstName: _nameController.text.trim(),
+        location: _locationController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        gender: _selectedGender,
+      );
+
+      final savedUser = await _userRepository.updateUserProfile(updatedUser);
+
+      // Update provider with new user data
+      ref.read(currentUserProvider.notifier).state = savedUser;
+
+      if (mounted) {
+        _showSnack("Profile Updated Successfully!");
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnack("Failed to update profile. Please try again.");
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -152,7 +181,6 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider);
     final primaryColor = Theme.of(context).primaryColor;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
@@ -161,28 +189,38 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _saveChanges,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              elevation: 10,
-              shadowColor: primaryColor.withValues(alpha: 0.4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            child: _isLoading
-                ? const SpinKitThreeBounce(color: Colors.white, size: 20)
-                : const Text(
-                    "Save Changes",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        child:
+            SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _saveChanges,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      elevation: 10,
+                      shadowColor: primaryColor.withValues(alpha: 0.4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SpinKitThreeBounce(
+                            color: Colors.white,
+                            size: 20,
+                          )
+                        : const Text(
+                            "Save Changes",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
-          ),
-        ).animate().fade(delay: 600.ms).slideY(begin: 0.5, end: 0),
+                )
+                .animate(key: const ValueKey('save_btn'))
+                .fade(delay: 600.ms)
+                .slideY(begin: 0.5, end: 0), // Added Key
       ),
 
       body: (context, padding) => SingleChildScrollView(
@@ -196,52 +234,58 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
           children: [
             const SizedBox(height: 20),
             Center(
-              child: Stack(
-                children: [
-                  Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 110,
+                        height: 110,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.grey.shade100,
-                      backgroundImage: user?.imageUrl != null
-                          ? CachedNetworkImageProvider(user!.imageUrl)
-                          : null,
-                      child: user?.imageUrl == null
-                          ? const Icon(Icons.person)
-                          : null,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: primaryColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.grey.shade100,
+                          backgroundImage:
+                              _avatarUrl != null && _avatarUrl!.isNotEmpty
+                              ? CachedNetworkImageProvider(_avatarUrl!)
+                              : null,
+                          child: (_avatarUrl == null || _avatarUrl!.isEmpty)
+                              ? const Icon(Icons.person)
+                              : null,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.camera_alt_rounded,
-                        color: Colors.white,
-                        size: 18,
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: primaryColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+                )
+                .animate(key: const ValueKey('avatar'))
+                .scale(
+                  duration: 400.ms,
+                  curve: Curves.easeOutBack,
+                ), // Added Key
 
             const SizedBox(height: 40),
 
@@ -278,91 +322,96 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
   Widget _buildGenderSelector(BuildContext context, {int delay = 0}) {
     final primaryColor = Theme.of(context).primaryColor;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 12, bottom: 10),
-          child: Text(
-            "Gender",
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Row(
-          children: Gender.values.map((gender) {
-            final isSelected = _selectedGender == gender;
-            final label =
-                gender.name[0].toUpperCase() + gender.name.substring(1);
-            IconData icon;
-            switch (gender) {
-              case Gender.male:
-                icon = Icons.male_rounded;
-                break;
-              case Gender.female:
-                icon = Icons.female_rounded;
-                break;
-              case Gender.other:
-                icon = Icons.transgender_rounded;
-                break;
-            }
-
-            return Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  setState(() => _selectedGender = gender);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected ? primaryColor : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected ? primaryColor : Colors.transparent,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      if (!isSelected)
-                        BoxShadow(
-                          color: const Color(
-                            0xFF1D1617,
-                          ).withValues(alpha: 0.05),
-                          offset: const Offset(0, 4),
-                          blurRadius: 16,
-                        ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        icon,
-                        color: isSelected ? Colors.white : Colors.grey.shade400,
-                        size: 24,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : Colors.grey.shade600,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 12, bottom: 10),
+              child: Text(
+                "Gender",
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            );
-          }).toList(),
-        ),
-      ],
-    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
+            ),
+            Row(
+              children: Gender.values.map((gender) {
+                final isSelected = _selectedGender == gender;
+                final label =
+                    gender.name[0].toUpperCase() + gender.name.substring(1);
+                IconData icon;
+                switch (gender) {
+                  case Gender.male:
+                    icon = Icons.male_rounded;
+                    break;
+                  case Gender.female:
+                    icon = Icons.female_rounded;
+                    break;
+                  case Gender.other:
+                    icon = Icons.transgender_rounded;
+                    break;
+                }
+
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedGender = gender);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? primaryColor : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? primaryColor : Colors.transparent,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          if (!isSelected)
+                            BoxShadow(
+                              color: const Color(
+                                0xFF1D1617,
+                              ).withValues(alpha: 0.05),
+                              offset: const Offset(0, 4),
+                              blurRadius: 16,
+                            ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            icon,
+                            color: isSelected
+                                ? Colors.white
+                                : Colors.grey.shade400,
+                            size: 24,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.grey.shade600,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        )
+        .animate(key: const ValueKey('gender'))
+        .fade(delay: delay.ms)
+        .slideX(begin: 0.2, end: 0); // Added Key
   }
 
   Widget _buildPillInput({
@@ -373,148 +422,157 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
     int delay = 0,
   }) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-            offset: const Offset(0, 4),
-            blurRadius: 16,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+                offset: const Offset(0, 4),
+                blurRadius: 16,
+              ),
+            ],
           ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
-        ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-          prefixIcon: Icon(
-            icon,
-            color: context.colorScheme.secondary,
-            size: 22,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              labelText: label,
+              labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+              prefixIcon: Icon(
+                icon,
+                color: context.colorScheme.secondary,
+                size: 22,
+              ),
+              prefixIconConstraints: const BoxConstraints(minWidth: 40),
+            ),
           ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 40),
-        ),
-      ),
-    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
+        )
+        .animate(key: ValueKey(label))
+        .fade(delay: delay.ms)
+        .slideX(begin: 0.2, end: 0); // Added Key
   }
 
   Widget _buildLocationInput({int delay = 0}) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-            offset: const Offset(0, 4),
-            blurRadius: 16,
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextFormField(
-              controller: _locationController,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+                offset: const Offset(0, 4),
+                blurRadius: 16,
               ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                labelText: "Location",
-                labelStyle: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 14,
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _locationController,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    labelText: "Location",
+                    labelStyle: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.location_on_outlined,
+                      color: context.colorScheme.secondary,
+                      size: 22,
+                    ),
+                    prefixIconConstraints: const BoxConstraints(minWidth: 40),
+                  ),
                 ),
-                prefixIcon: Icon(
-                  Icons.location_on_outlined,
-                  color: context.colorScheme.secondary,
-                  size: 22,
-                ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 40),
               ),
-            ),
+              IconButton(
+                onPressed: _detectLocation,
+                icon: Icon(
+                  Icons.my_location_rounded,
+                  color: context.colorScheme.primary,
+                ),
+                tooltip: "Use Current Location",
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: _detectLocation,
-            icon: Icon(
-              Icons.my_location_rounded,
-              color: context.colorScheme.primary,
-            ),
-            tooltip: "Use Current Location",
-          ),
-        ],
-      ),
-    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
+        )
+        .animate(key: const ValueKey('location'))
+        .fade(delay: delay.ms)
+        .slideX(begin: 0.2, end: 0); // Added Key
   }
 
   Widget _buildPhoneInput({int delay = 0}) {
     final hasPhone = _phoneController.text.isNotEmpty;
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-            offset: const Offset(0, 4),
-            blurRadius: 16,
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextFormField(
-              controller: _phoneController,
-              readOnly: true,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: hasPhone ? Colors.grey.shade700 : Colors.black87,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+                offset: const Offset(0, 4),
+                blurRadius: 16,
               ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                labelText: "Phone Number",
-                hintText: "Add your phone number",
-                labelStyle: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 14,
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _phoneController,
+                  readOnly: true,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: hasPhone ? Colors.grey.shade700 : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    labelText: "Phone Number",
+                    hintText: "Add your phone number",
+                    labelStyle: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.phone_outlined,
+                      color: context.colorScheme.secondary,
+                      size: 22,
+                    ),
+                    prefixIconConstraints: const BoxConstraints(minWidth: 40),
+                  ),
                 ),
-                prefixIcon: Icon(
-                  Icons.phone_outlined,
-                  color: context.colorScheme.secondary,
-                  size: 22,
+              ),
+              TextButton(
+                onPressed: _initiatePhoneChange,
+                child: Text(
+                  hasPhone ? "CHANGE" : "ADD",
+                  style: TextStyle(
+                    color: context.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 40),
               ),
-            ),
+            ],
           ),
-          TextButton(
-            onPressed: _initiatePhoneChange,
-            child: Text(
-              hasPhone ? "CHANGE" : "ADD",
-              style: TextStyle(
-                color: context.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
-    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
+        )
+        .animate(key: const ValueKey('phone'))
+        .fade(delay: delay.ms)
+        .slideX(begin: 0.2, end: 0); // Added Key
   }
 
   Widget _buildLanguageSelector({int delay = 0}) {
@@ -523,53 +581,61 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
         : _selectedLanguages.join(", ");
     final isPlaceholder = _selectedLanguages.isEmpty;
     return GestureDetector(
-      onTap: _showLanguageSelector,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-              offset: const Offset(0, 4),
-              blurRadius: 16,
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.translate_rounded,
-                  color: context.colorScheme.secondary,
-                  size: 22,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  "Languages Spoken",
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+          onTap: _showLanguageSelector,
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+                  offset: const Offset(0, 4),
+                  blurRadius: 16,
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.only(left: 34),
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: isPlaceholder ? Colors.grey.shade400 : Colors.black87,
-                  fontSize: 16,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.translate_rounded,
+                      color: context.colorScheme.secondary,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      "Languages Spoken",
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 34),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isPlaceholder
+                          ? Colors.grey.shade400
+                          : Colors.black87,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
+          ),
+        )
+        .animate(key: const ValueKey('language'))
+        .fade(delay: delay.ms)
+        .slideX(begin: 0.2, end: 0); // Added Key
   }
 }
