@@ -59,7 +59,7 @@ class AppRoutes {
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
   RouterNotifier(this._ref) {
-    _ref.listen(currentUserProvider, (_, __) => notifyListeners());
+    _ref.listen(currentUserProvider, (_, _) => notifyListeners());
   }
 }
 
@@ -115,17 +115,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.loginPath,
         name: AppRoutes.login,
-        builder: (_, __) => const LoginPage(),
+        builder: (_, _) => const LoginPage(),
       ),
       GoRoute(
         path: AppRoutes.roleSelectionPath,
         name: AppRoutes.roleSelection,
-        builder: (_, __) => const RoleSelectionPage(),
+        builder: (_, _) => const RoleSelectionPage(),
       ),
       GoRoute(
         path: AppRoutes.switchingPath,
         name: AppRoutes.switching,
-        builder: (_, __) => const SwitchingScreen(),
+        builder: (_, _) => const SwitchingScreen(),
       ),
 
       // Main Navigation Shell (Tabs)
@@ -160,7 +160,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.notificationsPath,
                 name: AppRoutes.notifications,
-                builder: (_, __) => const NotificationsPage(),
+                builder: (_, _) => const NotificationsPage(),
               ),
             ],
           ),
@@ -171,7 +171,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.profilePath,
                 name: AppRoutes.profile,
-                builder: (_, __) => const SettingsPage(),
+                builder: (_, _) => const SettingsPage(),
               ),
             ],
           ),
@@ -182,12 +182,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.specialNeedsPath,
         name: AppRoutes.specialNeeds,
-        builder: (_, __) => const SpecialNeedsPage(),
+        builder: (_, _) => const SpecialNeedsPage(),
       ),
       GoRoute(
         path: AppRoutes.caregiversListPath,
         name: AppRoutes.caregiversList,
-        builder: (_, __) => const CaregiversListPage(),
+        builder: (_, _) => const CaregiversListPage(),
       ),
       GoRoute(
         path: AppRoutes.caregiverProfilePath,
@@ -198,12 +198,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.parentEditProfilePath,
         name: AppRoutes.parentEditProfile,
-        builder: (_, __) => const ParentEditProfilePage(),
+        builder: (_, _) => const ParentEditProfilePage(),
       ),
       GoRoute(
         path: AppRoutes.addChildPath,
         name: AppRoutes.addChild,
-        builder: (_, __) => const AddChildPage(),
+        builder: (_, _) => const AddChildPage(),
       ),
     ],
   );
