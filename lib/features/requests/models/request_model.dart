@@ -1,51 +1,54 @@
-enum RequestStatus { pending, accepted, rejected }
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class CaregiverRequest {
-  final String id;
-  final String parentId;
-  final String parentName;
-  final String parentImageUrl;
-  final String parentLocation;
+part 'request_model.freezed.dart';
+part 'request_model.g.dart';
 
-  final String childName;
-  final int childAge;
-  final String childGender;
-  final String specialNeed;
+/// The status of a service request from a Parent to a Caregiver.
+enum RequestStatus {
+  @JsonValue('pending')
+  pending,
+  @JsonValue('accepted')
+  accepted,
+  @JsonValue('rejected')
+  rejected,
+}
 
-  final String serviceName;
+@freezed
+class CaregiverRequest with _$CaregiverRequest {
+  const CaregiverRequest._(); // Needed for our custom getters below
 
-  final RequestStatus status;
+  const factory CaregiverRequest({
+    required String id,
+    
+    // Parent Details (The person paying for the service)
+    required String parentId,
+    required String parentName,
+    @Default('https://example.com/placeholder.png') String parentImageUrl,
+    required String parentLocation,
 
-  CaregiverRequest({
-    required this.id,
-    required this.parentId,
-    required this.parentName,
-    required this.parentImageUrl,
-    required this.parentLocation,
-    required this.childName,
-    required this.childAge,
-    required this.childGender,
-    required this.specialNeed,
-    required this.serviceName,
-    this.status = RequestStatus.pending,
-  });
+    // Child Details (The person receiving the care)
+    required String childName,
+    required int childAge,
+    required String childGender,
+    required String specialNeed,
 
+    // Service Context
+    required String serviceName,
+
+    @Default(RequestStatus.pending) RequestStatus status,
+  }) = _CaregiverRequest;
+
+  factory CaregiverRequest.fromJson(Map<String, dynamic> json) =>
+      _$CaregiverRequestFromJson(json);
+
+  // --- EASY HELPERS: Makes your UI code look much cleaner ---
+
+  /// Example: "For Male Child of 8 years"
   String get childDescription => "For $childGender Child of $childAge years";
-  String get serviceDescription => "$specialNeed | $serviceName";
 
-  CaregiverRequest copyWith({RequestStatus? status}) {
-    return CaregiverRequest(
-      id: id,
-      parentId: parentId,
-      parentName: parentName,
-      parentImageUrl: parentImageUrl,
-      parentLocation: parentLocation,
-      childName: childName,
-      childAge: childAge,
-      childGender: childGender,
-      specialNeed: specialNeed,
-      serviceName: serviceName,
-      status: status ?? this.status,
-    );
-  }
+  /// Example: "Autism Support | Speech Therapy"
+  String get serviceDescription => "$specialNeed | $serviceName";
+  
+  /// Helper to check if the request is still actionable
+  bool get isPending => status == RequestStatus.pending;
 }
