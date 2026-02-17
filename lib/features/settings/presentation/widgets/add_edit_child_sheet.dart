@@ -18,7 +18,7 @@ class AddEditChildSheet extends StatefulWidget {
 
 class _AddEditChildSheetState extends State<AddEditChildSheet> {
   late TextEditingController _nameController;
-  late TextEditingController _ageController;
+  DateTime? _selectedDateOfBirth; // <-- NEW: Replaced ageController
   Gender? _selectedGender;
   bool _isLoading = false;
 
@@ -28,28 +28,25 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
     _nameController = TextEditingController(
       text: widget.existingChild?.name ?? "",
     );
-    _ageController = TextEditingController(
-      text: widget.existingChild != null
-          ? widget.existingChild!.age.toString()
-          : "",
-    );
+    // Initialize with existing DOB if editing
+    _selectedDateOfBirth = widget.existingChild?.dateOfBirth;
     _selectedGender = widget.existingChild?.gender;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _ageController.dispose();
     super.dispose();
   }
 
   void _submit() async {
+    // Check if name is empty, DOB is missing, or gender is missing
     if (_nameController.text.trim().isEmpty ||
-        _ageController.text.trim().isEmpty ||
+        _selectedDateOfBirth == null ||
         _selectedGender == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please fill all fields and select gender"),
+          content: Text("Please fill all fields, select DOB and gender"),
         ),
       );
       return;
@@ -62,7 +59,7 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
           widget.existingChild?.id ??
           "temp_id", // Backend will generate real ID on ADD
       name: _nameController.text.trim(),
-      age: int.tryParse(_ageController.text) ?? 0,
+      dateOfBirth: _selectedDateOfBirth!, // <-- Pass the DateTime directly!
       gender: _selectedGender!,
     );
 
@@ -125,12 +122,8 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
             ),
             const SizedBox(height: 16),
 
-            _buildInput(
-              label: "Age (in years)",
-              controller: _ageController,
-              icon: Icons.cake_outlined,
-              isNumber: true,
-            ),
+            // --- REPLACED: Age Input is now Date Selector ---
+            _buildDateSelector(context),
             const SizedBox(height: 24),
 
             // PILL GENDER SELECTOR
@@ -173,7 +166,6 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
     required String label,
     required TextEditingController controller,
     required IconData icon,
-    bool isNumber = false,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -184,7 +176,6 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: TextField(
         controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         style: const TextStyle(
           fontWeight: FontWeight.w600,
           color: Colors.black87,
@@ -200,7 +191,81 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
     );
   }
 
-  // Same Pill logic from Parent Edit Profile
+  // --- NEW: Custom Date Picker UI that matches your TextField style ---
+  Widget _buildDateSelector(BuildContext context) {
+    final hasDate = _selectedDateOfBirth != null;
+
+    // Format the date as DD/MM/YYYY
+    final dateText = hasDate
+        ? "${_selectedDateOfBirth!.day.toString().padLeft(2, '0')}/${_selectedDateOfBirth!.month.toString().padLeft(2, '0')}/${_selectedDateOfBirth!.year}"
+        : "Tap to select";
+
+    return GestureDetector(
+      onTap: () async {
+        FocusScope.of(context).unfocus(); // Close keyboard if it's open
+
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: _selectedDateOfBirth ?? DateTime.now(),
+          firstDate: DateTime.now().subtract(
+            const Duration(days: 365 * 30),
+          ), // Up to 30 years ago
+          lastDate: DateTime.now(), // Prevents selecting future dates
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: Theme.of(context).primaryColor,
+                  onPrimary: Colors.white,
+                  onSurface: Colors.black87,
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+
+        if (picked != null) {
+          setState(() => _selectedDateOfBirth = picked);
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(Icons.cake_outlined, color: Colors.grey.shade400, size: 20),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Date of Birth",
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  dateText,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: hasDate ? Colors.black87 : Colors.grey.shade500,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildGenderSelector() {
     final primaryColor = Theme.of(context).primaryColor;
 
