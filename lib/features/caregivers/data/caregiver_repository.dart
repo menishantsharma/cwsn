@@ -1,5 +1,8 @@
 import 'package:cwsn/core/data/user_data.dart';
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final caregiverRepositoryProvider = Provider((ref) => CaregiverRepository());
 
 class CaregiverRepository {
   // Simulate network delay
@@ -20,5 +23,13 @@ class CaregiverRepository {
       orElse: () => throw Exception('Caregiver not found'),
     );
     return user;
+  }
+
+  Future<void> sendRequest({
+    required String parentId,
+    required String caregiverId,
+    required String childId,
+  }) async {
+    await _simulateNetworkDelay();
   }
 }

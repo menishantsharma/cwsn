@@ -6,6 +6,7 @@ import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_skeleton_profile.dart';
+import 'package:cwsn/features/caregivers/presentation/widgets/select_child_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,11 +23,29 @@ class CaregiverProfilePage extends ConsumerStatefulWidget {
 class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
   final CaregiverRepository _repository = CaregiverRepository();
   late Future<User> _profileFuture;
+  bool _isRequestSent = false;
 
   @override
   void initState() {
     super.initState();
     _profileFuture = _repository.getCaregiverDetails(widget.caregiverId);
+  }
+
+  void _showSelectChildSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SelectChildSheet(
+        caregiverId: widget.caregiverId,
+        // --- NEW: Pass the success callback ---
+        onRequestSent: () {
+          setState(() {
+            _isRequestSent = true;
+          });
+        },
+      ),
+    );
   }
 
   @override
@@ -65,6 +84,7 @@ class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerFloat,
           body: (context, padding) => SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             padding: padding.copyWith(left: 24, right: 24, bottom: 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +109,7 @@ class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
                     Expanded(
                       child: _buildStatBox(
                         "Experience",
-                        "5 Yrs",
+                        "${user.caregiverProfile!.yearsOfExperience} Yrs",
                         Icons.work_history_rounded,
                         Colors.blue,
                       ),
@@ -197,11 +217,16 @@ class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
               borderRadius: BorderRadius.circular(20),
-              image: DecorationImage(
-                image: CachedNetworkImageProvider(user.imageUrl),
-                fit: BoxFit.cover,
-              ),
+              image: user.imageUrl.isNotEmpty
+                  ? DecorationImage(
+                      image: CachedNetworkImageProvider(user.imageUrl),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
+            child: user.imageUrl.isEmpty
+                ? const Icon(Icons.person, color: Colors.grey)
+                : null,
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -242,7 +267,7 @@ class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
                 ],
 
                 Text(
-                  "${user.firstName} ${user.lastName ?? ''}",
+                  user.firstName, // Uses the model's helper
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -361,99 +386,156 @@ class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
   Widget _buildBottomAction(
     BuildContext context, {
     required CaregiverProfile caregiverProfile,
-    required User? currentUser, // Use your actual User Model type
+    required User? currentUser,
   }) {
-    // CASE 1: GUEST USER -> Show "Login to Request"
+    Widget currentButton;
+
     if (currentUser == null || currentUser.isGuest) {
-      return _buildStyledButton(
-        context,
+      currentButton = _buildStyledButton(
+        key: const ValueKey('login_btn'),
         text: "Login to Request Service",
         icon: Icons.login_rounded,
-        color: context.colorScheme.primary,
+        backgroundColor: context.colorScheme.primary,
+        textColor: Colors.white,
+        onTap: () => ref.read(currentUserProvider.notifier).state = null,
+      );
+    } else if (_isRequestSent) {
+      // --- UPDATED: Flat Grey Cancellable State ---
+      currentButton = _buildStyledButton(
+        key: const ValueKey('sent_btn'),
+        text: "Request Sent",
+        subText: "Tap to cancel", // Keeps the visual cue
+        icon: Icons.check_circle_rounded,
+        backgroundColor: Colors.grey.shade200, // Flat grey background
+        textColor: Colors.grey.shade600, // Dark grey text
+        hasShadow: false, // No shadow for the "inactive" look
         onTap: () {
-          // Setting state to null triggers AppRouter to redirect to Login Page
-          ref.read(currentUserProvider.notifier).state = null;
+          // Instantly cancel the request (NO SnackBar)
+          setState(() {
+            _isRequestSent = false;
+          });
         },
       );
-    }
-
-    // CASE 2: REAL USER -> Check Availability
-    if (caregiverProfile.isAvailable) {
-      return _buildStyledButton(
-        context,
+    } else if (caregiverProfile.isAvailable) {
+      currentButton = _buildStyledButton(
+        key: const ValueKey('request_btn'),
         text: "Request Service",
         icon: Icons.arrow_forward_rounded,
-        color: context.colorScheme.primary,
-        onTap: () {
-          // Handle Request Logic
-        },
+        backgroundColor: context.colorScheme.primary,
+        textColor: Colors.white,
+        onTap: () => _showSelectChildSheet(context),
       );
-    }
-    // CASE 3: UNAVAILABLE
-    else {
-      return _buildStyledButton(
-        context,
+    } else {
+      currentButton = _buildStyledButton(
+        key: const ValueKey('unavailable_btn'),
         text: "Currently Unavailable",
-        icon: null, // No icon for disabled state
-        color: Colors.grey.shade400,
-        onTap: null, // Disable tap
+        icon: null,
+        backgroundColor: Colors.grey.shade200,
+        textColor: Colors.grey.shade400,
+        hasShadow: false,
+        onTap: null,
       );
     }
+
+    return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.95, end: 1.0).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          child: currentButton,
+        )
+        .animate(delay: 500.ms)
+        .fade(duration: 400.ms)
+        .slideY(
+          begin: 1.5,
+          end: 0,
+          curve: Curves.easeOutCubic,
+          duration: 400.ms,
+        );
   }
 
-  // Helper for consistent button styling
-  Widget _buildStyledButton(
-    BuildContext context, {
+  Widget _buildStyledButton({
+    required Key key,
     required String text,
-    required Color color,
+    String? subText,
+    required Color backgroundColor,
+    required Color textColor,
     IconData? icon,
     VoidCallback? onTap,
+    bool hasShadow = true,
   }) {
-    final isEnabled = onTap != null;
-
     return Container(
+      key: key,
       width: double.infinity,
+      height: 58, // <-- THE FIX: Fixed height prevents layout jumps!
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(30),
-        boxShadow: isEnabled
+        boxShadow: hasShadow
             ? [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.4),
+                  color: backgroundColor.withValues(alpha: 0.3),
                   blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  offset: const Offset(0, 8),
                 ),
               ]
-            : null,
+            : [],
       ),
       child: Material(
-        color: color,
-        borderRadius: BorderRadius.circular(30),
+        color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(30),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+          // --- THE FIX: We use Center() instead of Padding() ---
+          child: Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  text,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
                 if (icon != null) ...[
+                  Icon(icon, color: textColor, size: 22),
                   const SizedBox(width: 8),
-                  Icon(icon, color: Colors.white, size: 20),
                 ],
+                Column(
+                  mainAxisSize:
+                      MainAxisSize.min, // Keeps the texts stacked tightly
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      text,
+                      style: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        height: 1.2, // Helps keep text centered beautifully
+                      ),
+                    ),
+                    if (subText != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subText,
+                        style: TextStyle(
+                          color: textColor.withValues(alpha: 0.8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
           ),
         ),
       ),
-    ).animate().fade(delay: 500.ms).slideY(begin: 1, end: 0);
+    );
   }
 }
