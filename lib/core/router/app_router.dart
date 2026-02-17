@@ -1,3 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+// --- Feature Imports ---
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/scaffold_with_navbar.dart';
 import 'package:cwsn/core/widgets/switching_screen.dart';
@@ -13,124 +18,138 @@ import 'package:cwsn/features/settings/presentation/pages/add_child_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/parent_edit_profile_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/settings_page.dart';
 import 'package:cwsn/features/special_needs/pages/special_needs_page.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-class AppRoutes {
-  // Route names
-  static const String home = '/';
-  static const String specialNeeds = 'special-needs';
-  static const String caregiversList = 'caregivers';
-  static const String caregiverProfile = 'caregiver-profile';
-  static const String notifications = 'notifications';
-  static const String profile = 'profile';
-  static const String requests = 'requests';
-  static const String switching = 'switching';
-  static const String caregiverNotifications = 'caregiver-notifications';
-  static const String caregiverSettings = 'caregiver-settings';
-  static const String parentEditProfile = 'parent-edit-profile';
-  static const String addChild = 'add-child';
-  static const String login = 'login';
-  static const String roleSelection = 'role-selection';
-
-  // Route paths
-  static const String specialNeedsPath = '/special-needs';
-  static const String caregiversListPath = '/caregivers';
-  static const String caregiverProfilePath = '/caregiver-profile';
-  static const String requestsPath = '/requests';
-  static const String switchingPath = '/switching';
-  static const String notificationsPath = '/notifications';
-  static const String caregiverNotificationsPath = '/caregiver-notifications';
-  static const String caregiverSettingsPath = '/caregiver-settings';
-  static const String parentEditProfilePath = '/parent-edit-profile';
-  static const String addChildPath = '/add-child';
-  static const String loginPath = '/login';
-  static const String roleSelectionPath = '/role-selection';
-
-  AppRoutes._();
-}
-
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+/// Global key for showing SnackBars (Alerts) without needing BuildContext
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
+/// Centralized Routing Constants
+/// Use 'Names' for pushNamed() and 'Paths' for the router configuration.
+class AppRoutes {
+  // --- Route Names ---
+  static const String login = 'login';
+  static const String roleSelection = 'role-selection';
+  static const String switching = 'switching';
+  static const String home = 'home';
+  static const String notifications = 'notifications';
+  static const String profile = 'profile';
+  static const String specialNeeds = 'special-needs';
+  static const String caregiversList = 'caregivers';
+  static const String caregiverProfile = 'caregiver-profile';
+  static const String parentEditProfile = 'edit-profile';
+  static const String addChild = 'add-child';
+
+  // --- Route Paths ---
+  static const String loginPath = '/login';
+  static const String roleSelectionPath = '/role-selection';
+  static const String switchingPath = '/switching';
+  static const String homePath = '/';
+  static const String notificationsPath = '/notifications';
+  static const String profilePath = '/profile';
+  static const String specialNeedsPath = '/special-needs';
+  static const String caregiversListPath = '/caregivers';
+  static const String caregiverProfilePath = '/caregiver-profile';
+  static const String parentEditProfilePath = '/edit-profile';
+  static const String addChildPath = '/add-child';
+
+  AppRoutes._(); // Private constructor prevents instantiation
+}
+
+/// Listenable that triggers GoRouter to refresh whenever the Auth state changes
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+  RouterNotifier(this._ref) {
+    _ref.listen(currentUserProvider, (_, __) => notifyListeners());
+  }
+}
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final routerNotifier = ValueNotifier<User?>(ref.read(currentUserProvider));
-  ref.listen<User?>(currentUserProvider, (previous, next) {
-    routerNotifier.value = next;
-  });
+  final notifier = RouterNotifier(ref);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.home,
-    refreshListenable: routerNotifier,
+    initialLocation: AppRoutes.homePath,
+    refreshListenable: notifier,
+
+    // ==========================================
+    // REDIRECTION LOGIC
+    // ==========================================
     redirect: (context, state) {
       final user = ref.read(currentUserProvider);
       final isLoggedIn = user != null;
-      final goingToLogin = state.matchedLocation == AppRoutes.loginPath;
-      final goingToRoleSelection =
+      final isGuest = user?.isGuest ?? false;
+
+      final bool onLoginPage = state.matchedLocation == AppRoutes.loginPath;
+      final bool onRolePage =
           state.matchedLocation == AppRoutes.roleSelectionPath;
 
-      if (!isLoggedIn) {
-        return goingToLogin ? null : AppRoutes.loginPath;
-      }
+      // 1. Not Logged In -> Go to Login
+      if (!isLoggedIn) return onLoginPage ? null : AppRoutes.loginPath;
 
-      if (user.isGuest) {
-        if (goingToLogin || goingToRoleSelection) return AppRoutes.home;
+      // 2. Guest -> Go Home (Skip Role selection)
+      if (isGuest) {
+        if (onLoginPage || onRolePage) return AppRoutes.homePath;
         return null;
       }
 
+      // 3. Logged In but no Role chosen -> Go to Role Selection
       if (user.activeRole == null) {
-        return goingToRoleSelection ? null : AppRoutes.roleSelectionPath;
+        return onRolePage ? null : AppRoutes.roleSelectionPath;
       }
 
-      if (goingToLogin || goingToRoleSelection) {
-        if (user.activeRole == UserRole.caregiver) {
-          return AppRoutes.requestsPath;
-        } else {
-          return AppRoutes.home;
-        }
+      // 4. Role exists -> Prevent going back to Login/Role Selection
+      if (onLoginPage || onRolePage) {
+        return AppRoutes.homePath; // Home builder handles role-based UI
       }
 
       return null;
     },
+
+    // ==========================================
+    // ROUTE CONFIGURATION
+    // ==========================================
     routes: [
+      // Auth Screens
       GoRoute(
         path: AppRoutes.loginPath,
         name: AppRoutes.login,
-        builder: (context, state) => const LoginPage(),
+        builder: (_, __) => const LoginPage(),
       ),
       GoRoute(
         path: AppRoutes.roleSelectionPath,
         name: AppRoutes.roleSelection,
-        builder: (context, state) => const RoleSelectionPage(),
+        builder: (_, __) => const RoleSelectionPage(),
       ),
+      GoRoute(
+        path: AppRoutes.switchingPath,
+        name: AppRoutes.switching,
+        builder: (_, __) => const SwitchingScreen(),
+      ),
+
+      // Main Navigation Shell (Tabs)
       StatefulShellRoute.indexedStack(
-        pageBuilder: (context, state, navigationShell) {
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: ScaffoldWithNavbar(navigationShell: navigationShell),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity: CurveTween(
-                      curve: Curves.easeInOut,
-                    ).animate(animation),
-                    child: child,
-                  );
-                },
-            transitionDuration: const Duration(milliseconds: 600),
-          );
-        },
+        pageBuilder: (context, state, navigationShell) => CustomTransitionPage(
+          key: state.pageKey,
+          child: ScaffoldWithNavbar(navigationShell: navigationShell),
+          transitionsBuilder: (context, anim, _, child) =>
+              FadeTransition(opacity: anim, child: child),
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
         branches: [
-          // BRANCH 1: HOME (The main flow)
+          // BRANCH 1: Home (Smart loading Services or Requests)
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/',
+                path: AppRoutes.homePath,
                 name: AppRoutes.home,
-                builder: (context, state) => const ServicesPage(),
+                builder: (context, _) {
+                  final user = ref.read(currentUserProvider);
+                  return user?.activeRole == UserRole.caregiver
+                      ? const RequestsPage()
+                      : const ServicesPage();
+                },
               ),
             ],
           ),
@@ -141,9 +160,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.notificationsPath,
                 name: AppRoutes.notifications,
-                builder: (context, state) {
-                  return Scaffold(body: const NotificationsPage());
-                },
+                builder: (_, __) => const NotificationsPage(),
               ),
             ],
           ),
@@ -152,116 +169,41 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
+                path: AppRoutes.profilePath,
                 name: AppRoutes.profile,
-                builder: (context, state) {
-                  return SettingsPage();
-                },
+                builder: (_, __) => const SettingsPage(),
               ),
             ],
           ),
         ],
       ),
 
-      StatefulShellRoute.indexedStack(
-        pageBuilder: (context, state, navigationShell) {
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: ScaffoldWithNavbar(navigationShell: navigationShell),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity: CurveTween(
-                      curve: Curves.easeInOut,
-                    ).animate(animation),
-                    child: child,
-                  );
-                },
-            transitionDuration: const Duration(milliseconds: 600),
-          );
-        },
-        branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.requestsPath,
-                name: AppRoutes.requests,
-                builder: (context, state) => const RequestsPage(),
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.caregiverNotificationsPath,
-                name: AppRoutes.caregiverNotifications,
-                builder: (context, state) => const NotificationsPage(),
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.caregiverSettingsPath,
-                name: AppRoutes.caregiverSettings,
-                builder: (context, state) => const SettingsPage(),
-              ),
-            ],
-          ),
-        ],
-      ),
-
-      // Additional routes outside the bottom navigation
+      // Sub-Pages (Full screen, hides navbar)
       GoRoute(
-        name: AppRoutes.specialNeeds,
         path: AppRoutes.specialNeedsPath,
-        // Page displaying special needs categories
-        builder: (context, state) => const SpecialNeedsPage(),
+        name: AppRoutes.specialNeeds,
+        builder: (_, __) => const SpecialNeedsPage(),
       ),
       GoRoute(
-        name: AppRoutes.caregiversList,
         path: AppRoutes.caregiversListPath,
-        // Page displaying list of caregivers
-        builder: (context, state) => const CaregiversListPage(),
+        name: AppRoutes.caregiversList,
+        builder: (_, __) => const CaregiversListPage(),
       ),
       GoRoute(
-        name: AppRoutes.caregiverProfile,
         path: AppRoutes.caregiverProfilePath,
-        // Page displaying caregiver profile details
-        builder: (context, state) {
-          final caregiverId = state.extra as String? ?? '';
-          return CaregiverProfilePage(caregiverId: caregiverId);
-        },
+        name: AppRoutes.caregiverProfile,
+        builder: (context, state) =>
+            CaregiverProfilePage(caregiverId: state.extra as String? ?? ''),
       ),
-
       GoRoute(
-        name: AppRoutes.switching,
-        path: AppRoutes.switchingPath,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          child: const SwitchingScreen(),
-          key: state.pageKey,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 500),
-        ),
-      ),
-
-      GoRoute(
-        name: AppRoutes.parentEditProfile,
         path: AppRoutes.parentEditProfilePath,
-        builder: (context, state) => const ParentEditProfilePage(),
+        name: AppRoutes.parentEditProfile,
+        builder: (_, __) => const ParentEditProfilePage(),
       ),
-
       GoRoute(
-        name: AppRoutes.addChild,
         path: AppRoutes.addChildPath,
-        builder: (context, state) => const AddChildPage(),
+        name: AppRoutes.addChild,
+        builder: (_, __) => const AddChildPage(),
       ),
     ],
   );

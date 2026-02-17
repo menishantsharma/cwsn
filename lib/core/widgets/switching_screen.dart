@@ -41,11 +41,7 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
       );
     }
 
-    if (_isSwitchingToCaregiver) {
-      context.goNamed(AppRoutes.requests);
-    } else {
-      context.goNamed(AppRoutes.home);
-    }
+    context.goNamed(AppRoutes.home);
   }
 
   @override
