@@ -1,5 +1,4 @@
 import 'package:cwsn/core/models/user_model.dart';
-import 'package:cwsn/core/providers/user_mode_provider.dart';
 import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/guest_placeholder.dart';
@@ -17,7 +16,7 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isCaregiverMode = ref.read(userModeProvider);
+    final isCaregiverMode = ref.read(isCaregiverProvider);
     final user = ref.watch(currentUserProvider);
 
     if (user == null) return const SizedBox.shrink();

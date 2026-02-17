@@ -1,4 +1,4 @@
-import 'package:cwsn/core/providers/user_mode_provider.dart';
+import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/notifications/data/notification_repository.dart';
 import 'package:cwsn/features/notifications/models/notification_model.dart';
@@ -18,42 +18,33 @@ class NotificationsNotifier
   final Ref ref;
 
   NotificationsNotifier(this.ref) : super(const AsyncValue.loading()) {
-    // --- THE FIX IS HERE ---
-
-    // 1. Listen for Parent/Caregiver Mode Switches
-    ref.listen<bool>(userModeProvider, (previous, next) {
-      if (previous != next) {
-        fetch(); // Re-fetch when mode changes
-      }
-    });
-
-    // 2. Listen for Login/Logout events
     ref.listen(currentUserProvider, (previous, next) {
-      if (previous?.id != next?.id) {
-        fetch(); // Re-fetch when user changes
+      if (previous?.id != next?.id ||
+          previous?.activeRole != next?.activeRole) {
+        fetch(user: next); // Re-fetch when mode changes
       }
     });
 
-    // 3. Initial fetch when the app loads
-    fetch();
+    // Initial fetch when the app loads
+    fetch(user: ref.read(currentUserProvider));
   }
 
-  Future<void> fetch() async {
+  Future<void> fetch({User? user}) async {
     try {
       // Set to loading so the UI shows the shimmer effect when switching tabs
       state = const AsyncValue.loading();
 
-      final user = ref.read(currentUserProvider);
-      final isCaregiver = ref.read(userModeProvider);
+      final currentUser = user ?? ref.read(currentUserProvider);
 
-      if (user == null || user.isGuest) {
+      if (currentUser == null || currentUser.isGuest) {
         state = const AsyncValue.data([]);
         return;
       }
 
+      final isCaregiver = currentUser.activeRole == UserRole.caregiver;
       final repo = ref.read(notificationRepositoryProvider);
       final notifications = await repo.fetchNotifications(
-        userId: user.id,
+        userId: currentUser.id,
         isCaregiver: isCaregiver,
       );
 

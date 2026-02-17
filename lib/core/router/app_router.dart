@@ -2,6 +2,7 @@ import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/scaffold_with_navbar.dart';
 import 'package:cwsn/core/widgets/switching_screen.dart';
 import 'package:cwsn/features/auth/presentation/pages/login_page.dart';
+import 'package:cwsn/features/auth/presentation/pages/role_selection_page.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregiver_profile_page.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregivers_list_page.dart';
@@ -31,6 +32,7 @@ class AppRoutes {
   static const String parentEditProfile = 'parent-edit-profile';
   static const String addChild = 'add-child';
   static const String login = 'login';
+  static const String roleSelection = 'role-selection';
 
   // Route paths
   static const String specialNeedsPath = '/special-needs';
@@ -44,6 +46,7 @@ class AppRoutes {
   static const String parentEditProfilePath = '/parent-edit-profile';
   static const String addChildPath = '/add-child';
   static const String loginPath = '/login';
+  static const String roleSelectionPath = '/role-selection';
 
   AppRoutes._();
 }
@@ -63,15 +66,31 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.home,
     refreshListenable: routerNotifier,
     redirect: (context, state) {
-      final authState = ref.read(currentUserProvider);
-      final isLoggedIn = authState != null;
+      final user = ref.read(currentUserProvider);
+      final isLoggedIn = user != null;
       final goingToLogin = state.matchedLocation == AppRoutes.loginPath;
-      if (!isLoggedIn && !goingToLogin) {
-        return AppRoutes.loginPath;
+      final goingToRoleSelection =
+          state.matchedLocation == AppRoutes.roleSelectionPath;
+
+      if (!isLoggedIn) {
+        return goingToLogin ? null : AppRoutes.loginPath;
       }
 
-      if (isLoggedIn && goingToLogin) {
-        return AppRoutes.home;
+      if (user.isGuest) {
+        if (goingToLogin || goingToRoleSelection) return AppRoutes.home;
+        return null;
+      }
+
+      if (user.activeRole == null) {
+        return goingToRoleSelection ? null : AppRoutes.roleSelectionPath;
+      }
+
+      if (goingToLogin || goingToRoleSelection) {
+        if (user.activeRole == UserRole.caregiver) {
+          return AppRoutes.requestsPath;
+        } else {
+          return AppRoutes.home;
+        }
       }
 
       return null;
@@ -81,6 +100,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.loginPath,
         name: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.roleSelectionPath,
+        name: AppRoutes.roleSelection,
+        builder: (context, state) => const RoleSelectionPage(),
       ),
       StatefulShellRoute.indexedStack(
         pageBuilder: (context, state, navigationShell) {

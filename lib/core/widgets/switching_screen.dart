@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'package:cwsn/core/providers/user_mode_provider.dart';
+import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
+import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,9 +16,12 @@ class SwitchingScreen extends ConsumerStatefulWidget {
 }
 
 class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
+  late bool _isSwitchingToCaregiver;
+
   @override
   void initState() {
     super.initState();
+    _isSwitchingToCaregiver = !ref.read(isCaregiverProvider);
     _startSwitchingProcess();
   }
 
@@ -26,10 +30,18 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
 
     if (!mounted) return;
 
-    final isCurrentlyCaregiver = ref.read(userModeProvider);
-    ref.read(userModeProvider.notifier).state = !isCurrentlyCaregiver;
+    final user = ref.read(currentUserProvider);
 
-    if (!isCurrentlyCaregiver) {
+    if (user != null) {
+      final newRole = _isSwitchingToCaregiver
+          ? UserRole.caregiver
+          : UserRole.parent;
+      ref.read(currentUserProvider.notifier).state = user.copyWith(
+        activeRole: newRole,
+      );
+    }
+
+    if (_isSwitchingToCaregiver) {
       context.goNamed(AppRoutes.requests);
     } else {
       context.goNamed(AppRoutes.home);
@@ -38,8 +50,6 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isSwitchingToCaregiver = !ref.read(userModeProvider);
-
     final primaryColor = context.colorScheme.primary;
 
     return Scaffold(
@@ -87,7 +97,7 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
                     child: Center(
                       child:
                           Icon(
-                                isSwitchingToCaregiver
+                                _isSwitchingToCaregiver
                                     ? Icons.volunteer_activism_rounded
                                     : Icons.family_restroom_rounded,
                                 size: 32,
@@ -117,7 +127,7 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
             const SizedBox(height: 40),
 
             Text(
-              isSwitchingToCaregiver
+              _isSwitchingToCaregiver
                   ? "Switching to Caregiver..."
                   : "Switching to Parent...",
               style: const TextStyle(

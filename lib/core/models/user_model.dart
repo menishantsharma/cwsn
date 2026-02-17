@@ -1,5 +1,7 @@
 enum Gender { male, female, other }
 
+enum UserRole { parent, caregiver }
+
 class ChildModel {
   final String id;
   final int age;
@@ -96,6 +98,7 @@ class User {
   final bool isGuest;
   final String? phoneNumber;
   final Gender? gender;
+  final UserRole? activeRole;
 
   final CaregiverProfile? caregiverProfile;
   final ParentModel? parentProfile;
@@ -112,6 +115,7 @@ class User {
     this.isGuest = false,
     this.phoneNumber,
     this.gender,
+    this.activeRole,
   });
 
   bool get isParentSetup => parentProfile != null;
@@ -129,6 +133,7 @@ class User {
     Gender? gender,
     CaregiverProfile? caregiverProfile,
     ParentModel? parentProfile,
+    UserRole? activeRole,
   }) {
     return User(
       id: id ?? this.id,
@@ -142,6 +147,7 @@ class User {
       gender: gender ?? this.gender,
       caregiverProfile: caregiverProfile ?? this.caregiverProfile,
       parentProfile: parentProfile ?? this.parentProfile,
+      activeRole: activeRole ?? this.activeRole,
     );
   }
 }

@@ -1,4 +1,3 @@
-import 'package:cwsn/core/providers/user_mode_provider.dart';
 import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/core/widgets/guest_placeholder.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
@@ -17,7 +16,7 @@ class NotificationsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isCaregiverMode = ref.watch(userModeProvider);
+    final isCaregiverMode = ref.watch(isCaregiverProvider);
     final user = ref.watch(currentUserProvider);
 
     // Watch the Riverpod state
