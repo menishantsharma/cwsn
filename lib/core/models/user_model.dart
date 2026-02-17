@@ -128,7 +128,6 @@ class ParentModel {
 
 class CaregiverProfile {
   final String about;
-  final int rating;
   final List<String> services;
   final bool isVerified;
   final bool isAvailable;
@@ -139,7 +138,6 @@ class CaregiverProfile {
 
   CaregiverProfile({
     this.about = '',
-    this.rating = 0,
     this.services = const [],
     this.isVerified = false,
     this.isAvailable = true,
@@ -151,7 +149,6 @@ class CaregiverProfile {
 
   CaregiverProfile copyWith({
     String? about,
-    int? rating,
     List<String>? services,
     bool? isVerified,
     bool? isAvailable,
@@ -162,7 +159,6 @@ class CaregiverProfile {
   }) {
     return CaregiverProfile(
       about: about ?? this.about,
-      rating: rating ?? this.rating,
       services: services ?? this.services,
       isVerified: isVerified ?? this.isVerified,
       isAvailable: isAvailable ?? this.isAvailable,

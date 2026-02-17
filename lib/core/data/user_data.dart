@@ -15,7 +15,6 @@ final caregivers = [
     gender: Gender.male,
     caregiverProfile: CaregiverProfile(
       about: 'Experienced caregiver with a passion for helping others.',
-      rating: 4,
       services: ['Elderly Care', 'Child Care', 'Disability Support'],
       isVerified: true,
       isAvailable: true,
@@ -32,7 +31,6 @@ final caregivers = [
     gender: Gender.female,
     caregiverProfile: CaregiverProfile(
       about: 'Compassionate caregiver with 3 years of experience.',
-      rating: 5,
       services: ['Child Care', 'Special Needs Support'],
       isVerified: true,
       isAvailable: false,
@@ -49,7 +47,6 @@ final caregivers = [
     gender: Gender.male,
     caregiverProfile: CaregiverProfile(
       about: 'Reliable caregiver specializing in elderly care.',
-      rating: 3,
       services: ['Elderly Care', 'Disability Support'],
       isVerified: false,
       isAvailable: true,
