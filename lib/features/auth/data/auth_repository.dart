@@ -1,5 +1,8 @@
 import 'package:cwsn/core/data/user_data.dart';
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final authRepositoryProvider = Provider((ref) => AuthRepository());
 
 class AuthRepository {
   Future<User> signInWithGoogle() async {

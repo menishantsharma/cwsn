@@ -1,4 +1,5 @@
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:cwsn/features/auth/data/auth_repository.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
