@@ -7,84 +7,99 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// OPTIMIZED: Use a provider for the repository to allow for easy testing/mocking
 final parentRepositoryProvider = Provider((ref) => ParentRepository());
 
-class AddChildPage extends ConsumerStatefulWidget {
+class AddChildPage extends ConsumerWidget {
   const AddChildPage({super.key});
 
-  @override
-  ConsumerState<AddChildPage> createState() => _AddChildPageState();
-}
-
-class _AddChildPageState extends ConsumerState<AddChildPage> {
   // --- ACTIONS ---
 
-  void _deleteChild(User user, ChildModel child) async {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("Deleting ${child.name}...")));
+  Future<void> _deleteChild(
+    BuildContext context,
+    WidgetRef ref,
+    User user,
+    ChildModel child,
+  ) async {
+    final scaffold = ScaffoldMessenger.of(context);
+    final previousProfile = user.parentProfile!;
 
-    // Call Backend API
-    await ref
-        .read(parentRepositoryProvider)
-        .deleteChild(parentId: user.id, childId: child.id);
-
-    // Update Local State using the new Notifier method
-    final updatedChildren = user.parentProfile!.children
+    // 1. OPTIMISTIC UPDATE: Instantly remove child from UI
+    final optimisticChildren = previousProfile.children
         .where((c) => c.id != child.id)
         .toList();
-    final updatedProfile = user.parentProfile!.copyWith(
-      children: updatedChildren,
-    );
+    ref
+        .read(currentUserProvider.notifier)
+        .updateParentProfile(
+          previousProfile.copyWith(children: optimisticChildren),
+        );
 
-    ref.read(currentUserProvider.notifier).updateParentProfile(updatedProfile);
+    try {
+      // 2. Call Backend API (Silent on success)
+      await ref
+          .read(parentRepositoryProvider)
+          .deleteChild(parentId: user.id, childId: child.id);
+    } catch (e) {
+      // 3. ROLLBACK: If API fails, put the child back instantly & show error
+      ref
+          .read(currentUserProvider.notifier)
+          .updateParentProfile(previousProfile);
+
+      if (context.mounted) {
+        scaffold.showSnackBar(
+          const SnackBar(content: Text("Failed to delete child. Restoring...")),
+        );
+      }
+    }
   }
 
-  void _openChildFormSheet(User user, {ChildModel? existingChild}) {
+  void _openChildFormSheet(
+    BuildContext context,
+    WidgetRef ref,
+    User user, {
+    ChildModel? existingChild,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => AddEditChildSheet(
+      builder: (sheetContext) => AddEditChildSheet(
         existingChild: existingChild,
         onSave: (childData) async {
           final repo = ref.read(parentRepositoryProvider);
 
-          if (existingChild == null) {
-            // ADD LOGIC
-            final savedChild = await repo.addChild(
-              parentId: user.id,
-              child: childData,
-            );
+          try {
+            List<ChildModel> updatedChildren;
 
-            final updatedChildren = [
-              ...(user.parentProfile?.children ?? <ChildModel>[]),
-              savedChild,
-            ];
+            if (existingChild == null) {
+              final savedChild = await repo.addChild(
+                parentId: user.id,
+                child: childData,
+              );
+              updatedChildren = [
+                ...(user.parentProfile?.children ?? <ChildModel>[]),
+                savedChild,
+              ];
+            } else {
+              final updatedChild = await repo.updateChild(
+                parentId: user.id,
+                child: childData,
+              );
+              updatedChildren = user.parentProfile!.children
+                  .map((c) => c.id == updatedChild.id ? updatedChild : c)
+                  .toList();
+            }
+
             final updatedProfile = (user.parentProfile ?? const ParentModel())
                 .copyWith(children: updatedChildren);
-
             ref
                 .read(currentUserProvider.notifier)
                 .updateParentProfile(updatedProfile);
-          } else {
-            // EDIT LOGIC
-            final updatedChild = await repo.updateChild(
-              parentId: user.id,
-              child: childData,
-            );
-
-            final updatedChildren = user.parentProfile!.children
-                .map((c) => c.id == updatedChild.id ? updatedChild : c)
-                .toList();
-            final updatedProfile = user.parentProfile!.copyWith(
-              children: updatedChildren,
-            );
-
-            ref
-                .read(currentUserProvider.notifier)
-                .updateParentProfile(updatedProfile);
+          } catch (e) {
+            if (sheetContext.mounted) {
+              ScaffoldMessenger.of(sheetContext).showSnackBar(
+                const SnackBar(content: Text("Failed to save child profile.")),
+              );
+            }
           }
         },
       ),
@@ -92,11 +107,8 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // OPTIMIZED: Safely extract the user from AsyncValue
+  Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).value;
-
-    // Safety check in case the user was logged out while on this screen
     if (user == null) return const SizedBox.shrink();
 
     final children = user.parentProfile?.children ?? [];
@@ -117,8 +129,7 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
-            ).animate().fade().slideX(begin: -0.2, end: 0),
-
+            ),
             const SizedBox(height: 8),
             Text(
               "Add basic details about your children.",
@@ -127,30 +138,67 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
                 color: Colors.grey.shade600,
                 height: 1.5,
               ),
-            ).animate().fade(delay: 100.ms).slideX(begin: -0.2, end: 0),
+            ),
             const SizedBox(height: 24),
 
-            // --- CHILDREN LIST ---
-            if (children.isEmpty)
-              const _EmptyChildrenState()
-            else
-              // OPTIMIZED: Use a standard for-loop inside the Column
-              for (int i = 0; i < children.length; i++)
-                _ChildCard(
-                  child: children[i],
-                  delay: 200 + (i * 100),
-                  onEdit: () =>
-                      _openChildFormSheet(user, existingChild: children[i]),
-                  onDelete: () => _deleteChild(user, children[i]),
-                ),
+            // --- SMOOTH CHILDREN LIST & EMPTY STATE ---
+            // OPTIMIZED: AnimatedSize smoothly collapses the empty space when a child is removed
+            AnimatedSize(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: children.isEmpty
+                  ? const _EmptyChildrenState()
+                  : Column(
+                      children: children.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final child = entry.value;
 
-            const SizedBox(height: 24),
+                        return Padding(
+                          key: ValueKey(
+                            child.id,
+                          ), // Crucial: Locks the animation state so it doesn't replay on delete!
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child:
+                              _ChildCard(
+                                    child: child,
+                                    onEdit: () => _openChildFormSheet(
+                                      context,
+                                      ref,
+                                      user,
+                                      existingChild: child,
+                                    ),
+                                    onDelete: () =>
+                                        _deleteChild(context, ref, user, child),
+                                  )
+                                  // Staggered Entrance Animation
+                                  .animate()
+                                  .fade(
+                                    duration: 400.ms,
+                                    delay: (100 * index).ms,
+                                  )
+                                  .slideY(
+                                    begin: 0.1,
+                                    end: 0,
+                                    duration: 400.ms,
+                                    delay: (100 * index).ms,
+                                    curve: Curves.easeOutQuad,
+                                  ),
+                        );
+                      }).toList(),
+                    ),
+            ),
+
+            const SizedBox(height: 8),
 
             // --- ADD NEW BUTTON ---
+            // Fades in slightly after the list finishes loading
             _AddChildButton(
-              delay: children.isEmpty ? 300 : 200 + (children.length * 100),
-              onTap: () => _openChildFormSheet(user),
-            ),
+                  onTap: () => _openChildFormSheet(context, ref, user),
+                )
+                .animate()
+                .fade(delay: 300.ms, duration: 400.ms)
+                .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
           ],
         ),
       ),
@@ -164,13 +212,11 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
 
 class _ChildCard extends StatelessWidget {
   final ChildModel child;
-  final int delay;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const _ChildCard({
     required this.child,
-    required this.delay,
     required this.onEdit,
     required this.onDelete,
   });
@@ -180,7 +226,6 @@ class _ChildCard extends StatelessWidget {
     final primaryColor = Theme.of(context).primaryColor;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -258,7 +303,7 @@ class _ChildCard extends StatelessWidget {
           ),
         ],
       ),
-    ).animate().fade(delay: delay.ms).slideY(begin: 0.2, end: 0);
+    );
   }
 }
 
@@ -268,41 +313,43 @@ class _EmptyChildrenState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      alignment: Alignment.center,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.child_care_rounded,
-              size: 48,
-              color: Colors.grey.shade400,
-            ),
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          alignment: Alignment.center,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.child_care_rounded,
+                  size: 48,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "No children added yet.",
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            "No children added yet.",
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fade(delay: 200.ms);
+        )
+        .animate()
+        .fade(duration: 400.ms)
+        .slideY(begin: 0.1, end: 0); // Entrance animation for empty state
   }
 }
 
 class _AddChildButton extends StatelessWidget {
-  final int delay;
   final VoidCallback onTap;
 
-  const _AddChildButton({required this.delay, required this.onTap});
+  const _AddChildButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -348,6 +395,6 @@ class _AddChildButton extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fade(delay: delay.ms).slideY(begin: 0.2, end: 0);
+    );
   }
 }
