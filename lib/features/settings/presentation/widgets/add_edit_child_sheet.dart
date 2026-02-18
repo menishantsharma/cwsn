@@ -274,7 +274,7 @@ class _DateSelector extends StatelessWidget {
 
 class _GenderSelector extends StatelessWidget {
   final Gender? selectedGender;
-  final ValueChanged<Gender?> onChanged; // <-- Allow nullable Gender
+  final ValueChanged<Gender?> onChanged;
   final Color primaryColor;
 
   const _GenderSelector({
