@@ -4,14 +4,22 @@ import 'package:cwsn/features/requests/data/requests_data.dart';
 import 'package:cwsn/features/requests/models/request_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final requestRepositoryProvider = Provider((ref) => RequestsRepository());
+final requestsRepositoryProvider = Provider((ref) => FakeRequestsRepository());
 
-class RequestsRepository {
+abstract class RequestsRepository {
+  Future<List<CaregiverRequest>> getRequests();
+  Future<void> acceptRequest(String requestId);
+  Future<void> rejectRequest(String requestId);
+}
+
+class FakeRequestsRepository implements RequestsRepository {
+  @override
   Future<List<CaregiverRequest>> getRequests() async {
     await Future.delayed(Duration(seconds: 1));
     return mockRequests;
   }
 
+  @override
   Future<void> acceptRequest(String requestId) async {
     await Future.delayed(Duration(seconds: 1));
 
@@ -20,6 +28,7 @@ class RequestsRepository {
     }
   }
 
+  @override
   Future<void> rejectRequest(String requestId) async {
     await Future.delayed(Duration(seconds: 1));
 

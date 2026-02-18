@@ -6,28 +6,34 @@ import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_card.dar
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_filter_sheet.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_skeleton_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart'; // 1. Import
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class CaregiversListPage extends StatefulWidget {
+// ==========================================
+// 1. LOCAL PROVIDERS
+// ==========================================
+
+// Automatically fetches and caches the caregivers list.
+final caregiversListProvider = FutureProvider.autoDispose<List<User>>((
+  ref,
+) async {
+  final repo = ref.read(caregiverRepositoryProvider);
+  return await repo.getCaregiversList();
+});
+
+// ==========================================
+// 2. THE UI WIDGET
+// ==========================================
+
+class CaregiversListPage extends ConsumerWidget {
   const CaregiversListPage({super.key});
 
   @override
-  State<CaregiversListPage> createState() => _CaregiversListPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // OPTIMIZED: Watch the cached FutureProvider
+    final caregiversAsync = ref.watch(caregiversListProvider);
 
-class _CaregiversListPageState extends State<CaregiversListPage> {
-  final CaregiverRepository _repository = CaregiverRepository();
-  late Future<List<User>> _caregiversFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _caregiversFuture = _repository.getCaregiversList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return PillScaffold(
       title: 'Caregivers',
       actionIcon: Icons.filter_list_rounded,
@@ -40,63 +46,120 @@ class _CaregiversListPageState extends State<CaregiversListPage> {
         );
       },
 
-      body: (context, padding) {
-        return FutureBuilder<List<User>>(
-          future: _caregiversFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return ListView.builder(
-                padding: padding.copyWith(left: 20, right: 20, bottom: 20),
-                itemCount: 6,
-                itemBuilder: (_, _) => const CaregiverSkeletonCard()
-                    .animate(onPlay: (loop) => loop.repeat())
-                    .shimmer(
-                      duration: 1200.ms,
-                      color: const Color(0xFFEBEBF4),
-                      angle: 0.5,
-                    ),
-              );
-            }
+      // OPTIMIZED: Clean .when() handles all 3 states perfectly
+      body: (context, padding) => caregiversAsync.when(
+        // --- LOADING STATE ---
+        loading: () => ListView.builder(
+          physics:
+              const NeverScrollableScrollPhysics(), // Prevent weird scrolling while loading
+          padding: padding.copyWith(left: 20, right: 20, bottom: 20),
+          itemCount: 6,
+          itemBuilder: (_, _) => const CaregiverSkeletonCard()
+              .animate(onPlay: (loop) => loop.repeat())
+              .shimmer(
+                duration: 1200.ms,
+                color: const Color(0xFFEBEBF4),
+                angle: 0.5,
+              ),
+        ),
 
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
+        // --- ERROR STATE ---
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.wifi_off_rounded,
+                color: Colors.grey.shade400,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load caregivers',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                // Allows the user to try fetching the data again
+                onPressed: () => ref.invalidate(caregiversListProvider),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text("Retry"),
+              ),
+            ],
+          ),
+        ),
 
-            final users = snapshot.data ?? [];
+        // --- SUCCESS DATA STATE ---
+        data: (users) {
+          if (users.isEmpty) {
+            // OPTIMIZED: Wrapped in RefreshIndicator so you can pull-to-refresh even when empty
+            return RefreshIndicator(
+              onRefresh: () async => ref.refresh(caregiversListProvider.future),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).size.height * 0.2,
+                ),
+                children: const [_EmptyCaregiversState()],
+              ),
+            );
+          }
 
-            if (users.isEmpty) {
-              return _buildEmptyState().animate().fade().scale();
-            }
-
-            return ListView.builder(
+          // OPTIMIZED: Pull-to-Refresh added natively
+          return RefreshIndicator(
+            onRefresh: () async => ref.refresh(caregiversListProvider.future),
+            color: Theme.of(context).primaryColor,
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               padding: padding.copyWith(left: 20, right: 20, bottom: 100),
               itemCount: users.length,
               itemBuilder: (context, index) {
+                final user = users[index];
+
                 return CaregiverCard(
-                      user: users[index],
+                      key: ValueKey(
+                        user.id,
+                      ), // Keeps Flutter's rendering efficient
+                      user: user,
                       onCardTap: () => context.pushNamed(
                         AppRoutes.caregiverProfile,
-                        extra: users[index].id,
+                        extra: user.id,
                       ),
                     )
+                    // OPTIMIZED: Staggered waterfall entrance animation
                     .animate()
                     .fade(duration: 400.ms, delay: (50 * index).ms)
                     .slideY(
-                      begin: 0.2,
+                      begin: 0.1, // Reduced for a smoother, less jarring slide
                       end: 0,
                       duration: 400.ms,
                       curve: Curves.easeOutQuad,
                       delay: (50 * index).ms,
                     );
               },
-            );
-          },
-        );
-      },
+            ),
+          );
+        },
+      ),
     );
   }
+}
 
-  Widget _buildEmptyState() {
+// ==========================================
+// OPTIMIZED: EXTRACTED STATELESS WIDGETS
+// ==========================================
+
+// OPTIMIZED: Moved out of the main class so Flutter can cache it as a `const` widget
+class _EmptyCaregiversState extends StatelessWidget {
+  const _EmptyCaregiversState();
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -130,6 +193,9 @@ class _CaregiversListPageState extends State<CaregiversListPage> {
           ),
         ],
       ),
+    ).animate().fade().scale(
+      begin: const Offset(0.9, 0.9),
+      curve: Curves.easeOutBack,
     );
   }
 }

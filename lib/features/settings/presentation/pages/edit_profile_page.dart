@@ -11,8 +11,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-final userRepositoryProvider = Provider((ref) => UserRepository());
-
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
 
