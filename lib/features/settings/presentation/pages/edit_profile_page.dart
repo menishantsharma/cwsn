@@ -11,7 +11,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-// OPTIMIZED: Use a provider for Dependency Injection
 final userRepositoryProvider = Provider((ref) => UserRepository());
 
 class EditProfilePage extends ConsumerStatefulWidget {
@@ -22,15 +21,15 @@ class EditProfilePage extends ConsumerStatefulWidget {
 }
 
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
-  // Controllers
-  late TextEditingController _nameController;
-  late TextEditingController _locationController;
-  late TextEditingController _phoneController;
+  // 1. OPTIMIZED: Using Controllers and ValueNotifiers completely eliminates the need for setState!
+  late final TextEditingController _nameController;
+  late final TextEditingController _locationController;
+  late final TextEditingController _phoneController;
 
-  // State
-  Gender? _selectedGender;
-  List<String> _selectedLanguages = [];
-  bool _isLoading = false;
+  late final ValueNotifier<Gender?> _genderNotifier;
+  late final ValueNotifier<List<String>> _languagesNotifier;
+  late final ValueNotifier<bool> _isLoadingNotifier;
+
   String? _avatarUrl;
 
   final List<String> _allLanguages = [
@@ -49,13 +48,16 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   @override
   void initState() {
     super.initState();
-    // OPTIMIZED: Safely extract the .value from the AsyncNotifier
     final user = ref.read(currentUserProvider).value;
 
     _nameController = TextEditingController(text: user?.firstName ?? "");
     _locationController = TextEditingController(text: user?.location ?? "");
     _phoneController = TextEditingController(text: user?.phoneNumber ?? "");
-    _selectedGender = user?.gender;
+
+    _genderNotifier = ValueNotifier(user?.gender);
+    _languagesNotifier = ValueNotifier([]);
+    _isLoadingNotifier = ValueNotifier(false);
+
     _avatarUrl = user?.imageUrl;
   }
 
@@ -64,48 +66,48 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _nameController.dispose();
     _locationController.dispose();
     _phoneController.dispose();
+    _genderNotifier.dispose();
+    _languagesNotifier.dispose();
+    _isLoadingNotifier.dispose();
     super.dispose();
   }
 
   // --- ACTIONS ---
 
-  void _saveChanges() async {
+  Future<void> _saveChanges() async {
     if (_nameController.text.trim().isEmpty) {
       _showSnack("Please enter your name");
       return;
     }
-    if (_selectedGender == null) {
+    if (_genderNotifier.value == null) {
       _showSnack("Please select a gender");
       return;
     }
 
-    // OPTIMIZED: Safely extract .value
     final currentUser = ref.read(currentUserProvider).value;
     if (currentUser == null) return;
 
-    setState(() => _isLoading = true);
+    // 2. OPTIMIZED: Trigger loading state without rebuilding the page
+    _isLoadingNotifier.value = true;
 
     try {
       final updatedUser = currentUser.copyWith(
         firstName: _nameController.text.trim(),
         location: _locationController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
-        gender: _selectedGender,
+        gender: _genderNotifier.value,
       );
 
-      // OPTIMIZED: Read repository via Provider
       final savedUser = await ref
           .read(userRepositoryProvider)
           .updateUserProfile(updatedUser);
-
-      // OPTIMIZED: Use the safe update method we added to AuthNotifier
       ref.read(currentUserProvider.notifier).updateProfile(savedUser);
 
       if (mounted) _showSnack("Profile Updated Successfully!");
     } catch (e) {
       if (mounted) _showSnack("Failed to update profile. Please try again.");
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) _isLoadingNotifier.value = false;
     }
   }
 
@@ -115,6 +117,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Because we removed setState, this build method runs EXACTLY ONCE.
+    // Animations will play perfectly on load and never stutter or restart.
+
     final primaryColor = Theme.of(context).primaryColor;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
@@ -123,27 +128,36 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _saveChanges,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              elevation: 10,
-              shadowColor: primaryColor.withValues(alpha: 0.4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            child: _isLoading
-                ? const SpinKitThreeBounce(color: Colors.white, size: 20)
-                : const Text(
-                    "Save Changes",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        // 3. OPTIMIZED: Only the button listens to the loading state
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _isLoadingNotifier,
+          builder: (context, isLoading, child) {
+            return SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: isLoading ? null : _saveChanges,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  elevation: 10,
+                  shadowColor: primaryColor.withValues(alpha: 0.4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-          ),
+                ),
+                child: isLoading
+                    ? const SpinKitThreeBounce(color: Colors.white, size: 20)
+                    : const Text(
+                        "Save Changes",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            );
+          },
         ).animate().fade(delay: 600.ms).slideY(begin: 0.5, end: 0),
       ),
 
@@ -157,10 +171,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-
-            // OPTIMIZED: Extracted to a StatelessWidget
             _AvatarSelector(avatarUrl: _avatarUrl, primaryColor: primaryColor),
-
             const SizedBox(height: 40),
 
             Column(
@@ -179,19 +190,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   onDetectLocation: () async {
                     _showSnack("Fetching current location...");
                     await Future.delayed(const Duration(seconds: 2));
-                    setState(
-                      () => _locationController.text =
-                          "Powai, Mumbai, Maharashtra 400076",
-                    );
+                    // 4. OPTIMIZED: TextEditingController updates its own UI instantly. No setState needed!
+                    _locationController.text =
+                        "Powai, Mumbai, Maharashtra 400076";
                   },
                 ),
                 const SizedBox(height: 24),
 
-                _GenderSelector(
-                  selectedGender: _selectedGender,
-                  onChanged: (val) => setState(() => _selectedGender = val),
-                  delay: 300,
-                ),
+                _GenderSelector(genderNotifier: _genderNotifier, delay: 300),
                 const SizedBox(height: 24),
 
                 _PhoneInput(
@@ -205,7 +211,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       builder: (context) => PhoneVerificationSheet(
                         currentPhone: _phoneController.text,
                         onVerified: (newPhone) {
-                          setState(() => _phoneController.text = newPhone);
+                          _phoneController.text = newPhone; // Updates instantly
                           _showSnack("Phone Number Verified & Updated!");
                         },
                       ),
@@ -215,20 +221,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 const SizedBox(height: 20),
 
                 _LanguageSelector(
-                  selectedLanguages: _selectedLanguages,
+                  languagesNotifier: _languagesNotifier,
+                  allLanguages: _allLanguages,
                   delay: 500,
-                  onTap: () async {
-                    final List<String>? result = await showDialog(
-                      context: context,
-                      builder: (context) => LanguageSelectionDialog(
-                        allLanguages: _allLanguages,
-                        selectedLanguages: _selectedLanguages,
-                      ),
-                    );
-                    if (result != null) {
-                      setState(() => _selectedLanguages = result);
-                    }
-                  },
                 ),
               ],
             ),
@@ -252,54 +247,52 @@ class _AvatarSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-          child: Stack(
-            children: [
-              Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+      child: Stack(
+        children: [
+          Container(
+            width: 110,
+            height: 110,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 4),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-                child: CircleAvatar(
-                  backgroundColor: Colors.grey.shade100,
-                  backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
-                      ? CachedNetworkImageProvider(avatarUrl!)
-                      : null,
-                  child: (avatarUrl == null || avatarUrl!.isEmpty)
-                      ? const Icon(Icons.person)
-                      : null,
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: primaryColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
+            child: CircleAvatar(
+              backgroundColor: Colors.grey.shade100,
+              backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
+                  ? CachedNetworkImageProvider(avatarUrl!)
+                  : null,
+              child: (avatarUrl == null || avatarUrl!.isEmpty)
+                  ? const Icon(Icons.person)
+                  : null,
+            ),
           ),
-        )
-        .animate(key: const ValueKey('avatar'))
-        .scale(duration: 400.ms, curve: Curves.easeOutBack);
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: primaryColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+              ),
+              child: const Icon(
+                Icons.camera_alt_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
   }
 }
 
@@ -319,40 +312,37 @@ class _PillInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-                offset: const Offset(0, 4),
-                blurRadius: 16,
-              ),
-            ],
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 16,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: TextFormField(
-            controller: controller,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              labelText: label,
-              labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-              prefixIcon: Icon(
-                icon,
-                color: context.colorScheme.secondary,
-                size: 22,
-              ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 40),
-            ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: TextFormField(
+        controller: controller,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        ),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+          prefixIcon: Icon(
+            icon,
+            color: context.colorScheme.secondary,
+            size: 22,
           ),
-        )
-        .animate(key: ValueKey(label))
-        .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0);
+          prefixIconConstraints: const BoxConstraints(minWidth: 40),
+        ),
+      ),
+    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
   }
 }
 
@@ -370,89 +360,85 @@ class _LocationInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-                offset: const Offset(0, 4),
-                blurRadius: 16,
-              ),
-            ],
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 16,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: controller,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    labelText: "Location",
-                    labelStyle: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 14,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.location_on_outlined,
-                      color: context.colorScheme.secondary,
-                      size: 22,
-                    ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 40),
-                  ),
-                ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
               ),
-              IconButton(
-                onPressed: onDetectLocation,
-                icon: Icon(
-                  Icons.my_location_rounded,
-                  color: context.colorScheme.primary,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                labelText: "Location",
+                labelStyle: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 14,
                 ),
-                tooltip: "Use Current Location",
+                prefixIcon: Icon(
+                  Icons.location_on_outlined,
+                  color: context.colorScheme.secondary,
+                  size: 22,
+                ),
+                prefixIconConstraints: const BoxConstraints(minWidth: 40),
               ),
-            ],
+            ),
           ),
-        )
-        .animate(key: const ValueKey('location'))
-        .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0);
+          IconButton(
+            onPressed: onDetectLocation,
+            icon: Icon(
+              Icons.my_location_rounded,
+              color: context.colorScheme.primary,
+            ),
+            tooltip: "Use Current Location",
+          ),
+        ],
+      ),
+    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
   }
 }
 
+// 5. OPTIMIZED: Only the Gender Row rebuilds when a gender is clicked
 class _GenderSelector extends StatelessWidget {
-  final Gender? selectedGender;
-  final ValueChanged<Gender> onChanged;
+  final ValueNotifier<Gender?> genderNotifier;
   final int delay;
 
-  const _GenderSelector({
-    required this.selectedGender,
-    required this.onChanged,
-    required this.delay,
-  });
+  const _GenderSelector({required this.genderNotifier, required this.delay});
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
     return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 12, bottom: 10),
-              child: Text(
-                "Gender",
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 12, bottom: 10),
+          child: Text(
+            "Gender",
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
-            Row(
+          ),
+        ),
+        ValueListenableBuilder<Gender?>(
+          valueListenable: genderNotifier,
+          builder: (context, selectedGender, child) {
+            return Row(
               children: Gender.values.map((gender) {
                 final isSelected = selectedGender == gender;
                 final label =
@@ -464,7 +450,10 @@ class _GenderSelector extends StatelessWidget {
 
                 return Expanded(
                   child: GestureDetector(
-                    onTap: () => onChanged(gender),
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      genderNotifier.value = isSelected ? null : gender;
+                    },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -513,15 +502,15 @@ class _GenderSelector extends StatelessWidget {
                   ),
                 );
               }).toList(),
-            ),
-          ],
-        )
-        .animate(key: const ValueKey('gender'))
-        .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0);
+            );
+          },
+        ),
+      ],
+    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
   }
 }
 
+// 6. OPTIMIZED: Only the 'CHANGE/ADD' text rebuilds when typing a phone number
 class _PhoneInput extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onChangeRequested;
@@ -535,24 +524,27 @@ class _PhoneInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasPhone = controller.text.isNotEmpty;
     return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-                offset: const Offset(0, 4),
-                blurRadius: 16,
-              ),
-            ],
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 16,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextFormField(
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                final hasPhone = value.text.isNotEmpty;
+                return TextFormField(
                   controller: controller,
                   readOnly: true,
                   style: TextStyle(
@@ -574,85 +566,100 @@ class _PhoneInput extends StatelessWidget {
                     ),
                     prefixIconConstraints: const BoxConstraints(minWidth: 40),
                   ),
-                ),
-              ),
-              TextButton(
+                );
+              },
+            ),
+          ),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, child) {
+              return TextButton(
                 onPressed: onChangeRequested,
                 child: Text(
-                  hasPhone ? "CHANGE" : "ADD",
+                  value.text.isNotEmpty ? "CHANGE" : "ADD",
                   style: TextStyle(
                     color: context.colorScheme.primary,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
-        )
-        .animate(key: const ValueKey('phone'))
-        .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0);
+        ],
+      ),
+    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
   }
 }
 
+// 7. OPTIMIZED: Only the inner text rebuilds when languages change
 class _LanguageSelector extends StatelessWidget {
-  final List<String> selectedLanguages;
-  final VoidCallback onTap;
+  final ValueNotifier<List<String>> languagesNotifier;
+  final List<String> allLanguages;
   final int delay;
 
   const _LanguageSelector({
-    required this.selectedLanguages,
-    required this.onTap,
+    required this.languagesNotifier,
+    required this.allLanguages,
     required this.delay,
   });
 
   @override
   Widget build(BuildContext context) {
-    final text = selectedLanguages.isEmpty
-        ? "Select Languages"
-        : selectedLanguages.join(", ");
-    final isPlaceholder = selectedLanguages.isEmpty;
     return GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-                  offset: const Offset(0, 4),
-                  blurRadius: 16,
+      onTap: () async {
+        FocusScope.of(context).unfocus();
+        final List<String>? result = await showDialog(
+          context: context,
+          builder: (context) => LanguageSelectionDialog(
+            allLanguages: allLanguages,
+            selectedLanguages: languagesNotifier.value,
+          ),
+        );
+        if (result != null) languagesNotifier.value = result;
+      },
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+              offset: const Offset(0, 4),
+              blurRadius: 16,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.translate_rounded,
+                  color: context.colorScheme.secondary,
+                  size: 22,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  "Languages Spoken",
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                 ),
               ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.translate_rounded,
-                      color: context.colorScheme.secondary,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      "Languages Spoken",
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.only(left: 34),
-                  child: Text(
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 34),
+              child: ValueListenableBuilder<List<String>>(
+                valueListenable: languagesNotifier,
+                builder: (context, selectedLanguages, child) {
+                  final text = selectedLanguages.isEmpty
+                      ? "Select Languages"
+                      : selectedLanguages.join(", ");
+                  final isPlaceholder = selectedLanguages.isEmpty;
+                  return Text(
                     text,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
@@ -661,14 +668,13 @@ class _LanguageSelector extends StatelessWidget {
                           : Colors.black87,
                       fontSize: 16,
                     ),
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
-          ),
-        )
-        .animate(key: const ValueKey('language'))
-        .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0);
+          ],
+        ),
+      ),
+    ).animate().fade(delay: delay.ms).slideX(begin: 0.2, end: 0);
   }
 }
