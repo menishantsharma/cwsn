@@ -14,14 +14,52 @@ import 'package:cached_network_image/cached_network_image.dart';
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
+  void _confirmLogout(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Logout',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Are you sure you want to log out of your account?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref.read(currentUserProvider.notifier).logout();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade50,
+              foregroundColor: Colors.red,
+              elevation: 0,
+            ),
+            child: const Text(
+              'Logout',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1. OPTIMIZED: Safely extract the user value
     final user = ref.watch(currentUserProvider).value;
 
     if (user == null) return const SizedBox.shrink();
 
-    // 2. OPTIMIZED: Derive mode locally
     final isCaregiverMode = user.activeRole == UserRole.caregiver;
 
     // --- GUEST VIEW ---
@@ -31,13 +69,14 @@ class SettingsPage extends ConsumerWidget {
         body: (context, padding) => GuestPlaceholder(
           message:
               "Sign in to manage your profile, children details, and app preferences.",
-          // 3. OPTIMIZED: Use the correct logout method
           onLoginPressed: () => ref.read(currentUserProvider.notifier).logout(),
         ),
       );
     }
 
     // --- AUTHENTICATED VIEW ---
+    final textTheme = Theme.of(context).textTheme;
+
     return PillScaffold(
       title: 'Profile',
       showBack: false,
@@ -48,7 +87,6 @@ class SettingsPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children:
               [
-                    // 4. OPTIMIZED: Extracted to StatelessWidget
                     _ProfileHeader(user: user),
 
                     const SizedBox(height: 30),
@@ -59,7 +97,7 @@ class SettingsPage extends ConsumerWidget {
 
                     Text(
                       "Account Settings",
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      style: textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.grey.shade500,
                       ),
@@ -85,7 +123,7 @@ class SettingsPage extends ConsumerWidget {
 
                     Text(
                       "Other",
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      style: textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.grey.shade500,
                       ),
@@ -96,16 +134,14 @@ class SettingsPage extends ConsumerWidget {
                       icon: Icons.logout_rounded,
                       label: 'Logout',
                       isDestructive: true,
-                      // 3. OPTIMIZED: Use the correct logout method
-                      onTap: () =>
-                          ref.read(currentUserProvider.notifier).logout(),
+                      onTap: () => _confirmLogout(context, ref),
                     ),
                     SettingsTile(
                       icon: Icons.delete_outline_rounded,
                       label: 'Delete Account',
                       isDestructive: true,
                       onTap: () {
-                        // Add account deletion logic here later
+                        // Add account deletion logic here
                       },
                     ),
                   ]
@@ -129,60 +165,77 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 4),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.grey.shade200,
-                backgroundImage: user.imageUrl.isNotEmpty
-                    ? CachedNetworkImageProvider(user.imageUrl)
-                    : null,
-                child: user.imageUrl.isEmpty
-                    ? const Icon(Icons.person, size: 40, color: Colors.grey)
-                    : null,
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(6),
+    // OPTIMIZED: Tap the profile header to quickly jump to Edit Profile
+    return GestureDetector(
+      onTap: () => context.pushNamed(AppRoutes.parentEditProfile),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Container(
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
-                  color: context.colorScheme.primary,
                   shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.edit, color: Colors.white, size: 16),
+                // OPTIMIZED: Production-safe image loading. Doesn't crash if URL is malformed.
+                child: ClipOval(
+                  child: user.imageUrl.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: user.imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                              Container(color: Colors.grey.shade200),
+                          errorWidget: (context, url, error) =>
+                              _buildFallbackAvatar(),
+                        )
+                      : _buildFallbackAvatar(),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Text(
-          user.fullName, // OPTIMIZED: Use the getter we built in the User model!
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          user.email,
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-        ),
-      ],
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: context.colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit, color: Colors.white, size: 16),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            user.fullName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            user.email,
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFallbackAvatar() {
+    return Container(
+      color: Colors.grey.shade200,
+      child: const Icon(Icons.person, size: 40, color: Colors.grey),
     );
   }
 }
@@ -199,8 +252,8 @@ class _SwitchModeCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isCaregiver
-              ? [const Color(0xFF4CAF50), const Color(0xFF2E7D32)]
-              : [const Color(0xFF535CE8), const Color(0xFF3B46C4)],
+              ? const [Color(0xFF4CAF50), Color(0xFF2E7D32)]
+              : const [Color(0xFF535CE8), Color(0xFF3B46C4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -218,9 +271,7 @@ class _SwitchModeCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => context.pushNamed(
-            AppRoutes.switching,
-          ), // OPTIMIZED: Use pushNamed to stack the switching screen cleanly
+          onTap: () => context.pushNamed(AppRoutes.switching),
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(20),
