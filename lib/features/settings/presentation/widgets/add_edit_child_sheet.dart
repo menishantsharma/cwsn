@@ -17,19 +17,18 @@ class AddEditChildSheet extends StatefulWidget {
 }
 
 class _AddEditChildSheetState extends State<AddEditChildSheet> {
-  late TextEditingController _nameController;
-  DateTime? _selectedDateOfBirth; // <-- NEW: Replaced ageController
+  late final TextEditingController _nameController;
+  DateTime? _selectedDob;
   Gender? _selectedGender;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(
-      text: widget.existingChild?.name ?? "",
-    );
-    // Initialize with existing DOB if editing
-    _selectedDateOfBirth = widget.existingChild?.dateOfBirth;
+    _nameController = TextEditingController(text: widget.existingChild?.name)
+      ..addListener(_onTextChanged);
+
+    _selectedDob = widget.existingChild?.dateOfBirth;
     _selectedGender = widget.existingChild?.gender;
   }
 
@@ -39,36 +38,26 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
     super.dispose();
   }
 
-  void _submit() async {
-    // Check if name is empty, DOB is missing, or gender is missing
-    if (_nameController.text.trim().isEmpty ||
-        _selectedDateOfBirth == null ||
-        _selectedGender == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please fill all fields, select DOB and gender"),
-        ),
-      );
-      return;
-    }
+  void _onTextChanged() => setState(() {});
 
+  bool get _isValid =>
+      _nameController.text.trim().isNotEmpty &&
+      _selectedDob != null &&
+      _selectedGender != null;
+
+  Future<void> _submit() async {
     setState(() => _isLoading = true);
 
     final childData = ChildModel(
-      id:
-          widget.existingChild?.id ??
-          "temp_id", // Backend will generate real ID on ADD
+      id: widget.existingChild?.id ?? "temp_id",
       name: _nameController.text.trim(),
-      dateOfBirth: _selectedDateOfBirth!, // <-- Pass the DateTime directly!
+      dateOfBirth: _selectedDob!,
       gender: _selectedGender!,
     );
 
-    // Call the parent callback to handle API and State updates
     await widget.onSave(childData);
 
-    if (mounted) {
-      Navigator.pop(context); // Close sheet
-    }
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -81,92 +70,101 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
         left: 24,
         right: 24,
-        top: 24,
+        top: 12,
       ),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            Text(
-              isEditing ? "Edit Profile" : "Add New Child",
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            _buildInput(
-              label: "Full Name",
-              controller: _nameController,
-              icon: Icons.person_outline_rounded,
-            ),
-            const SizedBox(height: 16),
-
-            // --- REPLACED: Age Input is now Date Selector ---
-            _buildDateSelector(context),
-            const SizedBox(height: 24),
-
-            // PILL GENDER SELECTOR
-            _buildGenderSelector(),
-            const SizedBox(height: 32),
-
-            // Save Button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  elevation: 4,
-                  shadowColor: primaryColor.withValues(alpha: 0.4),
                 ),
-                child: _isLoading
-                    ? const SpinKitThreeBounce(color: Colors.white, size: 20)
-                    : Text(
-                        isEditing ? "Save Changes" : "Add Child",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
               ),
-            ),
-          ],
+
+              Text(
+                isEditing ? "Edit Profile" : "Add New Child",
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              _NameInput(controller: _nameController),
+              const SizedBox(height: 16),
+
+              _DateSelector(
+                selectedDate: _selectedDob,
+                onDateSelected: (date) => setState(() => _selectedDob = date),
+                primaryColor: primaryColor,
+              ),
+              const SizedBox(height: 24),
+
+              _GenderSelector(
+                selectedGender: _selectedGender,
+                onChanged: (gender) => setState(() => _selectedGender = gender),
+                primaryColor: primaryColor,
+              ),
+              const SizedBox(height: 32),
+
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: (_isValid && !_isLoading) ? _submit : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    disabledBackgroundColor: Colors.grey.shade200,
+                    disabledForegroundColor: Colors.grey.shade400,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: _isValid ? 4 : 0,
+                    shadowColor: primaryColor.withValues(alpha: 0.4),
+                  ),
+                  child: _isLoading
+                      ? const SpinKitThreeBounce(color: Colors.white, size: 20)
+                      : Text(
+                          isEditing ? "Save Changes" : "Add Child",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildInput({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-  }) {
+class _NameInput extends StatelessWidget {
+  final TextEditingController controller;
+
+  const _NameInput({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
@@ -180,54 +178,61 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
           fontWeight: FontWeight.w600,
           color: Colors.black87,
         ),
+        textCapitalization: TextCapitalization.words,
         decoration: InputDecoration(
           border: InputBorder.none,
-          labelText: label,
+          labelText: "Full Name",
           labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-          prefixIcon: Icon(icon, color: Colors.grey.shade400, size: 20),
+          prefixIcon: Icon(
+            Icons.person_outline_rounded,
+            color: Colors.grey.shade400,
+            size: 20,
+          ),
           prefixIconConstraints: const BoxConstraints(minWidth: 36),
         ),
       ),
     );
   }
+}
 
-  // --- NEW: Custom Date Picker UI that matches your TextField style ---
-  Widget _buildDateSelector(BuildContext context) {
-    final hasDate = _selectedDateOfBirth != null;
+class _DateSelector extends StatelessWidget {
+  final DateTime? selectedDate;
+  final ValueChanged<DateTime> onDateSelected;
+  final Color primaryColor;
 
-    // Format the date as DD/MM/YYYY
+  const _DateSelector({
+    required this.selectedDate,
+    required this.onDateSelected,
+    required this.primaryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDate = selectedDate != null;
     final dateText = hasDate
-        ? "${_selectedDateOfBirth!.day.toString().padLeft(2, '0')}/${_selectedDateOfBirth!.month.toString().padLeft(2, '0')}/${_selectedDateOfBirth!.year}"
+        ? "${selectedDate!.day.toString().padLeft(2, '0')}/${selectedDate!.month.toString().padLeft(2, '0')}/${selectedDate!.year}"
         : "Tap to select";
 
     return GestureDetector(
       onTap: () async {
-        FocusScope.of(context).unfocus(); // Close keyboard if it's open
-
+        FocusScope.of(context).unfocus();
         final picked = await showDatePicker(
           context: context,
-          initialDate: _selectedDateOfBirth ?? DateTime.now(),
-          firstDate: DateTime.now().subtract(
-            const Duration(days: 365 * 30),
-          ), // Up to 30 years ago
-          lastDate: DateTime.now(), // Prevents selecting future dates
-          builder: (context, child) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: ColorScheme.light(
-                  primary: Theme.of(context).primaryColor,
-                  onPrimary: Colors.white,
-                  onSurface: Colors.black87,
-                ),
+          initialDate: selectedDate ?? DateTime.now(),
+          firstDate: DateTime.now().subtract(const Duration(days: 365 * 30)),
+          lastDate: DateTime.now(),
+          builder: (context, child) => Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: primaryColor,
+                onPrimary: Colors.white,
+                onSurface: Colors.black87,
               ),
-              child: child!,
-            );
-          },
+            ),
+            child: child!,
+          ),
         );
-
-        if (picked != null) {
-          setState(() => _selectedDateOfBirth = picked);
-        }
+        if (picked != null) onDateSelected(picked);
       },
       child: Container(
         width: double.infinity,
@@ -265,10 +270,21 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
       ),
     );
   }
+}
 
-  Widget _buildGenderSelector() {
-    final primaryColor = Theme.of(context).primaryColor;
+class _GenderSelector extends StatelessWidget {
+  final Gender? selectedGender;
+  final ValueChanged<Gender?> onChanged; // <-- Allow nullable Gender
+  final Color primaryColor;
 
+  const _GenderSelector({
+    required this.selectedGender,
+    required this.onChanged,
+    required this.primaryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -285,29 +301,21 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
         ),
         Row(
           children: Gender.values.map((gender) {
-            final isSelected = _selectedGender == gender;
+            final isSelected = selectedGender == gender;
             final label =
                 gender.name[0].toUpperCase() + gender.name.substring(1);
 
-            IconData icon;
-            switch (gender) {
-              case Gender.male:
-                icon = Icons.male_rounded;
-                break;
-              case Gender.female:
-                icon = Icons.female_rounded;
-                break;
-              case Gender.other:
-                icon = Icons.transgender_rounded;
-                break;
-            }
+            IconData icon = Icons.transgender_rounded;
+            if (gender == Gender.male) icon = Icons.male_rounded;
+            if (gender == Gender.female) icon = Icons.female_rounded;
 
             return Expanded(
               child: GestureDetector(
                 onTap: () {
-                  // Unfocus keyboard when selecting gender
                   FocusScope.of(context).unfocus();
-                  setState(() => _selectedGender = gender);
+
+                  // OPTIMIZED: If already selected, pass null to unselect. Otherwise, pass the gender.
+                  onChanged(isSelected ? null : gender);
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
