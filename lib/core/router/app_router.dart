@@ -15,7 +15,7 @@ import 'package:cwsn/features/notifications/presentation/pages/notifications_pag
 import 'package:cwsn/features/requests/presentation/pages/requests_page.dart';
 import 'package:cwsn/features/services/presentation/pages/services_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/add_child_page.dart';
-import 'package:cwsn/features/settings/presentation/pages/parent_edit_profile_page.dart';
+import 'package:cwsn/features/settings/presentation/pages/edit_profile_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/settings_page.dart';
 import 'package:cwsn/features/special_needs/pages/special_needs_page.dart';
 
@@ -233,7 +233,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.parentEditProfilePath,
         name: AppRoutes.parentEditProfile,
-        builder: (_, _) => const ParentEditProfilePage(),
+        builder: (_, _) => const EditProfilePage(),
       ),
       GoRoute(
         path: AppRoutes.addChildPath,

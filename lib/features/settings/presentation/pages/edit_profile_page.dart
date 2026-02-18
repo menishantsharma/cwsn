@@ -14,15 +14,14 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 // OPTIMIZED: Use a provider for Dependency Injection
 final userRepositoryProvider = Provider((ref) => UserRepository());
 
-class ParentEditProfilePage extends ConsumerStatefulWidget {
-  const ParentEditProfilePage({super.key});
+class EditProfilePage extends ConsumerStatefulWidget {
+  const EditProfilePage({super.key});
 
   @override
-  ConsumerState<ParentEditProfilePage> createState() =>
-      _ParentEditProfilePageState();
+  ConsumerState<EditProfilePage> createState() => _EditProfilePageState();
 }
 
-class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
+class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   // Controllers
   late TextEditingController _nameController;
   late TextEditingController _locationController;
