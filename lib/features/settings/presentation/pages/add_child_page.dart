@@ -7,8 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final parentRepositoryProvider = Provider((ref) => ParentRepository());
-
 class AddChildPage extends ConsumerWidget {
   const AddChildPage({super.key});
 
