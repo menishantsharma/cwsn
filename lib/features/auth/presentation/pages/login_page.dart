@@ -10,11 +10,9 @@ class LoginPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1. Efficiently watch the AsyncValue state directly
     final authState = ref.watch(currentUserProvider);
     final isLoading = authState.isLoading;
 
-    // 2. Read the notifier and repository once for cleaner button callbacks
     final authNotifier = ref.read(currentUserProvider.notifier);
     final authRepo = ref.read(authRepositoryProvider);
 
@@ -24,7 +22,6 @@ class LoginPage extends ConsumerWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // --- BACKGROUND DECORATIONS ---
           Positioned(
             top: -100,
             right: -100,
@@ -50,7 +47,6 @@ class LoginPage extends ConsumerWidget {
             ),
           ),
 
-          // --- MAIN CONTENT ---
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -58,8 +54,6 @@ class LoginPage extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Spacer(),
-
-                  // HERO ICON
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -108,8 +102,6 @@ class LoginPage extends ConsumerWidget {
 
                   const Spacer(),
 
-                  // --- LOGIN BUTTONS STACK ---
-                  // Use IgnorePointer to disable clicks while loading, and fade the buttons
                   IgnorePointer(
                     ignoring: isLoading,
                     child: AnimatedOpacity(
@@ -117,7 +109,6 @@ class LoginPage extends ConsumerWidget {
                       duration: const Duration(milliseconds: 300),
                       child: Column(
                         children: [
-                          // 1. GOOGLE
                           _SocialLoginButton(
                             text: "Continue with Google",
                             icon: FontAwesomeIcons.google,
@@ -128,7 +119,6 @@ class LoginPage extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
 
-                          // 2. APPLE (Black Theme)
                           _SocialLoginButton(
                             text: "Continue with Apple",
                             icon: FontAwesomeIcons.apple,
@@ -141,7 +131,6 @@ class LoginPage extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
 
-                          // 3. FACEBOOK (Blue Theme)
                           _SocialLoginButton(
                             text: "Continue with Facebook",
                             icon: FontAwesomeIcons.facebookF,
@@ -159,7 +148,6 @@ class LoginPage extends ConsumerWidget {
 
                   const SizedBox(height: 24),
 
-                  // Guest Button
                   IgnorePointer(
                     ignoring: isLoading,
                     child: AnimatedOpacity(
@@ -186,7 +174,6 @@ class LoginPage extends ConsumerWidget {
             ),
           ),
 
-          // --- FULL SCREEN LOADING OVERLAY ---
           if (isLoading)
             Container(
               color: Colors.white.withValues(alpha: 0.5),
@@ -200,7 +187,6 @@ class LoginPage extends ConsumerWidget {
   }
 }
 
-// --- REUSABLE SOCIAL BUTTON (Unchanged) ---
 class _SocialLoginButton extends StatelessWidget {
   final String text;
   final IconData icon;

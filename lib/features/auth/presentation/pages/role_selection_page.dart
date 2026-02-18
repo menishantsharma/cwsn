@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class RoleSelectionPage extends ConsumerWidget {
   const RoleSelectionPage({super.key});
 
-  // OPTIMIZED: Use the dedicated switchRole method from our AsyncNotifier
   void _selectRole(WidgetRef ref, UserRole role) {
     ref.read(currentUserProvider.notifier).switchRole(role);
   }
@@ -16,7 +15,6 @@ class RoleSelectionPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).primaryColor;
 
-    // OPTIMIZED: Extract the actual User object from the AsyncValue
     final user = ref.watch(currentUserProvider).value;
 
     return Scaffold(
@@ -29,7 +27,6 @@ class RoleSelectionPage extends ConsumerWidget {
             children: [
               const Spacer(flex: 1),
 
-              // --- GREETING ---
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -65,7 +62,6 @@ class RoleSelectionPage extends ConsumerWidget {
 
               const Spacer(flex: 1),
 
-              // --- PARENT CARD ---
               _RoleCard(
                 title: "Continue as Parent",
                 subtitle:
@@ -78,7 +74,6 @@ class RoleSelectionPage extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // --- CAREGIVER CARD ---
               _RoleCard(
                 title: "Continue as Caregiver",
                 subtitle:
@@ -98,7 +93,6 @@ class RoleSelectionPage extends ConsumerWidget {
   }
 }
 
-// OPTIMIZED: Extracted into a StatelessWidget for better performance and rendering
 class _RoleCard extends StatelessWidget {
   final String title;
   final String subtitle;
