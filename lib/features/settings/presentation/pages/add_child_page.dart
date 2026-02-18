@@ -1,11 +1,14 @@
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
-import 'package:cwsn/features/settings/data/parent_repository.dart'; // Import repo
+import 'package:cwsn/features/settings/data/parent_repository.dart';
 import 'package:cwsn/features/settings/presentation/widgets/add_edit_child_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// OPTIMIZED: Use a provider for the repository to allow for easy testing/mocking
+final parentRepositoryProvider = Provider((ref) => ParentRepository());
 
 class AddChildPage extends ConsumerStatefulWidget {
   const AddChildPage({super.key});
@@ -15,20 +18,19 @@ class AddChildPage extends ConsumerStatefulWidget {
 }
 
 class _AddChildPageState extends ConsumerState<AddChildPage> {
-  final ParentRepository _repository = ParentRepository();
-
   // --- ACTIONS ---
 
   void _deleteChild(User user, ChildModel child) async {
-    // 1. Show loading/confirmation (simplified here)
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text("Deleting ${child.name}...")));
 
-    // 2. Call Backend API
-    await _repository.deleteChild(parentId: user.id, childId: child.id);
+    // Call Backend API
+    await ref
+        .read(parentRepositoryProvider)
+        .deleteChild(parentId: user.id, childId: child.id);
 
-    // 3. Update Local State (Provider)
+    // Update Local State using the new Notifier method
     final updatedChildren = user.parentProfile!.children
         .where((c) => c.id != child.id)
         .toList();
@@ -36,9 +38,7 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
       children: updatedChildren,
     );
 
-    ref.read(currentUserProvider.notifier).state = user.copyWith(
-      parentProfile: updatedProfile,
-    );
+    ref.read(currentUserProvider.notifier).updateParentProfile(updatedProfile);
   }
 
   void _openChildFormSheet(User user, {ChildModel? existingChild}) {
@@ -49,42 +49,42 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
       builder: (context) => AddEditChildSheet(
         existingChild: existingChild,
         onSave: (childData) async {
-          // This callback runs when the user clicks 'Save' in the bottom sheet
+          final repo = ref.read(parentRepositoryProvider);
 
           if (existingChild == null) {
             // ADD LOGIC
-            final savedChild = await _repository.addChild(
+            final savedChild = await repo.addChild(
               parentId: user.id,
               child: childData,
             );
 
-            // Update State
-            final updatedChildren = <ChildModel>[
+            final updatedChildren = [
               ...(user.parentProfile?.children ?? <ChildModel>[]),
               savedChild,
             ];
-            final updatedProfile = (user.parentProfile ?? ParentModel())
+            final updatedProfile = (user.parentProfile ?? const ParentModel())
                 .copyWith(children: updatedChildren);
-            ref.read(currentUserProvider.notifier).state = user.copyWith(
-              parentProfile: updatedProfile,
-            );
+
+            ref
+                .read(currentUserProvider.notifier)
+                .updateParentProfile(updatedProfile);
           } else {
             // EDIT LOGIC
-            final updatedChild = await _repository.updateChild(
+            final updatedChild = await repo.updateChild(
               parentId: user.id,
               child: childData,
             );
 
-            // Update State
             final updatedChildren = user.parentProfile!.children
                 .map((c) => c.id == updatedChild.id ? updatedChild : c)
                 .toList();
             final updatedProfile = user.parentProfile!.copyWith(
               children: updatedChildren,
             );
-            ref.read(currentUserProvider.notifier).state = user.copyWith(
-              parentProfile: updatedProfile,
-            );
+
+            ref
+                .read(currentUserProvider.notifier)
+                .updateParentProfile(updatedProfile);
           }
         },
       ),
@@ -93,8 +93,13 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider);
-    final children = user?.parentProfile?.children ?? [];
+    // OPTIMIZED: Safely extract the user from AsyncValue
+    final user = ref.watch(currentUserProvider).value;
+
+    // Safety check in case the user was logged out while on this screen
+    if (user == null) return const SizedBox.shrink();
+
+    final children = user.parentProfile?.children ?? [];
 
     return PillScaffold(
       title: 'Children Details',
@@ -127,35 +132,51 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
 
             // --- CHILDREN LIST ---
             if (children.isEmpty)
-              _buildEmptyState()
+              const _EmptyChildrenState()
             else
-              ...children.asMap().entries.map((entry) {
-                final index = entry.key;
-                final child = entry.value;
-                return _buildChildCard(
-                  user!,
-                  child,
-                  delay: 200 + (index * 100),
-                );
-              }),
+              // OPTIMIZED: Use a standard for-loop inside the Column
+              for (int i = 0; i < children.length; i++)
+                _ChildCard(
+                  child: children[i],
+                  delay: 200 + (i * 100),
+                  onEdit: () =>
+                      _openChildFormSheet(user, existingChild: children[i]),
+                  onDelete: () => _deleteChild(user, children[i]),
+                ),
 
             const SizedBox(height: 24),
 
             // --- ADD NEW BUTTON ---
-            if (user != null)
-              _buildAddButton(
-                user,
-                delay: children.isEmpty ? 300 : 200 + (children.length * 100),
-              ),
+            _AddChildButton(
+              delay: children.isEmpty ? 300 : 200 + (children.length * 100),
+              onTap: () => _openChildFormSheet(user),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  // --- WIDGET HELPERS ---
+// ==========================================
+// OPTIMIZED: EXTRACTED STATELESS WIDGETS
+// ==========================================
 
-  Widget _buildChildCard(User user, ChildModel child, {required int delay}) {
+class _ChildCard extends StatelessWidget {
+  final ChildModel child;
+  final int delay;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _ChildCard({
+    required this.child,
+    required this.delay,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
 
     return Container(
@@ -218,8 +239,7 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                onPressed: () =>
-                    _openChildFormSheet(user, existingChild: child),
+                onPressed: onEdit,
                 icon: Icon(
                   Icons.edit_rounded,
                   color: Colors.blue.shade400,
@@ -227,7 +247,7 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
                 ),
               ),
               IconButton(
-                onPressed: () => _deleteChild(user, child),
+                onPressed: onDelete,
                 icon: Icon(
                   Icons.delete_outline_rounded,
                   color: Colors.red.shade400,
@@ -240,8 +260,13 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
       ),
     ).animate().fade(delay: delay.ms).slideY(begin: 0.2, end: 0);
   }
+}
 
-  Widget _buildEmptyState() {
+class _EmptyChildrenState extends StatelessWidget {
+  const _EmptyChildrenState();
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 32),
       alignment: Alignment.center,
@@ -271,12 +296,20 @@ class _AddChildPageState extends ConsumerState<AddChildPage> {
       ),
     ).animate().fade(delay: 200.ms);
   }
+}
 
-  Widget _buildAddButton(User user, {required int delay}) {
+class _AddChildButton extends StatelessWidget {
+  final int delay;
+  final VoidCallback onTap;
+
+  const _AddChildButton({required this.delay, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
 
     return GestureDetector(
-      onTap: () => _openChildFormSheet(user),
+      onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),

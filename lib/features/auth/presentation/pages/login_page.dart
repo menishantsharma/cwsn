@@ -1,4 +1,3 @@
-import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/features/auth/data/auth_repository.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -11,24 +10,21 @@ class LoginPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isLoading = ref.watch(authLoadingProvider);
-    final primaryColor = Theme.of(context).primaryColor;
+    // 1. Efficiently watch the AsyncValue state directly
+    final authState = ref.watch(currentUserProvider);
+    final isLoading = authState.isLoading;
 
-    // --- HANDLERS ---
-    Future<void> handleLogin(Future<User> Function() loginMethod) async {
-      ref.read(authLoadingProvider.notifier).state = true;
-      try {
-        final user = await loginMethod();
-        ref.read(currentUserProvider.notifier).state = user;
-      } finally {
-        ref.read(authLoadingProvider.notifier).state = false;
-      }
-    }
+    // 2. Read the notifier and repository once for cleaner button callbacks
+    final authNotifier = ref.read(currentUserProvider.notifier);
+    final authRepo = ref.read(authRepositoryProvider);
+
+    final primaryColor = Theme.of(context).primaryColor;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
+          // --- BACKGROUND DECORATIONS ---
           Positioned(
             top: -100,
             right: -100,
@@ -54,7 +50,7 @@ class LoginPage extends ConsumerWidget {
             ),
           ),
 
-          // 2. MAIN CONTENT
+          // --- MAIN CONTENT ---
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -113,84 +109,98 @@ class LoginPage extends ConsumerWidget {
                   const Spacer(),
 
                   // --- LOGIN BUTTONS STACK ---
-                  if (isLoading)
-                    const CircularProgressIndicator()
-                  else
-                    Column(
-                      children: [
-                        // 1. GOOGLE
-                        _SocialLoginButton(
-                          text: "Continue with Google",
-                          icon: FontAwesomeIcons.google,
-                          iconColor: Colors.red,
-                          onTap: () => handleLogin(
-                            ref.read(authRepositoryProvider).signInWithGoogle,
+                  // Use IgnorePointer to disable clicks while loading, and fade the buttons
+                  IgnorePointer(
+                    ignoring: isLoading,
+                    child: AnimatedOpacity(
+                      opacity: isLoading ? 0.5 : 1.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Column(
+                        children: [
+                          // 1. GOOGLE
+                          _SocialLoginButton(
+                            text: "Continue with Google",
+                            icon: FontAwesomeIcons.google,
+                            iconColor: Colors.red,
+                            onTap: () =>
+                                authNotifier.login(authRepo.signInWithGoogle),
+                            delay: 400,
                           ),
-                          delay: 400,
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // 2. APPLE (Black Theme)
-                        _SocialLoginButton(
-                          text: "Continue with Apple",
-                          icon: FontAwesomeIcons.apple,
-                          iconColor: Colors.white,
-                          backgroundColor: Colors.black,
-                          textColor: Colors.white,
-                          onTap: () => handleLogin(
-                            ref.read(authRepositoryProvider).signInWithApple,
+                          // 2. APPLE (Black Theme)
+                          _SocialLoginButton(
+                            text: "Continue with Apple",
+                            icon: FontAwesomeIcons.apple,
+                            iconColor: Colors.white,
+                            backgroundColor: Colors.black,
+                            textColor: Colors.white,
+                            onTap: () =>
+                                authNotifier.login(authRepo.signInWithApple),
+                            delay: 500,
                           ),
-                          delay: 500,
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // 3. FACEBOOK (Blue Theme)
-                        _SocialLoginButton(
-                          text: "Continue with Facebook",
-                          icon: FontAwesomeIcons.facebookF,
-                          iconColor: Colors.white,
-                          backgroundColor: const Color(
-                            0xFF1877F2,
-                          ), // FB Brand Blue
-                          textColor: Colors.white,
-                          onTap: () => handleLogin(
-                            ref.read(authRepositoryProvider).signInWithFacebook,
+                          // 3. FACEBOOK (Blue Theme)
+                          _SocialLoginButton(
+                            text: "Continue with Facebook",
+                            icon: FontAwesomeIcons.facebookF,
+                            iconColor: Colors.white,
+                            backgroundColor: const Color(0xFF1877F2),
+                            textColor: Colors.white,
+                            onTap: () =>
+                                authNotifier.login(authRepo.signInWithFacebook),
+                            delay: 600,
                           ),
-                          delay: 600,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                  ),
 
                   const SizedBox(height: 24),
 
                   // Guest Button
-                  if (!isLoading)
-                    TextButton(
-                      onPressed: () => handleLogin(
-                        ref.read(authRepositoryProvider).signInAsGuest,
-                      ),
-                      child: Text(
-                        "Skip & Browse as Guest",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade500,
+                  IgnorePointer(
+                    ignoring: isLoading,
+                    child: AnimatedOpacity(
+                      opacity: isLoading ? 0.5 : 1.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: TextButton(
+                        onPressed: () =>
+                            authNotifier.login(authRepo.signInAsGuest),
+                        child: Text(
+                          "Skip & Browse as Guest",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade500,
+                          ),
                         ),
-                      ),
-                    ).animate().fade(delay: 700.ms),
+                      ).animate().fade(delay: 700.ms),
+                    ),
+                  ),
 
                   const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
+
+          // --- FULL SCREEN LOADING OVERLAY ---
+          if (isLoading)
+            Container(
+              color: Colors.white.withValues(alpha: 0.5),
+              child: Center(
+                child: CircularProgressIndicator(color: primaryColor),
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
-// --- REUSABLE SOCIAL BUTTON ---
+// --- REUSABLE SOCIAL BUTTON (Unchanged) ---
 class _SocialLoginButton extends StatelessWidget {
   final String text;
   final IconData icon;

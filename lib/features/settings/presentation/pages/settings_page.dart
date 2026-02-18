@@ -16,47 +16,52 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isCaregiverMode = ref.read(isCaregiverProvider);
-    final user = ref.watch(currentUserProvider);
+    // 1. OPTIMIZED: Safely extract the user value
+    final user = ref.watch(currentUserProvider).value;
 
     if (user == null) return const SizedBox.shrink();
 
+    // 2. OPTIMIZED: Derive mode locally
+    final isCaregiverMode = user.activeRole == UserRole.caregiver;
+
+    // --- GUEST VIEW ---
     if (user.isGuest) {
       return PillScaffold(
         title: 'Profile',
         body: (context, padding) => GuestPlaceholder(
           message:
               "Sign in to manage your profile, children details, and app preferences.",
-          onLoginPressed: () =>
-              ref.read(currentUserProvider.notifier).state = null,
+          // 3. OPTIMIZED: Use the correct logout method
+          onLoginPressed: () => ref.read(currentUserProvider.notifier).logout(),
         ),
       );
     }
 
+    // --- AUTHENTICATED VIEW ---
     return PillScaffold(
       title: 'Profile',
       showBack: false,
       body: (context, padding) => SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: padding.copyWith(left: 20, right: 20, bottom: 100),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children:
               [
-                    _buildProfileHeader(context, user),
+                    // 4. OPTIMIZED: Extracted to StatelessWidget
+                    _ProfileHeader(user: user),
 
                     const SizedBox(height: 30),
 
-                    _buildSwitchModeCard(context, isCaregiverMode),
+                    _SwitchModeCard(isCaregiver: isCaregiverMode),
 
                     const SizedBox(height: 24),
 
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Account Settings",
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade500,
-                        ),
+                    Text(
+                      "Account Settings",
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade500,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -78,14 +83,11 @@ class SettingsPage extends ConsumerWidget {
 
                     const SizedBox(height: 24),
 
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Other",
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade500,
-                        ),
+                    Text(
+                      "Other",
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade500,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -94,15 +96,17 @@ class SettingsPage extends ConsumerWidget {
                       icon: Icons.logout_rounded,
                       label: 'Logout',
                       isDestructive: true,
-                      onTap: () {
-                        ref.read(currentUserProvider.notifier).state = null;
-                      },
+                      // 3. OPTIMIZED: Use the correct logout method
+                      onTap: () =>
+                          ref.read(currentUserProvider.notifier).logout(),
                     ),
                     SettingsTile(
                       icon: Icons.delete_outline_rounded,
                       label: 'Delete Account',
                       isDestructive: true,
-                      onTap: () {},
+                      onTap: () {
+                        // Add account deletion logic here later
+                      },
                     ),
                   ]
                   .animate(interval: 50.ms)
@@ -112,8 +116,19 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildProfileHeader(BuildContext context, User user) {
+// ==========================================
+// OPTIMIZED: EXTRACTED STATELESS WIDGETS
+// ==========================================
+
+class _ProfileHeader extends StatelessWidget {
+  final User user;
+
+  const _ProfileHeader({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Stack(
@@ -133,7 +148,12 @@ class SettingsPage extends ConsumerWidget {
               child: CircleAvatar(
                 radius: 50,
                 backgroundColor: Colors.grey.shade200,
-                backgroundImage: CachedNetworkImageProvider(user.imageUrl),
+                backgroundImage: user.imageUrl.isNotEmpty
+                    ? CachedNetworkImageProvider(user.imageUrl)
+                    : null,
+                child: user.imageUrl.isEmpty
+                    ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                    : null,
               ),
             ),
             Positioned(
@@ -142,7 +162,7 @@ class SettingsPage extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: context.colorScheme.primary, // Brand Color
+                  color: context.colorScheme.primary,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.edit, color: Colors.white, size: 16),
@@ -152,10 +172,10 @@ class SettingsPage extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          "${user.firstName} ${user.lastName ?? ''}".trim(),
+          user.fullName, // OPTIMIZED: Use the getter we built in the User model!
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
@@ -165,21 +185,22 @@ class SettingsPage extends ConsumerWidget {
       ],
     );
   }
+}
 
-  Widget _buildSwitchModeCard(BuildContext context, bool isCaregiver) {
+class _SwitchModeCard extends StatelessWidget {
+  final bool isCaregiver;
+
+  const _SwitchModeCard({required this.isCaregiver});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isCaregiver
-              ? [
-                  const Color(0xFF4CAF50),
-                  const Color(0xFF2E7D32),
-                ] // Green for Caregiver
-              : [
-                  const Color(0xFF535CE8),
-                  const Color(0xFF3B46C4),
-                ], // Blue for Parent
+              ? [const Color(0xFF4CAF50), const Color(0xFF2E7D32)]
+              : [const Color(0xFF535CE8), const Color(0xFF3B46C4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -197,7 +218,9 @@ class SettingsPage extends ConsumerWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => context.goNamed(AppRoutes.switching),
+          onTap: () => context.pushNamed(
+            AppRoutes.switching,
+          ), // OPTIMIZED: Use pushNamed to stack the switching screen cleanly
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(20),

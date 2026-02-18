@@ -7,19 +7,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class RoleSelectionPage extends ConsumerWidget {
   const RoleSelectionPage({super.key});
 
-  void _selectRole(BuildContext context, WidgetRef ref, UserRole role) {
-    final user = ref.read(currentUserProvider);
-    if (user == null) return;
-
-    ref.read(currentUserProvider.notifier).state = user.copyWith(
-      activeRole: role,
-    );
+  // OPTIMIZED: Use the dedicated switchRole method from our AsyncNotifier
+  void _selectRole(WidgetRef ref, UserRole role) {
+    ref.read(currentUserProvider.notifier).switchRole(role);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).primaryColor;
-    final user = ref.watch(currentUserProvider);
+
+    // OPTIMIZED: Extract the actual User object from the AsyncValue
+    final user = ref.watch(currentUserProvider).value;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -31,7 +29,7 @@ class RoleSelectionPage extends ConsumerWidget {
             children: [
               const Spacer(flex: 1),
 
-              // Greeting
+              // --- GREETING ---
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -67,30 +65,28 @@ class RoleSelectionPage extends ConsumerWidget {
 
               const Spacer(flex: 1),
 
-              // PARENT CARD
-              _buildRoleCard(
-                context: context,
+              // --- PARENT CARD ---
+              _RoleCard(
                 title: "Continue as Parent",
                 subtitle:
                     "Find trusted caregivers and specialized services for your child.",
                 icon: Icons.family_restroom_rounded,
                 color: Colors.blue.shade600,
                 delay: 400,
-                onTap: () => _selectRole(context, ref, UserRole.parent),
+                onTap: () => _selectRole(ref, UserRole.parent),
               ),
 
               const SizedBox(height: 20),
 
-              // CAREGIVER CARD
-              _buildRoleCard(
-                context: context,
+              // --- CAREGIVER CARD ---
+              _RoleCard(
                 title: "Continue as Caregiver",
                 subtitle:
                     "Manage your profile, view requests, and offer your services.",
                 icon: Icons.volunteer_activism_rounded,
                 color: primaryColor,
                 delay: 500,
-                onTap: () => _selectRole(context, ref, UserRole.caregiver),
+                onTap: () => _selectRole(ref, UserRole.caregiver),
               ),
 
               const Spacer(flex: 2),
@@ -100,16 +96,28 @@ class RoleSelectionPage extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildRoleCard({
-    required BuildContext context,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required int delay,
-    required VoidCallback onTap,
-  }) {
+// OPTIMIZED: Extracted into a StatelessWidget for better performance and rendering
+class _RoleCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final int delay;
+  final VoidCallback onTap;
+
+  const _RoleCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.delay,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,

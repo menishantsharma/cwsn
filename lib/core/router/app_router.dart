@@ -23,6 +23,23 @@ import 'package:cwsn/features/special_needs/pages/special_needs_page.dart';
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
+class HomeWrapperPage extends ConsumerWidget {
+  const HomeWrapperPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 1. We use ref.WATCH here so this widget rebuilds whenever the user state changes
+    final user = ref.watch(currentUserProvider).value;
+
+    // 2. Dynamically return the correct page
+    if (user?.activeRole == UserRole.caregiver) {
+      return const RequestsPage();
+    } else {
+      return const ServicesPage();
+    }
+  }
+}
+
 /// Centralized Routing Constants
 class AppRoutes {
   // --- Route Names ---
@@ -51,18 +68,34 @@ class AppRoutes {
   static const String parentEditProfilePath = '/edit-profile';
   static const String addChildPath = '/add-child';
 
-  AppRoutes._(); // Private constructor prevents instantiation
+  AppRoutes._();
 }
 
-/// Listenable that triggers GoRouter to refresh whenever the Auth state changes
+/// 1. OPTIMIZED: Smarter Notifier for AsyncValue
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
   RouterNotifier(this._ref) {
-    _ref.listen(currentUserProvider, (_, _) => notifyListeners());
+    _ref.listen(currentUserProvider, (previous, next) {
+      // Only refresh the router if the Auth Notifier has finished loading data.
+      // This prevents UI flickering during the login API calls.
+      if (!next.isLoading) {
+        notifyListeners();
+      }
+    });
   }
 }
 
+// 2. OPTIMIZED: Unique Navigator Keys for memory safety & tab persistence
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _shellNavigatorHomeKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellHome',
+);
+final _shellNavigatorNotificationsKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellNotifications',
+);
+final _shellNavigatorProfileKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellProfile',
+);
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = RouterNotifier(ref);
@@ -76,7 +109,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     // REDIRECTION LOGIC
     // ==========================================
     redirect: (context, state) {
-      final user = ref.read(currentUserProvider);
+      // 3. OPTIMIZED: Extract from AsyncValue safely
+      final authState = ref.read(currentUserProvider);
+
+      // Do not interrupt the user with redirects if the Auth state is still fetching/loading
+      if (authState.isLoading) return null;
+
+      final user = authState.value;
       final isLoggedIn = user != null;
       final isGuest = user?.isGuest ?? false;
 
@@ -84,23 +123,23 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final bool onRolePage =
           state.matchedLocation == AppRoutes.roleSelectionPath;
 
-      // 1. Not Logged In -> Go to Login
+      // Unauthenticated -> Go to Login
       if (!isLoggedIn) return onLoginPage ? null : AppRoutes.loginPath;
 
-      // 2. Guest -> Go Home (Skip Role selection)
+      // Guest -> Go Home (Skip Role selection)
       if (isGuest) {
         if (onLoginPage || onRolePage) return AppRoutes.homePath;
         return null;
       }
 
-      // 3. Logged In but no Role chosen -> Go to Role Selection
+      // Logged In but no Role chosen -> Go to Role Selection
       if (user.activeRole == null) {
         return onRolePage ? null : AppRoutes.roleSelectionPath;
       }
 
-      // 4. Role exists -> Prevent going back to Login/Role Selection
+      // Role exists -> Prevent going back to Login/Role Selection
       if (onLoginPage || onRolePage) {
-        return AppRoutes.homePath; // Home builder handles role-based UI
+        return AppRoutes.homePath;
       }
 
       return null;
@@ -110,7 +149,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     // ROUTE CONFIGURATION
     // ==========================================
     routes: [
-      // Auth Screens
       GoRoute(
         path: AppRoutes.loginPath,
         name: AppRoutes.login,
@@ -137,24 +175,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           transitionDuration: const Duration(milliseconds: 400),
         ),
         branches: [
-          // BRANCH 1: Home (Smart loading Services or Requests)
+          // BRANCH 1: Home
           StatefulShellBranch(
+            navigatorKey: _shellNavigatorHomeKey, // Attached Key
             routes: [
               GoRoute(
                 path: AppRoutes.homePath,
                 name: AppRoutes.home,
-                builder: (context, _) {
-                  final user = ref.read(currentUserProvider);
-                  return user?.activeRole == UserRole.caregiver
-                      ? const RequestsPage()
-                      : const ServicesPage();
-                },
+                builder: (context, _) => const HomeWrapperPage(),
               ),
             ],
           ),
 
           // BRANCH 2: Notifications
           StatefulShellBranch(
+            navigatorKey: _shellNavigatorNotificationsKey, // Attached Key
             routes: [
               GoRoute(
                 path: AppRoutes.notificationsPath,
@@ -166,6 +201,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
           // BRANCH 3: Profile
           StatefulShellBranch(
+            navigatorKey: _shellNavigatorProfileKey, // Attached Key
             routes: [
               GoRoute(
                 path: AppRoutes.profilePath,
@@ -177,7 +213,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Sub-Pages (Full screen, hides navbar)
+      // Sub-Pages
       GoRoute(
         path: AppRoutes.specialNeedsPath,
         name: AppRoutes.specialNeeds,

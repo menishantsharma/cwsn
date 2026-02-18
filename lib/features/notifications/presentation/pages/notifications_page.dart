@@ -1,3 +1,4 @@
+import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/core/widgets/guest_placeholder.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
@@ -16,15 +17,15 @@ class NotificationsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isCaregiverMode = ref.watch(isCaregiverProvider);
-    final user = ref.watch(currentUserProvider);
-
-    // Watch the Riverpod state
-    final notificationsState = ref.watch(notificationsProvider);
+    // 1. OPTIMIZED: Properly extract the user value from the AsyncValue
+    final user = ref.watch(currentUserProvider).value;
 
     if (user == null) return const SizedBox.shrink();
 
-    // GUEST VIEW
+    // 2. OPTIMIZED: Derive the role locally instead of watching another provider
+    final isCaregiver = user.activeRole == UserRole.caregiver;
+
+    // --- GUEST VIEW ---
     if (user.isGuest) {
       return PillScaffold(
         title: 'Notifications',
@@ -32,25 +33,30 @@ class NotificationsPage extends ConsumerWidget {
         body: (context, padding) => GuestPlaceholder(
           title: "No Notifications",
           message: "Please login to see your updates and messages.",
-          onLoginPressed: () {
-            ref.read(currentUserProvider.notifier).state = null;
-          },
+          // 3. OPTIMIZED: Use the proper logout method
+          onLoginPressed: () => ref.read(currentUserProvider.notifier).logout(),
         ),
       );
     }
 
-    // AUTHENTICATED VIEW
+    // --- AUTHENTICATED VIEW ---
+    final notificationsAsync = ref.watch(notificationsProvider);
+
     return PillScaffold(
       title: 'Notifications',
       showBack: false,
-      actionIcon: Icons.done_all_rounded,
+      // Only show the "Mark All Read" icon if there is actual data
+      actionIcon:
+          notificationsAsync.hasValue && notificationsAsync.value!.isNotEmpty
+          ? Icons.done_all_rounded
+          : null,
       onActionPressed: () {
         ref.read(notificationsProvider.notifier).markAllAsRead();
       },
 
       body: (context, padding) {
-        return notificationsState.when(
-          // LOADING STATE
+        return notificationsAsync.when(
+          // --- LOADING STATE ---
           loading: () => ListView.builder(
             padding: padding.copyWith(left: 20, right: 20),
             itemCount: 6,
@@ -59,13 +65,19 @@ class NotificationsPage extends ConsumerWidget {
                 .shimmer(color: Colors.grey.shade200, duration: 1200.ms),
           ),
 
+          // --- ERROR STATE ---
           error: (err, stack) => Center(child: Text('Error: $err')),
 
+          // --- DATA STATE ---
           data: (notifications) {
-            if (notifications.isEmpty) return _buildEmptyState(isCaregiverMode);
+            if (notifications.isEmpty) {
+              return _EmptyNotificationsState(isCaregiver: isCaregiver);
+            }
 
             return RefreshIndicator(
-              onRefresh: () => ref.read(notificationsProvider.notifier).fetch(),
+              // 4. OPTIMIZED: The most efficient way to refresh an AsyncNotifier in Riverpod 2+
+              // Invalidate forces Riverpod to drop the current state and run build() again
+              onRefresh: () async => ref.invalidate(notificationsProvider),
               color: Theme.of(context).primaryColor,
               child: ListView.builder(
                 padding: padding.copyWith(left: 20, right: 20, bottom: 80),
@@ -76,20 +88,19 @@ class NotificationsPage extends ConsumerWidget {
                   return NotificationTile(
                         notification: notification,
                         onTap: () {
-                          // 1. Mark as read instantly in UI & Backend
+                          // Mark as read instantly in UI & Backend
                           ref
                               .read(notificationsProvider.notifier)
                               .markAsRead(notification.id);
 
-                          // 2. Handle Navigation Logic based on Notification Type
+                          // Handle Navigation Logic based on Notification Type
                           switch (notification.type) {
                             case NotificationType.requestAccepted:
                               // PARENT: Open the Caregiver's Profile
                               if (notification.relatedId != null) {
                                 context.pushNamed(
                                   AppRoutes.caregiverProfile,
-                                  extra: notification
-                                      .relatedId, // Pass the Caregiver ID
+                                  extra: notification.relatedId,
                                 );
                               }
                               break;
@@ -99,6 +110,7 @@ class NotificationsPage extends ConsumerWidget {
                               break;
 
                             case NotificationType.message:
+                              // Navigate to chat (Future)
                               break;
 
                             default:
@@ -124,8 +136,20 @@ class NotificationsPage extends ConsumerWidget {
       },
     );
   }
+}
 
-  Widget _buildEmptyState(bool isCaregiver) {
+// ==========================================
+// 5. OPTIMIZED: EXTRACTED STATELESS WIDGET
+// ==========================================
+// Moving this out of the main build method prevents the entire
+// NotificationsPage from rebuilding when it's just showing the empty state.
+class _EmptyNotificationsState extends StatelessWidget {
+  final bool isCaregiver;
+
+  const _EmptyNotificationsState({required this.isCaregiver});
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

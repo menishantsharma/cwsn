@@ -11,6 +11,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
+// OPTIMIZED: Use a provider for Dependency Injection
+final userRepositoryProvider = Provider((ref) => UserRepository());
+
 class ParentEditProfilePage extends ConsumerStatefulWidget {
   const ParentEditProfilePage({super.key});
 
@@ -20,8 +23,6 @@ class ParentEditProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
-  final UserRepository _userRepository = UserRepository();
-
   // Controllers
   late TextEditingController _nameController;
   late TextEditingController _locationController;
@@ -31,8 +32,6 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
   Gender? _selectedGender;
   List<String> _selectedLanguages = [];
   bool _isLoading = false;
-
-  // Store avatar URL locally so we don't need ref.watch in the build method
   String? _avatarUrl;
 
   final List<String> _allLanguages = [
@@ -51,7 +50,8 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
   @override
   void initState() {
     super.initState();
-    final user = ref.read(currentUserProvider);
+    // OPTIMIZED: Safely extract the .value from the AsyncNotifier
+    final user = ref.read(currentUserProvider).value;
 
     _nameController = TextEditingController(text: user?.firstName ?? "");
     _locationController = TextEditingController(text: user?.location ?? "");
@@ -80,7 +80,8 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
       return;
     }
 
-    final currentUser = ref.read(currentUserProvider);
+    // OPTIMIZED: Safely extract .value
+    final currentUser = ref.read(currentUserProvider).value;
     if (currentUser == null) return;
 
     setState(() => _isLoading = true);
@@ -93,90 +94,24 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
         gender: _selectedGender,
       );
 
-      final savedUser = await _userRepository.updateUserProfile(updatedUser);
+      // OPTIMIZED: Read repository via Provider
+      final savedUser = await ref
+          .read(userRepositoryProvider)
+          .updateUserProfile(updatedUser);
 
-      // Update provider with new user data
-      ref.read(currentUserProvider.notifier).state = savedUser;
+      // OPTIMIZED: Use the safe update method we added to AuthNotifier
+      ref.read(currentUserProvider.notifier).updateProfile(savedUser);
 
-      if (mounted) {
-        _showSnack("Profile Updated Successfully!");
-      }
+      if (mounted) _showSnack("Profile Updated Successfully!");
     } catch (e) {
-      if (mounted) {
-        _showSnack("Failed to update profile. Please try again.");
-      }
+      if (mounted) _showSnack("Failed to update profile. Please try again.");
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
-  void _showLanguageSelector() async {
-    final List<String>? result = await showDialog(
-      context: context,
-      builder: (context) => LanguageSelectionDialog(
-        allLanguages: _allLanguages,
-        selectedLanguages: _selectedLanguages,
-      ),
-    );
-
-    if (result != null) {
-      setState(() {
-        _selectedLanguages = result;
-      });
-    }
-  }
-
-  void _initiatePhoneChange() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => PhoneVerificationSheet(
-        currentPhone: _phoneController.text,
-        onVerified: (newPhone) {
-          setState(() {
-            _phoneController.text = newPhone;
-          });
-          _showSnack("Phone Number Verified & Updated!");
-        },
-      ),
-    );
-  }
-
-  void _detectLocation() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(width: 16),
-            Text("Fetching current location..."),
-          ],
-        ),
-        duration: Duration(seconds: 1),
-      ),
-    );
-
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() {
-        _locationController.text = "Powai, Mumbai, Maharashtra 400076";
-      });
-    }
   }
 
   @override
@@ -189,38 +124,28 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child:
-            SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _saveChanges,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      elevation: 10,
-                      shadowColor: primaryColor.withValues(alpha: 0.4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: _isLoading
-                        ? const SpinKitThreeBounce(
-                            color: Colors.white,
-                            size: 20,
-                          )
-                        : const Text(
-                            "Save Changes",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+        child: SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _saveChanges,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+              elevation: 10,
+              shadowColor: primaryColor.withValues(alpha: 0.4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: _isLoading
+                ? const SpinKitThreeBounce(color: Colors.white, size: 20)
+                : const Text(
+                    "Save Changes",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                )
-                .animate(key: const ValueKey('save_btn'))
-                .fade(delay: 600.ms)
-                .slideY(begin: 0.5, end: 0), // Added Key
+          ),
+        ).animate().fade(delay: 600.ms).slideY(begin: 0.5, end: 0),
       ),
 
       body: (context, padding) => SingleChildScrollView(
@@ -233,65 +158,15 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            Center(
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 110,
-                        height: 110,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          backgroundColor: Colors.grey.shade100,
-                          backgroundImage:
-                              _avatarUrl != null && _avatarUrl!.isNotEmpty
-                              ? CachedNetworkImageProvider(_avatarUrl!)
-                              : null,
-                          child: (_avatarUrl == null || _avatarUrl!.isEmpty)
-                              ? const Icon(Icons.person)
-                              : null,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: primaryColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-                .animate(key: const ValueKey('avatar'))
-                .scale(
-                  duration: 400.ms,
-                  curve: Curves.easeOutBack,
-                ), // Added Key
+
+            // OPTIMIZED: Extracted to a StatelessWidget
+            _AvatarSelector(avatarUrl: _avatarUrl, primaryColor: primaryColor),
 
             const SizedBox(height: 40),
 
             Column(
               children: [
-                _buildPillInput(
+                _PillInput(
                   label: "First Name",
                   controller: _nameController,
                   icon: Icons.person_outline_rounded,
@@ -299,16 +174,63 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
                 ),
                 const SizedBox(height: 20),
 
-                _buildLocationInput(delay: 200),
+                _LocationInput(
+                  controller: _locationController,
+                  delay: 200,
+                  onDetectLocation: () async {
+                    _showSnack("Fetching current location...");
+                    await Future.delayed(const Duration(seconds: 2));
+                    setState(
+                      () => _locationController.text =
+                          "Powai, Mumbai, Maharashtra 400076",
+                    );
+                  },
+                ),
                 const SizedBox(height: 24),
 
-                _buildGenderSelector(context, delay: 300),
+                _GenderSelector(
+                  selectedGender: _selectedGender,
+                  onChanged: (val) => setState(() => _selectedGender = val),
+                  delay: 300,
+                ),
                 const SizedBox(height: 24),
 
-                _buildPhoneInput(delay: 400),
+                _PhoneInput(
+                  controller: _phoneController,
+                  delay: 400,
+                  onChangeRequested: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => PhoneVerificationSheet(
+                        currentPhone: _phoneController.text,
+                        onVerified: (newPhone) {
+                          setState(() => _phoneController.text = newPhone);
+                          _showSnack("Phone Number Verified & Updated!");
+                        },
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 20),
 
-                _buildLanguageSelector(delay: 500),
+                _LanguageSelector(
+                  selectedLanguages: _selectedLanguages,
+                  delay: 500,
+                  onTap: () async {
+                    final List<String>? result = await showDialog(
+                      context: context,
+                      builder: (context) => LanguageSelectionDialog(
+                        allLanguages: _allLanguages,
+                        selectedLanguages: _selectedLanguages,
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() => _selectedLanguages = result);
+                    }
+                  },
+                ),
               ],
             ),
           ],
@@ -316,10 +238,206 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
       ),
     );
   }
+}
 
-  // --- WIDGET HELPERS ---
+// ==========================================
+// OPTIMIZED: EXTRACTED STATELESS WIDGETS
+// ==========================================
 
-  Widget _buildGenderSelector(BuildContext context, {int delay = 0}) {
+class _AvatarSelector extends StatelessWidget {
+  final String? avatarUrl;
+  final Color primaryColor;
+
+  const _AvatarSelector({required this.avatarUrl, required this.primaryColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+          child: Stack(
+            children: [
+              Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  backgroundColor: Colors.grey.shade100,
+                  backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
+                      ? CachedNetworkImageProvider(avatarUrl!)
+                      : null,
+                  child: (avatarUrl == null || avatarUrl!.isEmpty)
+                      ? const Icon(Icons.person)
+                      : null,
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )
+        .animate(key: const ValueKey('avatar'))
+        .scale(duration: 400.ms, curve: Curves.easeOutBack);
+  }
+}
+
+class _PillInput extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final IconData icon;
+  final int delay;
+
+  const _PillInput({
+    required this.label,
+    required this.controller,
+    required this.icon,
+    required this.delay,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+                offset: const Offset(0, 4),
+                blurRadius: 16,
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: TextFormField(
+            controller: controller,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              labelText: label,
+              labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+              prefixIcon: Icon(
+                icon,
+                color: context.colorScheme.secondary,
+                size: 22,
+              ),
+              prefixIconConstraints: const BoxConstraints(minWidth: 40),
+            ),
+          ),
+        )
+        .animate(key: ValueKey(label))
+        .fade(delay: delay.ms)
+        .slideX(begin: 0.2, end: 0);
+  }
+}
+
+class _LocationInput extends StatelessWidget {
+  final TextEditingController controller;
+  final int delay;
+  final VoidCallback onDetectLocation;
+
+  const _LocationInput({
+    required this.controller,
+    required this.delay,
+    required this.onDetectLocation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
+                offset: const Offset(0, 4),
+                blurRadius: 16,
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: controller,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    labelText: "Location",
+                    labelStyle: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.location_on_outlined,
+                      color: context.colorScheme.secondary,
+                      size: 22,
+                    ),
+                    prefixIconConstraints: const BoxConstraints(minWidth: 40),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: onDetectLocation,
+                icon: Icon(
+                  Icons.my_location_rounded,
+                  color: context.colorScheme.primary,
+                ),
+                tooltip: "Use Current Location",
+              ),
+            ],
+          ),
+        )
+        .animate(key: const ValueKey('location'))
+        .fade(delay: delay.ms)
+        .slideX(begin: 0.2, end: 0);
+  }
+}
+
+class _GenderSelector extends StatelessWidget {
+  final Gender? selectedGender;
+  final ValueChanged<Gender> onChanged;
+  final int delay;
+
+  const _GenderSelector({
+    required this.selectedGender,
+    required this.onChanged,
+    required this.delay,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
     return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,27 +455,17 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
             ),
             Row(
               children: Gender.values.map((gender) {
-                final isSelected = _selectedGender == gender;
+                final isSelected = selectedGender == gender;
                 final label =
                     gender.name[0].toUpperCase() + gender.name.substring(1);
-                IconData icon;
-                switch (gender) {
-                  case Gender.male:
-                    icon = Icons.male_rounded;
-                    break;
-                  case Gender.female:
-                    icon = Icons.female_rounded;
-                    break;
-                  case Gender.other:
-                    icon = Icons.transgender_rounded;
-                    break;
-                }
+
+                IconData icon = Icons.transgender_rounded;
+                if (gender == Gender.male) icon = Icons.male_rounded;
+                if (gender == Gender.female) icon = Icons.female_rounded;
 
                 return Expanded(
                   child: GestureDetector(
-                    onTap: () {
-                      setState(() => _selectedGender = gender);
-                    },
+                    onTap: () => onChanged(gender),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -411,55 +519,24 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
         )
         .animate(key: const ValueKey('gender'))
         .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0); // Added Key
+        .slideX(begin: 0.2, end: 0);
   }
+}
 
-  Widget _buildPillInput({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    TextInputType? keyboardType,
-    int delay = 0,
-  }) {
-    return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-                offset: const Offset(0, 4),
-                blurRadius: 16,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: TextFormField(
-            controller: controller,
-            keyboardType: keyboardType,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              labelText: label,
-              labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-              prefixIcon: Icon(
-                icon,
-                color: context.colorScheme.secondary,
-                size: 22,
-              ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 40),
-            ),
-          ),
-        )
-        .animate(key: ValueKey(label))
-        .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0); // Added Key
-  }
+class _PhoneInput extends StatelessWidget {
+  final TextEditingController controller;
+  final VoidCallback onChangeRequested;
+  final int delay;
 
-  Widget _buildLocationInput({int delay = 0}) {
+  const _PhoneInput({
+    required this.controller,
+    required this.onChangeRequested,
+    required this.delay,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhone = controller.text.isNotEmpty;
     return Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -477,63 +554,7 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
             children: [
               Expanded(
                 child: TextFormField(
-                  controller: _locationController,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    labelText: "Location",
-                    labelStyle: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 14,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.location_on_outlined,
-                      color: context.colorScheme.secondary,
-                      size: 22,
-                    ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 40),
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: _detectLocation,
-                icon: Icon(
-                  Icons.my_location_rounded,
-                  color: context.colorScheme.primary,
-                ),
-                tooltip: "Use Current Location",
-              ),
-            ],
-          ),
-        )
-        .animate(key: const ValueKey('location'))
-        .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0); // Added Key
-  }
-
-  Widget _buildPhoneInput({int delay = 0}) {
-    final hasPhone = _phoneController.text.isNotEmpty;
-    return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-                offset: const Offset(0, 4),
-                blurRadius: 16,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _phoneController,
+                  controller: controller,
                   readOnly: true,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
@@ -557,7 +578,7 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
                 ),
               ),
               TextButton(
-                onPressed: _initiatePhoneChange,
+                onPressed: onChangeRequested,
                 child: Text(
                   hasPhone ? "CHANGE" : "ADD",
                   style: TextStyle(
@@ -572,16 +593,29 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
         )
         .animate(key: const ValueKey('phone'))
         .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0); // Added Key
+        .slideX(begin: 0.2, end: 0);
   }
+}
 
-  Widget _buildLanguageSelector({int delay = 0}) {
-    final text = _selectedLanguages.isEmpty
+class _LanguageSelector extends StatelessWidget {
+  final List<String> selectedLanguages;
+  final VoidCallback onTap;
+  final int delay;
+
+  const _LanguageSelector({
+    required this.selectedLanguages,
+    required this.onTap,
+    required this.delay,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = selectedLanguages.isEmpty
         ? "Select Languages"
-        : _selectedLanguages.join(", ");
-    final isPlaceholder = _selectedLanguages.isEmpty;
+        : selectedLanguages.join(", ");
+    final isPlaceholder = selectedLanguages.isEmpty;
     return GestureDetector(
-          onTap: _showLanguageSelector,
+          onTap: onTap,
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -636,6 +670,6 @@ class _ParentEditProfilePageState extends ConsumerState<ParentEditProfilePage> {
         )
         .animate(key: const ValueKey('language'))
         .fade(delay: delay.ms)
-        .slideX(begin: 0.2, end: 0); // Added Key
+        .slideX(begin: 0.2, end: 0);
   }
 }

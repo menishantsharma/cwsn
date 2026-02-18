@@ -21,7 +21,8 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
   @override
   void initState() {
     super.initState();
-    _isSwitchingToCaregiver = !ref.read(isCaregiverProvider);
+    final currentUser = ref.read(currentUserProvider).value;
+    _isSwitchingToCaregiver = currentUser?.activeRole == UserRole.parent;
     _startSwitchingProcess();
   }
 
@@ -30,16 +31,12 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
 
     if (!mounted) return;
 
-    final user = ref.read(currentUserProvider);
+    final newRole = _isSwitchingToCaregiver
+        ? UserRole.caregiver
+        : UserRole.parent;
+    ref.read(currentUserProvider.notifier).switchRole(newRole);
 
-    if (user != null) {
-      final newRole = _isSwitchingToCaregiver
-          ? UserRole.caregiver
-          : UserRole.parent;
-      ref.read(currentUserProvider.notifier).state = user.copyWith(
-        activeRole: newRole,
-      );
-    }
+    if (!mounted) return;
 
     context.goNamed(AppRoutes.home);
   }

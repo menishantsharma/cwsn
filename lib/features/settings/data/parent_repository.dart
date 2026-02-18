@@ -1,4 +1,7 @@
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final parentRepositoryProvider = Provider((ref) => ParentRepository());
 
 class ParentRepository {
   Future<ChildModel> addChild({
