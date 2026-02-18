@@ -24,7 +24,6 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
 /// Centralized Routing Constants
-/// Use 'Names' for pushNamed() and 'Paths' for the router configuration.
 class AppRoutes {
   // --- Route Names ---
   static const String login = 'login';
