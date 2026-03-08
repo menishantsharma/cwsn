@@ -75,14 +75,29 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = user != null;
       final isGuest = user?.isGuest ?? false;
 
-      final bool onLoginPage = state.matchedLocation == AppRoutes.loginPath;
-      final bool onRolePage =
-          state.matchedLocation == AppRoutes.roleSelectionPath;
+      final currentPath = state.matchedLocation;
+      final bool onLoginPage = currentPath == AppRoutes.loginPath;
+      final bool onRolePage = currentPath == AppRoutes.roleSelectionPath;
 
       if (!isLoggedIn) return onLoginPage ? null : AppRoutes.loginPath;
 
       if (isGuest) {
         if (onLoginPage || onRolePage) return AppRoutes.homePath;
+
+        final guestWhitelist = {
+          AppRoutes.homePath,
+          AppRoutes.notificationsPath,
+          AppRoutes.profilePath,
+          AppRoutes.specialNeedsPath,
+          AppRoutes.caregiversListPath,
+          AppRoutes.caregiverProfilePath,
+        };
+
+        final isAllowed = guestWhitelist.any(
+          (route) => currentPath == route || currentPath.startsWith('$route/'),
+        );
+
+        if (!isAllowed) return AppRoutes.loginPath;
         return null;
       }
 
