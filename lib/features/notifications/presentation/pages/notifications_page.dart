@@ -5,10 +5,8 @@ import 'package:cwsn/core/widgets/guest_placeholder.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/notifications/models/notification_model.dart';
 import 'package:cwsn/features/notifications/presentation/providers/notification_provider.dart';
-import 'package:cwsn/features/notifications/presentation/widgets/notification_skeleton_tile.dart';
 import 'package:cwsn/features/notifications/presentation/widgets/notification_tile.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,15 +15,13 @@ class NotificationsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider).value;
+    final userAsync = ref.watch(currentUserProvider);
+    final user = userAsync.value;
 
     if (user == null) return const SizedBox.shrink();
-
-    final isCaregiver = user.activeRole == UserRole.caregiver;
-
     if (user.isGuest) {
       return Scaffold(
-        appBar: AppTopBar(title: 'Notifications'),
+        appBar: const AppTopBar(title: 'Notifications'),
         body: GuestPlaceholder(
           title: "No Notifications",
           message: "Please login to see your updates and messages.",
@@ -37,83 +33,54 @@ class NotificationsPage extends ConsumerWidget {
     final notificationsAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFBFBFB),
       appBar: AppTopBar(
         title: 'Notifications',
+        showBackButton: false,
         actions: [
-          if (notificationsAsync.hasValue &&
-              notificationsAsync.value!.isNotEmpty)
+          if (notificationsAsync.value?.any((n) => !n.isRead) ?? false)
             IconButton(
-              icon: const Icon(Icons.done_all_rounded),
-              onPressed: () {
-                ref.read(notificationsProvider.notifier).markAllAsRead();
-              },
+              tooltip: 'Mark all as read',
+              icon: const Icon(Icons.done_all_rounded, color: Colors.black87),
+              onPressed: () =>
+                  ref.read(notificationsProvider.notifier).markAllAsRead(),
             ),
         ],
-        showBackButton: false,
       ),
-
       body: notificationsAsync.when(
-        loading: () => ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          itemCount: 6,
-          itemBuilder: (_, _) => const NotificationSkeletonTile()
-              .animate(onPlay: (c) => c.repeat())
-              .shimmer(color: Colors.grey.shade200, duration: 1200.ms),
-        ),
+        loading: () =>
+            const Center(child: CircularProgressIndicator.adaptive()),
 
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, _) => Center(child: Text('Failed to load: $err')),
 
         data: (notifications) {
           if (notifications.isEmpty) {
-            return _EmptyNotificationsState(isCaregiver: isCaregiver);
+            return _EmptyNotificationsState(
+              isCaregiver: user.activeRole == UserRole.caregiver,
+            );
           }
 
-          return RefreshIndicator(
+          return RefreshIndicator.adaptive(
             onRefresh: () async => ref.invalidate(notificationsProvider),
-            color: Theme.of(context).primaryColor,
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: notifications.length,
+              separatorBuilder: (_, _) =>
+                  Divider(height: 1, indent: 80, color: Colors.grey.shade100),
               itemBuilder: (context, index) {
-                final notification = notifications[index];
-
+                final item = notifications[index];
                 return NotificationTile(
-                      notification: notification,
-                      onTap: () {
-                        ref
-                            .read(notificationsProvider.notifier)
-                            .markAsRead(notification.id);
-
-                        switch (notification.type) {
-                          case NotificationType.requestAccepted:
-                            if (notification.relatedId != null) {
-                              context.pushNamed(
-                                AppRoutes.caregiverProfile,
-                                extra: notification.relatedId,
-                              );
-                            }
-                            break;
-
-                          case NotificationType.requestReceived:
-                            break;
-
-                          case NotificationType.message:
-                            break;
-
-                          default:
-                            break;
-                        }
-                      },
-                    )
-                    .animate()
-                    .fade(duration: 400.ms, delay: (50 * index).ms)
-                    .slideX(
-                      begin: 0.1,
-                      end: 0,
-                      duration: 400.ms,
-                      curve: Curves.easeOutQuad,
-                      delay: (50 * index).ms,
-                    );
+                  notification: item,
+                  onTap: () {
+                    ref
+                        .read(notificationsProvider.notifier)
+                        .markAsRead(item.id);
+                    _handleNavigation(context, item);
+                  },
+                );
               },
             ),
           );
@@ -121,52 +88,59 @@ class NotificationsPage extends ConsumerWidget {
       ),
     );
   }
+
+  void _handleNavigation(BuildContext context, NotificationItem item) {
+    switch (item.type) {
+      case NotificationType.requestAccepted:
+        if (item.relatedId != null) {
+          context.pushNamed(AppRoutes.caregiverProfile, extra: item.relatedId);
+        }
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 class _EmptyNotificationsState extends StatelessWidget {
   final bool isCaregiver;
-
   const _EmptyNotificationsState({required this.isCaregiver});
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F7FF),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
               shape: BoxShape.circle,
             ),
             child: Icon(
               isCaregiver
-                  ? Icons.work_off_rounded
-                  : Icons.notifications_off_rounded,
+                  ? Icons.work_outline_rounded
+                  : Icons.notifications_none_rounded,
               size: 48,
-              color: const Color(0xFF535CE8).withValues(alpha: 0.5),
+              color: Colors.grey.shade300,
             ),
           ),
           const SizedBox(height: 16),
           const Text(
             'All caught up!',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             isCaregiver
-                ? 'You have no new requests from parents.'
-                : 'You have no new updates from caregivers.',
+                ? 'No new service requests yet.'
+                : 'No new updates for you.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey.shade500),
           ),
         ],
-      ).animate().fade().scale(),
+      ),
     );
   }
 }
