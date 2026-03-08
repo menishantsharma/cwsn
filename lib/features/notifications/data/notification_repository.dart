@@ -1,10 +1,12 @@
 import 'package:cwsn/features/notifications/models/notification_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Provider to access the notification repository throughout the app.
 final notificationRepositoryProvider = Provider<NotificationRepository>(
   (ref) => FakeNotificationRepository(),
 );
 
+/// The blueprint for notification data operations.
 abstract class NotificationRepository {
   Future<List<NotificationItem>> fetchNotifications({
     required String userId,
@@ -13,12 +15,21 @@ abstract class NotificationRepository {
     int offset = 0,
   });
 
-  Future<void> markAsRead(String notificationId);
-  Future<void> markAllAsRead(String userId);
+  Future<void> markAsRead({
+    required String notificationId,
+    required bool isCaregiver,
+  });
+  Future<void> markAllAsRead({
+    required String userId,
+    required bool isCaregiver,
+  });
 }
 
+/// A stateful mock repository that persists changes in memory during the app session.
 class FakeNotificationRepository implements NotificationRepository {
-  List<NotificationItem>? _inMemoryDb;
+  // Separate in-memory databases to prevent role-switch data bleeding.
+  List<NotificationItem>? _parentDb;
+  List<NotificationItem>? _caregiverDb;
 
   @override
   Future<List<NotificationItem>> fetchNotifications({
@@ -27,29 +38,60 @@ class FakeNotificationRepository implements NotificationRepository {
     int limit = 20,
     int offset = 0,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 800));
 
-    _inMemoryDb = isCaregiver
-        ? _generateCaregiverMocks()
-        : _generateParentMocks();
+    if (isCaregiver) {
+      _caregiverDb ??= _generateCaregiverMocks();
+    } else {
+      _parentDb ??= _generateParentMocks();
+    }
 
-    if (offset >= _inMemoryDb!.length) return [];
+    final activeDb = isCaregiver ? _caregiverDb! : _parentDb!;
 
-    final end = (offset + limit) > _inMemoryDb!.length
-        ? _inMemoryDb!.length
+    if (offset >= activeDb.length) return [];
+
+    final end = (offset + limit) > activeDb.length
+        ? activeDb.length
         : offset + limit;
 
-    return _inMemoryDb!.sublist(offset, end);
+    return activeDb.sublist(offset, end);
   }
 
   @override
-  Future<void> markAsRead(String notificationId) async {
+  Future<void> markAsRead({
+    required String notificationId,
+    required bool isCaregiver,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 300));
+
+    if (isCaregiver && _caregiverDb != null) {
+      _updateInList(_caregiverDb!, notificationId);
+    } else if (!isCaregiver && _parentDb != null) {
+      _updateInList(_parentDb!, notificationId);
+    }
+  }
+
+  void _updateInList(List<NotificationItem> list, String id) {
+    final index = list.indexWhere((n) => n.id == id);
+    if (index != -1) {
+      list[index] = list[index].copyWith(isRead: true);
+    }
   }
 
   @override
-  Future<void> markAllAsRead(String userId) async {
+  Future<void> markAllAsRead({
+    required String userId,
+    required bool isCaregiver,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 500));
+
+    if (isCaregiver) {
+      _caregiverDb = _caregiverDb
+          ?.map((n) => n.copyWith(isRead: true))
+          .toList();
+    } else {
+      _parentDb = _parentDb?.map((n) => n.copyWith(isRead: true)).toList();
+    }
   }
 
   List<NotificationItem> _generateCaregiverMocks() {

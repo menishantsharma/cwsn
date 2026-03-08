@@ -6,67 +6,79 @@ import 'package:cwsn/features/notifications/models/notification_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final notificationsProvider =
-    AsyncNotifierProvider<NotificationsNotifier, List<NotificationItem>>(() {
-      return NotificationsNotifier();
-    });
+    AsyncNotifierProvider<NotificationsNotifier, List<NotificationItem>>(
+      NotificationsNotifier.new,
+    );
 
 class NotificationsNotifier extends AsyncNotifier<List<NotificationItem>> {
   @override
   FutureOr<List<NotificationItem>> build() async {
-    final user = ref.watch(currentUserProvider).value;
+    final (userId, isGuest, activeRole) = await ref.watch(
+      currentUserProvider.selectAsync(
+        (u) => (u?.id, u?.isGuest ?? true, u?.activeRole),
+      ),
+    );
 
-    if (user == null || user.isGuest) {
-      return [];
-    }
-
-    final isCaregiver = user.activeRole == UserRole.caregiver;
+    if (userId == null || isGuest) return [];
 
     final repo = ref.watch(notificationRepositoryProvider);
-    return await repo.fetchNotifications(
-      userId: user.id,
-      isCaregiver: isCaregiver,
+
+    return repo.fetchNotifications(
+      userId: userId,
+      isCaregiver: activeRole == UserRole.caregiver,
     );
   }
 
   Future<void> markAsRead(String notificationId) async {
-    final currentList = state.value;
-    if (currentList == null) return;
+    final previousState = state.value;
+    final user = ref.read(currentUserProvider).value;
 
-    final targetIndex = currentList.indexWhere((n) => n.id == notificationId);
-    if (targetIndex == -1 || currentList[targetIndex].isRead) return;
+    if (previousState == null || user == null) return;
+
+    final targetIndex = previousState.indexWhere((n) => n.id == notificationId);
+    if (targetIndex == -1 || previousState[targetIndex].isRead) return;
+
+    final bool isCaregiver = user.activeRole == UserRole.caregiver;
 
     state = AsyncData(
-      currentList.map((n) {
-        return n.id == notificationId ? n.copyWith(isRead: true) : n;
-      }).toList(),
+      previousState
+          .map((n) => n.id == notificationId ? n.copyWith(isRead: true) : n)
+          .toList(),
     );
 
     try {
-      await ref.read(notificationRepositoryProvider).markAsRead(notificationId);
+      await ref
+          .read(notificationRepositoryProvider)
+          .markAsRead(notificationId: notificationId, isCaregiver: isCaregiver);
     } catch (e) {
-      state = AsyncData(currentList);
+      state = AsyncData(previousState);
     }
   }
 
   Future<void> markAllAsRead() async {
-    final currentList = state.value;
-    if (currentList == null || currentList.isEmpty) return;
-
+    final previousState = state.value;
     final user = ref.read(currentUserProvider).value;
-    if (user == null) return;
+
+    if (previousState == null ||
+        user == null ||
+        previousState.every((n) => n.isRead)) {
+      return;
+    }
+
+    final bool isCaregiver = user.activeRole == UserRole.caregiver;
 
     state = AsyncData(
-      currentList.map((n) => n.copyWith(isRead: true)).toList(),
+      previousState.map((n) => n.copyWith(isRead: true)).toList(),
     );
 
     try {
-      await ref.read(notificationRepositoryProvider).markAllAsRead(user.id);
+      await ref
+          .read(notificationRepositoryProvider)
+          .markAllAsRead(userId: user.id, isCaregiver: isCaregiver);
     } catch (e) {
-      state = AsyncData(currentList);
+      state = AsyncData(previousState);
     }
   }
 
-  Future<void> refresh() async {
-    ref.invalidateSelf();
-  }
+  Future<void> refresh() async => ref.invalidateSelf();
 }

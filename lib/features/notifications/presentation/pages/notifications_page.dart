@@ -7,6 +7,7 @@ import 'package:cwsn/features/notifications/models/notification_model.dart';
 import 'package:cwsn/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:cwsn/features/notifications/presentation/widgets/notification_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Required for HapticFeedback
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,9 +19,10 @@ class NotificationsPage extends ConsumerWidget {
     final user = ref.watch(currentUserProvider).value;
 
     if (user == null) return const SizedBox.shrink();
+
     if (user.isGuest) {
       return Scaffold(
-        appBar: const AppTopBar(title: 'Notifications'),
+        appBar: const AppTopBar(title: 'Notifications', showBackButton: false),
         body: GuestPlaceholder(
           title: "No Notifications",
           message: "Please login to see your updates and messages.",
@@ -29,6 +31,7 @@ class NotificationsPage extends ConsumerWidget {
       );
     }
 
+    // Watch notifications list state
     final notificationsAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
@@ -37,21 +40,22 @@ class NotificationsPage extends ConsumerWidget {
         title: 'Notifications',
         showBackButton: false,
         actions: [
+          // Logic to show "Mark all as read" only if unread items exist
           if (notificationsAsync.value?.any((n) => !n.isRead) ?? false)
             IconButton(
               tooltip: 'Mark all as read',
               icon: const Icon(Icons.done_all_rounded, color: Colors.black87),
-              onPressed: () =>
-                  ref.read(notificationsProvider.notifier).markAllAsRead(),
+              onPressed: () {
+                HapticFeedback.mediumImpact(); // Premium tactile feel
+                ref.read(notificationsProvider.notifier).markAllAsRead();
+              },
             ),
         ],
       ),
       body: notificationsAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator.adaptive()),
-
         error: (err, _) => Center(child: Text('Failed to load: $err')),
-
         data: (notifications) {
           if (notifications.isEmpty) {
             return _EmptyNotificationsState(
@@ -60,7 +64,7 @@ class NotificationsPage extends ConsumerWidget {
           }
 
           return RefreshIndicator.adaptive(
-            onRefresh: () async => ref.invalidate(notificationsProvider),
+            onRefresh: () => ref.read(notificationsProvider.notifier).refresh(),
             child: ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
@@ -74,6 +78,7 @@ class NotificationsPage extends ConsumerWidget {
                 return NotificationTile(
                   notification: item,
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     ref
                         .read(notificationsProvider.notifier)
                         .markAsRead(item.id);
