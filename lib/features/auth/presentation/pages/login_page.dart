@@ -1,4 +1,3 @@
-import 'package:cwsn/features/auth/data/auth_repository.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,11 +10,19 @@ class LoginPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(currentUserProvider);
     final isLoading = authState.isLoading;
-
-    final authNotifier = ref.read(currentUserProvider.notifier);
-    final authRepo = ref.read(authRepositoryProvider);
-
     final primaryColor = Theme.of(context).primaryColor;
+
+    ref.listen<AsyncValue>(currentUserProvider, (_, next) {
+      if (next.hasError && !next.isLoading) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Authentication failed. Please try again."),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -28,7 +35,6 @@ class LoginPage extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Spacer(),
-
                   CircleAvatar(
                     radius: 48,
                     backgroundColor: primaryColor.withValues(alpha: 0.08),
@@ -39,7 +45,6 @@ class LoginPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-
                   const Text(
                     "Welcome to CWSN",
                     style: TextStyle(
@@ -58,7 +63,6 @@ class LoginPage extends ConsumerWidget {
                       color: Colors.grey.shade600,
                     ),
                   ),
-
                   const Spacer(),
 
                   IgnorePointer(
@@ -67,47 +71,49 @@ class LoginPage extends ConsumerWidget {
                       opacity: isLoading ? 0.6 : 1.0,
                       child: Column(
                         children: [
+                          // OPTIMIZED: The UI simply calls the explicit action!
                           _AuthButton(
                             text: "Continue with Google",
                             icon: FontAwesomeIcons.google,
                             iconColor: Colors.red,
                             isOutlined: true,
-                            onTap: () =>
-                                authNotifier.login(authRepo.signInWithGoogle),
+                            onTap: () => ref
+                                .read(currentUserProvider.notifier)
+                                .loginWithGoogle(),
                           ),
                           const SizedBox(height: 12),
-
                           _AuthButton(
                             text: "Continue with Apple",
                             icon: FontAwesomeIcons.apple,
                             iconColor: Colors.white,
                             bgColor: Colors.black,
                             textColor: Colors.white,
-                            onTap: () =>
-                                authNotifier.login(authRepo.signInWithApple),
+                            onTap: () => ref
+                                .read(currentUserProvider.notifier)
+                                .loginWithApple(),
                           ),
                           const SizedBox(height: 12),
-
                           _AuthButton(
                             text: "Continue with Facebook",
                             icon: FontAwesomeIcons.facebookF,
                             iconColor: Colors.white,
                             bgColor: const Color(0xFF1877F2),
                             textColor: Colors.white,
-                            onTap: () =>
-                                authNotifier.login(authRepo.signInWithFacebook),
+                            onTap: () => ref
+                                .read(currentUserProvider.notifier)
+                                .loginWithFacebook(),
                           ),
                         ],
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
                   TextButton(
                     onPressed: isLoading
                         ? null
-                        : () => authNotifier.login(authRepo.signInAsGuest),
+                        : () => ref
+                              .read(currentUserProvider.notifier)
+                              .loginAsGuest(),
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.grey.shade600,
                     ),
@@ -116,13 +122,11 @@ class LoginPage extends ConsumerWidget {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-
                   const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
-
           if (isLoading)
             Positioned.fill(
               child: Container(
