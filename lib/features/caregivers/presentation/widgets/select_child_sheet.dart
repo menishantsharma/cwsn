@@ -1,5 +1,5 @@
 import 'package:cwsn/core/models/user_model.dart';
-import 'package:cwsn/core/router/app_router.dart';
+import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:flutter/material.dart';

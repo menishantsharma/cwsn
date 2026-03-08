@@ -1,4 +1,4 @@
-import 'package:cwsn/core/router/app_router.dart';
+import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/special_needs/data/special_needs_data.dart';

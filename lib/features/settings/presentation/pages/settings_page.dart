@@ -1,5 +1,5 @@
 import 'package:cwsn/core/models/user_model.dart';
-import 'package:cwsn/core/router/app_router.dart';
+import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/guest_placeholder.dart';
 import 'package:cwsn/core/widgets/pill_scaffold.dart';

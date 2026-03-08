@@ -1,3 +1,4 @@
+import 'package:cwsn/core/router/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,37 +39,6 @@ class HomeWrapperPage extends ConsumerWidget {
       return const ServicesPage();
     }
   }
-}
-
-/// Centralized Routing Constants
-class AppRoutes {
-  // --- Route Names ---
-  static const String login = 'login';
-  static const String roleSelection = 'role-selection';
-  static const String switching = 'switching';
-  static const String home = 'home';
-  static const String notifications = 'notifications';
-  static const String profile = 'profile';
-  static const String specialNeeds = 'special-needs';
-  static const String caregiversList = 'caregivers';
-  static const String caregiverProfile = 'caregiver-profile';
-  static const String parentEditProfile = 'edit-profile';
-  static const String addChild = 'add-child';
-
-  // --- Route Paths ---
-  static const String loginPath = '/login';
-  static const String roleSelectionPath = '/role-selection';
-  static const String switchingPath = '/switching';
-  static const String homePath = '/';
-  static const String notificationsPath = '/notifications';
-  static const String profilePath = '/profile';
-  static const String specialNeedsPath = '/special-needs';
-  static const String caregiversListPath = '/caregivers';
-  static const String caregiverProfilePath = '/caregiver-profile';
-  static const String parentEditProfilePath = '/edit-profile';
-  static const String addChildPath = '/add-child';
-
-  AppRoutes._();
 }
 
 /// 1. OPTIMIZED: Smarter Notifier for AsyncValue

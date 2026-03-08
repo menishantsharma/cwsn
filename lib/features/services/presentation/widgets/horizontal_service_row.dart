@@ -1,4 +1,4 @@
-import 'package:cwsn/core/router/app_router.dart';
+import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/features/services/models/service_model.dart';
 import 'package:cwsn/features/services/presentation/widgets/service_card.dart';
