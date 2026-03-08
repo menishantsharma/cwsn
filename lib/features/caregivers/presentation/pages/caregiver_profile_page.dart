@@ -90,7 +90,7 @@ class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
                     Expanded(
                       child: StatBox(
                         label: "Recommended",
-                        value: numberOfRecommendationsToK(
+                        value: formatCompactNumber(
                           caregiver.totalRecommendations,
                         ),
                         icon: Icons.thumb_up_rounded,

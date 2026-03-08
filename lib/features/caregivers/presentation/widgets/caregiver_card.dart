@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
-import 'package:cwsn/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class CaregiverCard extends StatelessWidget {
@@ -9,189 +8,144 @@ class CaregiverCard extends StatelessWidget {
 
   const CaregiverCard({super.key, required this.onCardTap, required this.user});
 
+  String _formatCount(int count) {
+    if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
+    if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
+    return count.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final contentOpacity = user.caregiverProfile?.isAvailable ?? false
-        ? 1.0
-        : 0.4;
+    final profile = user.caregiverProfile;
+    final bool isAvailable = profile?.isAvailable ?? false;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1D1617).withValues(alpha: 0.06),
-            offset: const Offset(0, 4),
-            blurRadius: 16,
-            spreadRadius: 0,
-          ),
-        ],
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade100, width: 1),
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onCardTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                Stack(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: Colors.grey.shade50,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: ColorFiltered(
-                          colorFilter:
-                              user.caregiverProfile?.isAvailable ?? false
-                              ? const ColorFilter.mode(
-                                  Colors.transparent,
-                                  BlendMode.dst,
-                                )
-                              : const ColorFilter.mode(
-                                  Colors.grey,
-                                  BlendMode.saturation,
-                                ),
-                          child: CachedNetworkImage(
-                            imageUrl: user.imageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (_, _) =>
-                                Container(color: Colors.grey.shade100),
-                            errorWidget: (_, _, _) =>
-                                const Icon(Icons.person, color: Colors.grey),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Positioned(
-                      bottom: 4,
-                      right: 4,
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: user.caregiverProfile!.isAvailable
-                              ? const Color(0xFF4CAF50) // Green
-                              : Colors.grey, // Grey
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                      ),
-                    ),
-                  ],
+      child: InkWell(
+        onTap: onCardTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade50,
                 ),
-
-                const SizedBox(width: 16),
-
-                Expanded(
-                  child: Opacity(
-                    opacity: contentOpacity,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                "${user.firstName} ${user.lastName ?? ''}"
-                                    .trim(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-
-                            if (user.caregiverProfile!.isVerified) ...[
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.verified_rounded,
-                                color: Color(0xFF4589FF),
-                                size: 16,
-                              ),
-                            ],
-                          ],
-                        ),
-
-                        const SizedBox(height: 6),
-                        Text(
-                          "Certified Caregiver", // Or caregiver.role
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.thumb_up_rounded,
-                              size: 14,
-                              color: Color(0xFFFF9800),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              numberOfRecommendationsToK(
-                                user.caregiverProfile!.totalRecommendations,
-                              ),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11,
-                                color: Colors.black87,
-                              ),
-                            ),
-
-                            // Separator
-                            Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 6),
-                              width: 3,
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade400,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-
-                            Text(
-                              "1.2 km away",
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade500,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: CachedNetworkImage(
+                    imageUrl: user.imageUrl,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, _, _) => Icon(
+                      Icons.person,
+                      color: Colors.grey.shade300,
+                      size: 32,
                     ),
                   ),
                 ),
+              ),
+              const SizedBox(width: 16),
 
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: Colors.grey.shade300,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            "${user.firstName} ${user.lastName ?? ''}".trim(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (profile?.isVerified ?? false)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 4),
+                            child: Icon(
+                              Icons.verified_rounded,
+                              color: Colors.blue,
+                              size: 16,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Certified Caregiver",
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.thumb_up_rounded,
+                          size: 15,
+                          color: Color(0xFFFF9800),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _formatCount(profile?.totalRecommendations ?? 0),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFF9800),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isAvailable
+                                ? Colors.green.shade50
+                                : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            isAvailable ? "AVAILABLE" : "BUSY",
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                              color: isAvailable
+                                  ? Colors.green.shade700
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-              ],
-            ),
+              ),
+
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.black12,
+                size: 24,
+              ),
+            ],
           ),
         ),
       ),
