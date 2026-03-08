@@ -16,7 +16,7 @@ class CaregiverProfilePage extends ConsumerWidget {
   final String caregiverId;
   const CaregiverProfilePage({super.key, required this.caregiverId});
 
-  // COMPACT NUMBER HELPER: Converts 20000 to 20K
+  // Helper: Converts 20000 -> 20K, 1200000 -> 1.2M
   String _formatCompact(int number) {
     if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
     if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}K';
@@ -46,6 +46,8 @@ class CaregiverProfilePage extends ConsumerWidget {
         error: (err, _) => const Center(child: Text('Failed to load profile')),
         data: (user) {
           final caregiver = user.caregiverProfile!;
+          final bool isAvailable = caregiver.isAvailable;
+
           return Stack(
             children: [
               ListView(
@@ -55,7 +57,6 @@ class CaregiverProfilePage extends ConsumerWidget {
                   _CenteredHeader(user: user),
                   const SizedBox(height: 32),
 
-                  // Updated Metrics with Compact Formatting
                   _MetricsCard(
                     recs: _formatCompact(caregiver.totalRecommendations),
                     exp: '${caregiver.yearsOfExperience}y',
@@ -63,6 +64,10 @@ class CaregiverProfilePage extends ConsumerWidget {
                   ),
 
                   const SizedBox(height: 32),
+
+                  // BUSY STATUS ALERT
+                  if (!isAvailable) _BusyAlert(),
+
                   const _SectionHeader(title: 'About Caregiver'),
                   Text(
                     caregiver.about,
@@ -73,6 +78,7 @@ class CaregiverProfilePage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
+
                   const _SectionHeader(title: 'Specialties'),
                   Wrap(
                     spacing: 10,
@@ -82,6 +88,7 @@ class CaregiverProfilePage extends ConsumerWidget {
                         .toList(),
                   ),
                   const SizedBox(height: 32),
+
                   const _SectionHeader(title: 'General Information'),
                   _InfoTile(
                     Icons.map_outlined,
@@ -95,7 +102,12 @@ class CaregiverProfilePage extends ConsumerWidget {
                   ),
                 ],
               ),
-              _FixedRequestButton(onTap: () => _openRequestSheet(context)),
+
+              // Button is disabled (grey) if caregiver is not available
+              _FixedRequestButton(
+                isAvailable: isAvailable,
+                onTap: isAvailable ? () => _openRequestSheet(context) : null,
+              ),
             ],
           );
         },
@@ -103,6 +115,8 @@ class CaregiverProfilePage extends ConsumerWidget {
     );
   }
 }
+
+// --- PRIVATE UI COMPONENTS ---
 
 class _CenteredHeader extends StatelessWidget {
   final User user;
@@ -219,10 +233,38 @@ class _MetricItem extends StatelessWidget {
   );
 }
 
+class _BusyAlert extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 32),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.orange.shade50,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.orange.shade100),
+    ),
+    child: Row(
+      children: [
+        Icon(
+          Icons.info_outline_rounded,
+          color: Colors.orange.shade800,
+          size: 20,
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Text(
+            "Currently busy and not accepting requests.",
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 class _ModernChip extends StatelessWidget {
   final String label;
   const _ModernChip({required this.label});
-
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -241,17 +283,12 @@ class _ModernChip extends StatelessWidget {
 class _SectionHeader extends StatelessWidget {
   final String title;
   const _SectionHeader({required this.title});
-
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
     child: Text(
       title,
-      style: const TextStyle(
-        fontSize: 17,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.3,
-      ),
+      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
     ),
   );
 }
@@ -291,8 +328,9 @@ class _InfoTile extends StatelessWidget {
 }
 
 class _FixedRequestButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const _FixedRequestButton({required this.onTap});
+  final VoidCallback? onTap;
+  final bool isAvailable;
+  const _FixedRequestButton({required this.onTap, required this.isAvailable});
 
   @override
   State<_FixedRequestButton> createState() => _FixedRequestButtonState();
@@ -300,47 +338,54 @@ class _FixedRequestButton extends StatefulWidget {
 
 class _FixedRequestButtonState extends State<_FixedRequestButton> {
   bool _isPressed = false;
-
   @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.bottomCenter,
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        onTap: widget.onTap,
-        child: AnimatedScale(
-          scale: _isPressed ? 0.96 : 1.0,
-          duration: const Duration(milliseconds: 100),
-          child: Container(
-            height: 60,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE53935),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFE53935).withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text(
-                "Request Service",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
+  Widget build(BuildContext context) {
+    final Color color = widget.isAvailable
+        ? const Color(0xFFE53935)
+        : Colors.grey.shade400;
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: GestureDetector(
+          onTapDown: (_) =>
+              widget.isAvailable ? setState(() => _isPressed = true) : null,
+          onTapUp: (_) => setState(() => _isPressed = false),
+          onTapCancel: () => setState(() => _isPressed = false),
+          onTap: widget.onTap,
+          child: AnimatedScale(
+            scale: _isPressed ? 0.96 : 1.0,
+            duration: const Duration(milliseconds: 100),
+            child: Container(
+              height: 60,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: widget.isAvailable
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Center(
+                child: Text(
+                  widget.isAvailable ? "Request Service" : "Currently Busy",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
