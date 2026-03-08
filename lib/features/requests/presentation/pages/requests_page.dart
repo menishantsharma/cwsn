@@ -1,5 +1,5 @@
 import 'dart:async'; // Required for FutureOr
-import 'package:cwsn/core/widgets/pill_scaffold.dart';
+import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/features/requests/data/requests_repository.dart';
 import 'package:cwsn/features/requests/models/request_model.dart';
 import 'package:cwsn/features/requests/presentation/widgets/request_tile.dart';
@@ -8,28 +8,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// ==========================================
-// 1. LOCAL PROVIDERS & CONTROLLERS
-// ==========================================
-
-// FIXED: Removed .autoDispose to fix compiler bounds error.
-// Using PendingRequestsNotifier.new is the modern, preferred Riverpod syntax.
 final pendingRequestsProvider =
     AsyncNotifierProvider<PendingRequestsNotifier, List<CaregiverRequest>>(
       PendingRequestsNotifier.new,
     );
 
-// FIXED: Extended standard AsyncNotifier
 class PendingRequestsNotifier extends AsyncNotifier<List<CaregiverRequest>> {
   @override
-  // FIXED: Changed Future to FutureOr to strictly match Riverpod's expected signature
   FutureOr<List<CaregiverRequest>> build() async {
     final repo = ref.read(requestsRepositoryProvider);
     final allRequests = await repo.getRequests();
     return allRequests.where((r) => r.status == RequestStatus.pending).toList();
   }
 
-  /// Handles accepting or rejecting a request with Optimistic UI updates
   Future<void> handleAction(String requestId, bool isAccepted) async {
     final previousState = state;
     final currentList = state.value ?? [];
@@ -37,14 +28,11 @@ class PendingRequestsNotifier extends AsyncNotifier<List<CaregiverRequest>> {
     final requestIndex = currentList.indexWhere((r) => r.id == requestId);
     if (requestIndex == -1) return;
 
-    // Optimistic Update: Instantly remove the item from the UI state
-    // final removedItem = currentList[requestIndex];
     final newList = List<CaregiverRequest>.from(currentList)
       ..removeAt(requestIndex);
     state = AsyncData(newList);
 
     try {
-      // Call Backend API
       final repo = ref.read(requestsRepositoryProvider);
       if (isAccepted) {
         await repo.acceptRequest(requestId);
@@ -52,21 +40,15 @@ class PendingRequestsNotifier extends AsyncNotifier<List<CaregiverRequest>> {
         await repo.rejectRequest(requestId);
       }
     } catch (e) {
-      // Rollback if API fails
       state = previousState;
       throw Exception("Action failed. Please try again.");
     }
   }
 }
 
-// ==========================================
-// 2. THE UI WIDGET
-// ==========================================
-
 class RequestsPage extends ConsumerWidget {
   const RequestsPage({super.key});
 
-  // Moves the Snackbar logic out of the build method to keep it clean
   void _onAction(
     BuildContext context,
     WidgetRef ref,
@@ -77,7 +59,6 @@ class RequestsPage extends ConsumerWidget {
 
     scaffold.clearSnackBars();
 
-    // Show Optimistic Success Snackbar immediately
     scaffold.showSnackBar(
       SnackBar(
         content: Row(
@@ -102,7 +83,6 @@ class RequestsPage extends ConsumerWidget {
     );
 
     try {
-      // Tell the Notifier to handle the API and state logic
       await ref
           .read(pendingRequestsProvider.notifier)
           .handleAction(requestId, isAccepted);
@@ -123,20 +103,24 @@ class RequestsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the AsyncNotifier state
     final requestsAsync = ref.watch(pendingRequestsProvider);
 
-    return PillScaffold(
-      title: 'Requests',
-      actionIcon: Icons.history_rounded,
-      onActionPressed: () {
-        // Handle history navigation
-      },
-      body: (context, padding) => requestsAsync.when(
-        // --- LOADING STATE ---
+    return Scaffold(
+      appBar: AppTopBar(
+        title: 'Requests',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded),
+            onPressed: () {
+              // Handle history navigation
+            },
+          ),
+        ],
+      ),
+      body: requestsAsync.when(
         loading: () => ListView.builder(
           physics: const NeverScrollableScrollPhysics(),
-          padding: padding.copyWith(left: 20, right: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           itemCount: 4,
           itemBuilder: (_, _) => const RequestTileSkeleton()
               .animate(onPlay: (c) => c.repeat())
@@ -146,7 +130,6 @@ class RequestsPage extends ConsumerWidget {
               ),
         ),
 
-        // --- ERROR STATE ---
         error: (error, stackTrace) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -174,10 +157,8 @@ class RequestsPage extends ConsumerWidget {
           ),
         ),
 
-        // --- SUCCESS DATA STATE ---
         data: (requests) {
           if (requests.isEmpty) {
-            // OPTIMIZED: Wrap empty state in RefreshIndicator so users can pull-to-refresh even when empty
             return RefreshIndicator(
               onRefresh: () async =>
                   ref.refresh(pendingRequestsProvider.future),
@@ -222,7 +203,6 @@ class RequestsPage extends ConsumerWidget {
             );
           }
 
-          // OPTIMIZED: Pull to refresh logic baked right in
           return RefreshIndicator(
             onRefresh: () async => ref.refresh(pendingRequestsProvider.future),
             color: Theme.of(context).primaryColor,
@@ -230,15 +210,13 @@ class RequestsPage extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              padding: padding.copyWith(left: 20, right: 20, bottom: 80),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               itemCount: requests.length,
               itemBuilder: (context, index) {
                 final request = requests[index];
 
                 return RequestTile(
-                      key: ValueKey(
-                        request.id,
-                      ), // CRITICAL: Locks animation state when items are removed
+                      key: ValueKey(request.id),
                       request: request,
                       onAccept: () => _onAction(context, ref, request.id, true),
                       onReject: () =>

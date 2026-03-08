@@ -1,5 +1,5 @@
 import 'package:cwsn/core/models/user_model.dart';
-import 'package:cwsn/core/widgets/pill_scaffold.dart';
+import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/settings/data/parent_repository.dart';
 import 'package:cwsn/features/settings/presentation/widgets/add_edit_child_sheet.dart';
@@ -10,8 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AddChildPage extends ConsumerWidget {
   const AddChildPage({super.key});
 
-  // --- ACTIONS ---
-
   Future<void> _deleteChild(
     BuildContext context,
     WidgetRef ref,
@@ -21,7 +19,6 @@ class AddChildPage extends ConsumerWidget {
     final scaffold = ScaffoldMessenger.of(context);
     final previousProfile = user.parentProfile!;
 
-    // 1. OPTIMISTIC UPDATE: Instantly remove child from UI
     final optimisticChildren = previousProfile.children
         .where((c) => c.id != child.id)
         .toList();
@@ -32,12 +29,10 @@ class AddChildPage extends ConsumerWidget {
         );
 
     try {
-      // 2. Call Backend API (Silent on success)
       await ref
           .read(parentRepositoryProvider)
           .deleteChild(parentId: user.id, childId: child.id);
     } catch (e) {
-      // 3. ROLLBACK: If API fails, put the child back instantly & show error
       ref
           .read(currentUserProvider.notifier)
           .updateParentProfile(previousProfile);
@@ -111,11 +106,11 @@ class AddChildPage extends ConsumerWidget {
 
     final children = user.parentProfile?.children ?? [];
 
-    return PillScaffold(
-      title: 'Children Details',
-      body: (context, padding) => SingleChildScrollView(
+    return Scaffold(
+      appBar: AppTopBar(title: 'Children Details'),
+      body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: padding.copyWith(left: 24, right: 24, bottom: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -139,8 +134,6 @@ class AddChildPage extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            // --- SMOOTH CHILDREN LIST & EMPTY STATE ---
-            // OPTIMIZED: AnimatedSize smoothly collapses the empty space when a child is removed
             AnimatedSize(
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeOutCubic,
@@ -153,9 +146,7 @@ class AddChildPage extends ConsumerWidget {
                         final child = entry.value;
 
                         return Padding(
-                          key: ValueKey(
-                            child.id,
-                          ), // Crucial: Locks the animation state so it doesn't replay on delete!
+                          key: ValueKey(child.id),
                           padding: const EdgeInsets.only(bottom: 16),
                           child:
                               _ChildCard(
@@ -169,7 +160,6 @@ class AddChildPage extends ConsumerWidget {
                                     onDelete: () =>
                                         _deleteChild(context, ref, user, child),
                                   )
-                                  // Staggered Entrance Animation
                                   .animate()
                                   .fade(
                                     duration: 400.ms,
@@ -189,8 +179,6 @@ class AddChildPage extends ConsumerWidget {
 
             const SizedBox(height: 8),
 
-            // --- ADD NEW BUTTON ---
-            // Fades in slightly after the list finishes loading
             _AddChildButton(
                   onTap: () => _openChildFormSheet(context, ref, user),
                 )
@@ -203,10 +191,6 @@ class AddChildPage extends ConsumerWidget {
     );
   }
 }
-
-// ==========================================
-// OPTIMIZED: EXTRACTED STATELESS WIDGETS
-// ==========================================
 
 class _ChildCard extends StatelessWidget {
   final ChildModel child;
@@ -311,36 +295,33 @@ class _EmptyChildrenState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-          padding: const EdgeInsets.symmetric(vertical: 32),
-          alignment: Alignment.center,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.child_care_rounded,
-                  size: 48,
-                  color: Colors.grey.shade400,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                "No children added yet.",
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      alignment: Alignment.center,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.child_care_rounded,
+              size: 48,
+              color: Colors.grey.shade400,
+            ),
           ),
-        )
-        .animate()
-        .fade(duration: 400.ms)
-        .slideY(begin: 0.1, end: 0); // Entrance animation for empty state
+          const SizedBox(height: 16),
+          Text(
+            "No children added yet.",
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 }
 

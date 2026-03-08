@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CaregiverProfileSkeleton extends StatelessWidget {
-  final EdgeInsets padding;
-
-  const CaregiverProfileSkeleton({super.key, required this.padding});
+  const CaregiverProfileSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +10,7 @@ class CaregiverProfileSkeleton extends StatelessWidget {
     final highlightColor = Colors.grey.shade100;
 
     return SingleChildScrollView(
-      padding: padding.copyWith(left: 20, right: 20, bottom: 120),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Shimmer.fromColors(
         baseColor: baseColor,
         highlightColor: highlightColor,

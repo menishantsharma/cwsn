@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/utils/utils.dart';
-import 'package:cwsn/core/widgets/pill_scaffold.dart';
+import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_skeleton_profile.dart';
@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// --- PROVIDER ---
 final caregiverProfileProvider = FutureProvider.autoDispose
     .family<User, String>((ref, caregiverId) async {
       final repository = ref.watch(caregiverRepositoryProvider);
@@ -48,18 +47,19 @@ class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. OPTIMIZED: Use Riverpod's built-in AsyncValue handling instead of FutureBuilder
     final profileAsync = ref.watch(
       caregiverProfileProvider(widget.caregiverId),
     );
 
-    // 2. OPTIMIZED: Properly extract the User value from the new AsyncNotifier
     final currentUser = ref.watch(currentUserProvider).value;
 
-    return PillScaffold(
-      title: 'Profile',
-      actionIcon: Icons.share_rounded,
-      onActionPressed: () {},
+    return Scaffold(
+      appBar: AppTopBar(
+        title: 'Profile',
+        actions: [
+          IconButton(icon: const Icon(Icons.share_rounded), onPressed: () {}),
+        ],
+      ),
 
       // Only show the bottom action if we successfully loaded the caregiver
       floatingActionButton: profileAsync.hasValue
@@ -71,23 +71,20 @@ class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
 
-      body: (context, padding) => profileAsync.when(
-        loading: () => CaregiverProfileSkeleton(padding: padding),
+      body: profileAsync.when(
+        loading: () => CaregiverProfileSkeleton(),
         error: (err, stack) => Center(child: Text('Error: $err')),
         data: (user) {
           final caregiver = user.caregiverProfile!;
 
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: padding.copyWith(left: 24, right: 24, bottom: 120),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // OPTIMIZED: Extracted to a const Stateless Widget
                 CaregiverProfileHeader(user: user),
-
                 const SizedBox(height: 24),
-
                 Row(
                   children: [
                     Expanded(

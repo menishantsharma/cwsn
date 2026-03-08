@@ -1,6 +1,6 @@
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/router/app_routes.dart';
-import 'package:cwsn/core/widgets/pill_scaffold.dart';
+import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_card.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_filter_sheet.dart';
@@ -31,28 +31,31 @@ class CaregiversListPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // OPTIMIZED: Watch the cached FutureProvider
     final caregiversAsync = ref.watch(caregiversListProvider);
 
-    return PillScaffold(
-      title: 'Caregivers',
-      actionIcon: Icons.filter_list_rounded,
-      onActionPressed: () {
-        showModalBottomSheet(
-          context: context,
-          backgroundColor: Colors.transparent,
-          isScrollControlled: true,
-          builder: (context) => const CaregiverFilterSheet(),
-        );
-      },
+    return Scaffold(
+      appBar: AppTopBar(
+        title: 'Caregivers',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list_rounded),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (context) => const CaregiverFilterSheet(),
+              );
+            },
+          ),
+        ],
+      ),
 
-      // OPTIMIZED: Clean .when() handles all 3 states perfectly
-      body: (context, padding) => caregiversAsync.when(
-        // --- LOADING STATE ---
+      body: caregiversAsync.when(
         loading: () => ListView.builder(
           physics:
-              const NeverScrollableScrollPhysics(), // Prevent weird scrolling while loading
-          padding: padding.copyWith(left: 20, right: 20, bottom: 20),
+              const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
           itemCount: 6,
           itemBuilder: (_, _) => const CaregiverSkeletonCard()
               .animate(onPlay: (loop) => loop.repeat())
@@ -63,7 +66,6 @@ class CaregiversListPage extends ConsumerWidget {
               ),
         ),
 
-        // --- ERROR STATE ---
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -83,7 +85,6 @@ class CaregiversListPage extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               TextButton.icon(
-                // Allows the user to try fetching the data again
                 onPressed: () => ref.invalidate(caregiversListProvider),
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text("Retry"),
@@ -92,10 +93,8 @@ class CaregiversListPage extends ConsumerWidget {
           ),
         ),
 
-        // --- SUCCESS DATA STATE ---
         data: (users) {
           if (users.isEmpty) {
-            // OPTIMIZED: Wrapped in RefreshIndicator so you can pull-to-refresh even when empty
             return RefreshIndicator(
               onRefresh: () async => ref.refresh(caregiversListProvider.future),
               child: ListView(
@@ -108,7 +107,6 @@ class CaregiversListPage extends ConsumerWidget {
             );
           }
 
-          // OPTIMIZED: Pull-to-Refresh added natively
           return RefreshIndicator(
             onRefresh: () async => ref.refresh(caregiversListProvider.future),
             color: Theme.of(context).primaryColor,
@@ -116,7 +114,7 @@ class CaregiversListPage extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              padding: padding.copyWith(left: 20, right: 20, bottom: 100),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
               itemCount: users.length,
               itemBuilder: (context, index) {
                 final user = users[index];
@@ -131,11 +129,10 @@ class CaregiversListPage extends ConsumerWidget {
                         extra: user.id,
                       ),
                     )
-                    // OPTIMIZED: Staggered waterfall entrance animation
                     .animate()
                     .fade(duration: 400.ms, delay: (50 * index).ms)
                     .slideY(
-                      begin: 0.1, // Reduced for a smoother, less jarring slide
+                      begin: 0.1,
                       end: 0,
                       duration: 400.ms,
                       curve: Curves.easeOutQuad,
@@ -150,11 +147,6 @@ class CaregiversListPage extends ConsumerWidget {
   }
 }
 
-// ==========================================
-// OPTIMIZED: EXTRACTED STATELESS WIDGETS
-// ==========================================
-
-// OPTIMIZED: Moved out of the main class so Flutter can cache it as a `const` widget
 class _EmptyCaregiversState extends StatelessWidget {
   const _EmptyCaregiversState();
 

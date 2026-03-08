@@ -1,8 +1,8 @@
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
+import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/guest_placeholder.dart';
-import 'package:cwsn/core/widgets/pill_scaffold.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/settings/presentation/widgets/settings_tile.dart';
 import 'package:flutter/material.dart';
@@ -62,11 +62,10 @@ class SettingsPage extends ConsumerWidget {
 
     final isCaregiverMode = user.activeRole == UserRole.caregiver;
 
-    // --- GUEST VIEW ---
     if (user.isGuest) {
-      return PillScaffold(
-        title: 'Profile',
-        body: (context, padding) => GuestPlaceholder(
+      return Scaffold(
+        appBar: AppTopBar(title: 'Profile'),
+        body: GuestPlaceholder(
           message:
               "Sign in to manage your profile, children details, and app preferences.",
           onLoginPressed: () => ref.read(currentUserProvider.notifier).logout(),
@@ -74,15 +73,13 @@ class SettingsPage extends ConsumerWidget {
       );
     }
 
-    // --- AUTHENTICATED VIEW ---
     final textTheme = Theme.of(context).textTheme;
 
-    return PillScaffold(
-      title: 'Profile',
-      showBack: false,
-      body: (context, padding) => SingleChildScrollView(
+    return Scaffold(
+      appBar: AppTopBar(title: 'Profile', showBackButton: false,),
+      body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: padding.copyWith(left: 20, right: 20, bottom: 100),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children:
@@ -154,10 +151,6 @@ class SettingsPage extends ConsumerWidget {
   }
 }
 
-// ==========================================
-// OPTIMIZED: EXTRACTED STATELESS WIDGETS
-// ==========================================
-
 class _ProfileHeader extends StatelessWidget {
   final User user;
 
@@ -165,7 +158,6 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // OPTIMIZED: Tap the profile header to quickly jump to Edit Profile
     return GestureDetector(
       onTap: () => context.pushNamed(AppRoutes.parentEditProfile),
       behavior: HitTestBehavior.opaque,
@@ -187,7 +179,6 @@ class _ProfileHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                // OPTIMIZED: Production-safe image loading. Doesn't crash if URL is malformed.
                 child: ClipOval(
                   child: user.imageUrl.isNotEmpty
                       ? CachedNetworkImage(

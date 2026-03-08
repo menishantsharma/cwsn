@@ -1,6 +1,6 @@
 import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
-import 'package:cwsn/core/widgets/pill_scaffold.dart';
+import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/features/special_needs/data/special_needs_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,13 +11,12 @@ class SpecialNeedsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Data Source
     final List<String> specialNeeds = mockSpecialNeeds;
 
-    return PillScaffold(
-      title: 'Special Needs',
-      body: (context, padding) => ListView.separated(
-        padding: padding.copyWith(left: 20, right: 20, bottom: 40),
+    return Scaffold(
+      appBar: AppTopBar(title: 'Special Needs'),
+      body: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         itemCount: specialNeeds.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (_, index) {

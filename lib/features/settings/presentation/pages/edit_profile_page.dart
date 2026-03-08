@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
-import 'package:cwsn/core/widgets/pill_scaffold.dart';
+import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/auth/data/user_repository.dart';
 import 'package:cwsn/features/settings/presentation/widgets/language_selection_dialog.dart';
@@ -19,7 +19,6 @@ class EditProfilePage extends ConsumerStatefulWidget {
 }
 
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
-  // 1. OPTIMIZED: Using Controllers and ValueNotifiers completely eliminates the need for setState!
   late final TextEditingController _nameController;
   late final TextEditingController _locationController;
   late final TextEditingController _phoneController;
@@ -70,8 +69,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     super.dispose();
   }
 
-  // --- ACTIONS ---
-
   Future<void> _saveChanges() async {
     if (_nameController.text.trim().isEmpty) {
       _showSnack("Please enter your name");
@@ -85,7 +82,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final currentUser = ref.read(currentUserProvider).value;
     if (currentUser == null) return;
 
-    // 2. OPTIMIZED: Trigger loading state without rebuilding the page
     _isLoadingNotifier.value = true;
 
     try {
@@ -115,18 +111,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Because we removed setState, this build method runs EXACTLY ONCE.
-    // Animations will play perfectly on load and never stutter or restart.
-
     final primaryColor = Theme.of(context).primaryColor;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return PillScaffold(
-      title: 'Edit Profile',
+    return Scaffold(
+      appBar: AppTopBar(title: 'Edit Profile'),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        // 3. OPTIMIZED: Only the button listens to the loading state
         child: ValueListenableBuilder<bool>(
           valueListenable: _isLoadingNotifier,
           builder: (context, isLoading, child) {
@@ -159,13 +150,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         ).animate().fade(delay: 600.ms).slideY(begin: 0.5, end: 0),
       ),
 
-      body: (context, padding) => SingleChildScrollView(
+      body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: padding.copyWith(
-          left: 24,
-          right: 24,
-          bottom: 150 + bottomInset,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           children: [
             const SizedBox(height: 20),
@@ -188,7 +175,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   onDetectLocation: () async {
                     _showSnack("Fetching current location...");
                     await Future.delayed(const Duration(seconds: 2));
-                    // 4. OPTIMIZED: TextEditingController updates its own UI instantly. No setState needed!
                     _locationController.text =
                         "Powai, Mumbai, Maharashtra 400076";
                   },
@@ -209,7 +195,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       builder: (context) => PhoneVerificationSheet(
                         currentPhone: _phoneController.text,
                         onVerified: (newPhone) {
-                          _phoneController.text = newPhone; // Updates instantly
+                          _phoneController.text = newPhone;
                           _showSnack("Phone Number Verified & Updated!");
                         },
                       ),
@@ -231,10 +217,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     );
   }
 }
-
-// ==========================================
-// OPTIMIZED: EXTRACTED STATELESS WIDGETS
-// ==========================================
 
 class _AvatarSelector extends StatelessWidget {
   final String? avatarUrl;
@@ -409,7 +391,6 @@ class _LocationInput extends StatelessWidget {
   }
 }
 
-// 5. OPTIMIZED: Only the Gender Row rebuilds when a gender is clicked
 class _GenderSelector extends StatelessWidget {
   final ValueNotifier<Gender?> genderNotifier;
   final int delay;
@@ -508,7 +489,6 @@ class _GenderSelector extends StatelessWidget {
   }
 }
 
-// 6. OPTIMIZED: Only the 'CHANGE/ADD' text rebuilds when typing a phone number
 class _PhoneInput extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onChangeRequested;
@@ -590,7 +570,6 @@ class _PhoneInput extends StatelessWidget {
   }
 }
 
-// 7. OPTIMIZED: Only the inner text rebuilds when languages change
 class _LanguageSelector extends StatelessWidget {
   final ValueNotifier<List<String>> languagesNotifier;
   final List<String> allLanguages;
