@@ -1,7 +1,6 @@
 import 'package:cwsn/features/auth/data/auth_repository.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -22,31 +21,6 @@ class LoginPage extends ConsumerWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                color: primaryColor.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            left: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -54,41 +28,26 @@ class LoginPage extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: primaryColor.withValues(alpha: 0.1),
-                          blurRadius: 40,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
+
+                  CircleAvatar(
+                    radius: 48,
+                    backgroundColor: primaryColor.withValues(alpha: 0.08),
                     child: Icon(
                       Icons.favorite_rounded,
-                      size: 80,
+                      size: 48,
                       color: primaryColor,
                     ),
-                  ).animate().scale(
-                    duration: 600.ms,
-                    curve: Curves.easeOutBack,
                   ),
-
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 32),
 
                   const Text(
                     "Welcome to CWSN",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      color: Colors.black87,
                       letterSpacing: -0.5,
                     ),
-                  ).animate().fade().slideY(begin: 0.3, end: 0, delay: 100.ms),
-
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     "Find trusted caregivers for your loved ones,\nor join us to help others.",
@@ -98,48 +57,45 @@ class LoginPage extends ConsumerWidget {
                       height: 1.5,
                       color: Colors.grey.shade600,
                     ),
-                  ).animate().fade(delay: 200.ms).slideY(begin: 0.3, end: 0),
+                  ),
 
                   const Spacer(),
 
                   IgnorePointer(
                     ignoring: isLoading,
-                    child: AnimatedOpacity(
-                      opacity: isLoading ? 0.5 : 1.0,
-                      duration: const Duration(milliseconds: 300),
+                    child: Opacity(
+                      opacity: isLoading ? 0.6 : 1.0,
                       child: Column(
                         children: [
-                          _SocialLoginButton(
+                          _AuthButton(
                             text: "Continue with Google",
                             icon: FontAwesomeIcons.google,
                             iconColor: Colors.red,
+                            isOutlined: true,
                             onTap: () =>
                                 authNotifier.login(authRepo.signInWithGoogle),
-                            delay: 400,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
 
-                          _SocialLoginButton(
+                          _AuthButton(
                             text: "Continue with Apple",
                             icon: FontAwesomeIcons.apple,
                             iconColor: Colors.white,
-                            backgroundColor: Colors.black,
+                            bgColor: Colors.black,
                             textColor: Colors.white,
                             onTap: () =>
                                 authNotifier.login(authRepo.signInWithApple),
-                            delay: 500,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
 
-                          _SocialLoginButton(
+                          _AuthButton(
                             text: "Continue with Facebook",
                             icon: FontAwesomeIcons.facebookF,
                             iconColor: Colors.white,
-                            backgroundColor: const Color(0xFF1877F2),
+                            bgColor: const Color(0xFF1877F2),
                             textColor: Colors.white,
                             onTap: () =>
                                 authNotifier.login(authRepo.signInWithFacebook),
-                            delay: 600,
                           ),
                         ],
                       ),
@@ -148,37 +104,32 @@ class LoginPage extends ConsumerWidget {
 
                   const SizedBox(height: 24),
 
-                  IgnorePointer(
-                    ignoring: isLoading,
-                    child: AnimatedOpacity(
-                      opacity: isLoading ? 0.5 : 1.0,
-                      duration: const Duration(milliseconds: 300),
-                      child: TextButton(
-                        onPressed: () =>
-                            authNotifier.login(authRepo.signInAsGuest),
-                        child: Text(
-                          "Skip & Browse as Guest",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ).animate().fade(delay: 700.ms),
+                  TextButton(
+                    onPressed: isLoading
+                        ? null
+                        : () => authNotifier.login(authRepo.signInAsGuest),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey.shade600,
+                    ),
+                    child: const Text(
+                      "Skip & Browse as Guest",
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
 
           if (isLoading)
-            Container(
-              color: Colors.white.withValues(alpha: 0.5),
-              child: Center(
-                child: CircularProgressIndicator(color: primaryColor),
+            Positioned.fill(
+              child: Container(
+                color: Colors.white.withValues(alpha: 0.6),
+                child: const Center(
+                  child: CircularProgressIndicator.adaptive(),
+                ),
               ),
             ),
         ],
@@ -187,67 +138,63 @@ class LoginPage extends ConsumerWidget {
   }
 }
 
-class _SocialLoginButton extends StatelessWidget {
+class _AuthButton extends StatelessWidget {
   final String text;
   final IconData icon;
   final Color iconColor;
   final VoidCallback onTap;
-  final Color backgroundColor;
+  final Color bgColor;
   final Color textColor;
-  final int delay;
+  final bool isOutlined;
 
-  const _SocialLoginButton({
+  const _AuthButton({
     required this.text,
     required this.icon,
     required this.iconColor,
     required this.onTap,
-    this.backgroundColor = Colors.white,
+    this.bgColor = Colors.white,
     this.textColor = Colors.black87,
-    this.delay = 0,
+    this.isOutlined = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(30),
-        border: backgroundColor == Colors.white
-            ? Border.all(color: Colors.grey.shade200)
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1D1617).withValues(alpha: 0.06),
-            offset: const Offset(0, 4),
-            blurRadius: 16,
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(30),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(30),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 20, color: iconColor),
-              const SizedBox(width: 12),
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
-              ),
-            ],
-          ),
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    );
+    const padding = EdgeInsets.symmetric(vertical: 16);
+    final textStyle = TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.bold,
+      color: textColor,
+    );
+
+    if (isOutlined) {
+      return OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 20, color: iconColor),
+        label: Text(text, style: textStyle),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
+          padding: padding,
+          shape: shape,
+          side: BorderSide(color: Colors.grey.shade300),
         ),
+      );
+    }
+
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 20, color: iconColor),
+      label: Text(text, style: textStyle),
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size.fromHeight(56),
+        backgroundColor: bgColor,
+        foregroundColor: textColor,
+        elevation: 0,
+        padding: padding,
+        shape: shape,
       ),
-    ).animate().fade(delay: delay.ms).slideY(begin: 0.5, end: 0);
+    );
   }
 }

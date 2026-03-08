@@ -67,7 +67,6 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
     final children = user?.parentProfile?.children ?? [];
 
     return Container(
-      // Explicit white background and rounded corners
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -77,7 +76,6 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
       ),
       child: SafeArea(
         child: Padding(
-          // Accommodate standard padding and keyboard safely
           padding: EdgeInsets.fromLTRB(
             24,
             12,
@@ -88,7 +86,6 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Drag Handle
               Center(
                 child: Container(
                   width: 40,
@@ -101,7 +98,6 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
                 ),
               ),
 
-              // 2. Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -140,7 +136,6 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
               ),
               const SizedBox(height: 16),
 
-              // 3. Scrollable Content (Children List)
               Flexible(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
@@ -155,7 +150,6 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
 
                       const SizedBox(height: 8),
 
-                      // Add Child Button (Native ListTile)
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: CircleAvatar(
@@ -184,7 +178,6 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
               ),
               const SizedBox(height: 24),
 
-              // 4. Submit Action
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -234,13 +227,14 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
     );
   }
 
-  // Native ListTile for the Child Selection
   Widget _buildChildTile(ChildModel child, Color primaryColor) {
     final isSelected = _selectedChild?.id == child.id;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: isSelected ? primaryColor.withOpacity(0.05) : Colors.transparent,
+        color: isSelected
+            ? primaryColor.withValues(alpha: 0.05)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected ? primaryColor : Colors.transparent,
