@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cwsn/features/requests/data/requests_data.dart';
 import 'package:cwsn/features/requests/models/request_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,27 +11,32 @@ abstract class RequestsRepository {
 }
 
 class FakeRequestsRepository implements RequestsRepository {
+  List<CaregiverRequest>? _db;
+
   @override
   Future<List<CaregiverRequest>> getRequests() async {
     await Future.delayed(Duration(seconds: 1));
-    return mockRequests;
+    _db ??= List.from(mockRequests);
+    return _db!;
   }
 
   @override
   Future<void> acceptRequest(String requestId) async {
     await Future.delayed(Duration(seconds: 1));
-
-    if (Random().nextDouble() < 0.5) {
-      throw Exception("Simulated Backend Error: Could not accept request.");
-    }
+    _updateStatus(requestId, RequestStatus.accepted);
   }
 
   @override
   Future<void> rejectRequest(String requestId) async {
     await Future.delayed(Duration(seconds: 1));
+    _updateStatus(requestId, RequestStatus.rejected);
+  }
 
-    if (Random().nextDouble() < 0.5) {
-      throw Exception("Simulated Backend Error: Could not reject request.");
+  void _updateStatus(String id, RequestStatus newStatus) {
+    if (_db == null) return;
+    final index = _db!.indexWhere((r) => r.id == id);
+    if (index != -1) {
+      _db![index] = _db![index].copyWith(status: newStatus);
     }
   }
 }

@@ -12,9 +12,7 @@ _$CaregiverRequestImpl _$$CaregiverRequestImplFromJson(
   id: json['id'] as String,
   parentId: json['parentId'] as String,
   parentName: json['parentName'] as String,
-  parentImageUrl:
-      json['parentImageUrl'] as String? ??
-      'https://example.com/placeholder.png',
+  parentImageUrl: json['parentImageUrl'] as String?,
   parentLocation: json['parentLocation'] as String,
   childName: json['childName'] as String,
   childAge: (json['childAge'] as num).toInt(),
@@ -24,6 +22,7 @@ _$CaregiverRequestImpl _$$CaregiverRequestImplFromJson(
   status:
       $enumDecodeNullable(_$RequestStatusEnumMap, json['status']) ??
       RequestStatus.pending,
+  createdAt: DateTime.parse(json['createdAt'] as String),
 );
 
 Map<String, dynamic> _$$CaregiverRequestImplToJson(
@@ -40,6 +39,7 @@ Map<String, dynamic> _$$CaregiverRequestImplToJson(
   'specialNeed': instance.specialNeed,
   'serviceName': instance.serviceName,
   'status': _$RequestStatusEnumMap[instance.status]!,
+  'createdAt': instance.createdAt.toIso8601String(),
 };
 
 const _$RequestStatusEnumMap = {

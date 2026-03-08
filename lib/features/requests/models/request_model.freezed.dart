@@ -21,20 +21,18 @@ CaregiverRequest _$CaregiverRequestFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$CaregiverRequest {
-  String get id =>
-      throw _privateConstructorUsedError; // Parent Details (The person paying for the service)
+  String get id => throw _privateConstructorUsedError;
   String get parentId => throw _privateConstructorUsedError;
   String get parentName => throw _privateConstructorUsedError;
-  String get parentImageUrl => throw _privateConstructorUsedError;
-  String get parentLocation =>
-      throw _privateConstructorUsedError; // Child Details (The person receiving the care)
+  String? get parentImageUrl => throw _privateConstructorUsedError;
+  String get parentLocation => throw _privateConstructorUsedError;
   String get childName => throw _privateConstructorUsedError;
   int get childAge => throw _privateConstructorUsedError;
   String get childGender => throw _privateConstructorUsedError;
-  String get specialNeed =>
-      throw _privateConstructorUsedError; // Service Context
+  String get specialNeed => throw _privateConstructorUsedError;
   String get serviceName => throw _privateConstructorUsedError;
   RequestStatus get status => throw _privateConstructorUsedError;
+  DateTime get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this CaregiverRequest to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -57,7 +55,7 @@ abstract class $CaregiverRequestCopyWith<$Res> {
     String id,
     String parentId,
     String parentName,
-    String parentImageUrl,
+    String? parentImageUrl,
     String parentLocation,
     String childName,
     int childAge,
@@ -65,6 +63,7 @@ abstract class $CaregiverRequestCopyWith<$Res> {
     String specialNeed,
     String serviceName,
     RequestStatus status,
+    DateTime createdAt,
   });
 }
 
@@ -86,7 +85,7 @@ class _$CaregiverRequestCopyWithImpl<$Res, $Val extends CaregiverRequest>
     Object? id = null,
     Object? parentId = null,
     Object? parentName = null,
-    Object? parentImageUrl = null,
+    Object? parentImageUrl = freezed,
     Object? parentLocation = null,
     Object? childName = null,
     Object? childAge = null,
@@ -94,6 +93,7 @@ class _$CaregiverRequestCopyWithImpl<$Res, $Val extends CaregiverRequest>
     Object? specialNeed = null,
     Object? serviceName = null,
     Object? status = null,
+    Object? createdAt = null,
   }) {
     return _then(
       _value.copyWith(
@@ -109,10 +109,10 @@ class _$CaregiverRequestCopyWithImpl<$Res, $Val extends CaregiverRequest>
                 ? _value.parentName
                 : parentName // ignore: cast_nullable_to_non_nullable
                       as String,
-            parentImageUrl: null == parentImageUrl
+            parentImageUrl: freezed == parentImageUrl
                 ? _value.parentImageUrl
                 : parentImageUrl // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
             parentLocation: null == parentLocation
                 ? _value.parentLocation
                 : parentLocation // ignore: cast_nullable_to_non_nullable
@@ -141,6 +141,10 @@ class _$CaregiverRequestCopyWithImpl<$Res, $Val extends CaregiverRequest>
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                       as RequestStatus,
+            createdAt: null == createdAt
+                ? _value.createdAt
+                : createdAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
           )
           as $Val,
     );
@@ -160,7 +164,7 @@ abstract class _$$CaregiverRequestImplCopyWith<$Res>
     String id,
     String parentId,
     String parentName,
-    String parentImageUrl,
+    String? parentImageUrl,
     String parentLocation,
     String childName,
     int childAge,
@@ -168,6 +172,7 @@ abstract class _$$CaregiverRequestImplCopyWith<$Res>
     String specialNeed,
     String serviceName,
     RequestStatus status,
+    DateTime createdAt,
   });
 }
 
@@ -188,7 +193,7 @@ class __$$CaregiverRequestImplCopyWithImpl<$Res>
     Object? id = null,
     Object? parentId = null,
     Object? parentName = null,
-    Object? parentImageUrl = null,
+    Object? parentImageUrl = freezed,
     Object? parentLocation = null,
     Object? childName = null,
     Object? childAge = null,
@@ -196,6 +201,7 @@ class __$$CaregiverRequestImplCopyWithImpl<$Res>
     Object? specialNeed = null,
     Object? serviceName = null,
     Object? status = null,
+    Object? createdAt = null,
   }) {
     return _then(
       _$CaregiverRequestImpl(
@@ -211,10 +217,10 @@ class __$$CaregiverRequestImplCopyWithImpl<$Res>
             ? _value.parentName
             : parentName // ignore: cast_nullable_to_non_nullable
                   as String,
-        parentImageUrl: null == parentImageUrl
+        parentImageUrl: freezed == parentImageUrl
             ? _value.parentImageUrl
             : parentImageUrl // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
         parentLocation: null == parentLocation
             ? _value.parentLocation
             : parentLocation // ignore: cast_nullable_to_non_nullable
@@ -243,6 +249,10 @@ class __$$CaregiverRequestImplCopyWithImpl<$Res>
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
                   as RequestStatus,
+        createdAt: null == createdAt
+            ? _value.createdAt
+            : createdAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
       ),
     );
   }
@@ -255,7 +265,7 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
     required this.id,
     required this.parentId,
     required this.parentName,
-    this.parentImageUrl = 'https://example.com/placeholder.png',
+    this.parentImageUrl,
     required this.parentLocation,
     required this.childName,
     required this.childAge,
@@ -263,6 +273,7 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
     required this.specialNeed,
     required this.serviceName,
     this.status = RequestStatus.pending,
+    required this.createdAt,
   }) : super._();
 
   factory _$CaregiverRequestImpl.fromJson(Map<String, dynamic> json) =>
@@ -270,17 +281,14 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
 
   @override
   final String id;
-  // Parent Details (The person paying for the service)
   @override
   final String parentId;
   @override
   final String parentName;
   @override
-  @JsonKey()
-  final String parentImageUrl;
+  final String? parentImageUrl;
   @override
   final String parentLocation;
-  // Child Details (The person receiving the care)
   @override
   final String childName;
   @override
@@ -289,16 +297,17 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
   final String childGender;
   @override
   final String specialNeed;
-  // Service Context
   @override
   final String serviceName;
   @override
   @JsonKey()
   final RequestStatus status;
+  @override
+  final DateTime createdAt;
 
   @override
   String toString() {
-    return 'CaregiverRequest(id: $id, parentId: $parentId, parentName: $parentName, parentImageUrl: $parentImageUrl, parentLocation: $parentLocation, childName: $childName, childAge: $childAge, childGender: $childGender, specialNeed: $specialNeed, serviceName: $serviceName, status: $status)';
+    return 'CaregiverRequest(id: $id, parentId: $parentId, parentName: $parentName, parentImageUrl: $parentImageUrl, parentLocation: $parentLocation, childName: $childName, childAge: $childAge, childGender: $childGender, specialNeed: $specialNeed, serviceName: $serviceName, status: $status, createdAt: $createdAt)';
   }
 
   @override
@@ -325,7 +334,9 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
                 other.specialNeed == specialNeed) &&
             (identical(other.serviceName, serviceName) ||
                 other.serviceName == serviceName) &&
-            (identical(other.status, status) || other.status == status));
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -343,6 +354,7 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
     specialNeed,
     serviceName,
     status,
+    createdAt,
   );
 
   /// Create a copy of CaregiverRequest
@@ -367,7 +379,7 @@ abstract class _CaregiverRequest extends CaregiverRequest {
     required final String id,
     required final String parentId,
     required final String parentName,
-    final String parentImageUrl,
+    final String? parentImageUrl,
     required final String parentLocation,
     required final String childName,
     required final int childAge,
@@ -375,6 +387,7 @@ abstract class _CaregiverRequest extends CaregiverRequest {
     required final String specialNeed,
     required final String serviceName,
     final RequestStatus status,
+    required final DateTime createdAt,
   }) = _$CaregiverRequestImpl;
   const _CaregiverRequest._() : super._();
 
@@ -382,15 +395,15 @@ abstract class _CaregiverRequest extends CaregiverRequest {
       _$CaregiverRequestImpl.fromJson;
 
   @override
-  String get id; // Parent Details (The person paying for the service)
+  String get id;
   @override
   String get parentId;
   @override
   String get parentName;
   @override
-  String get parentImageUrl;
+  String? get parentImageUrl;
   @override
-  String get parentLocation; // Child Details (The person receiving the care)
+  String get parentLocation;
   @override
   String get childName;
   @override
@@ -398,11 +411,13 @@ abstract class _CaregiverRequest extends CaregiverRequest {
   @override
   String get childGender;
   @override
-  String get specialNeed; // Service Context
+  String get specialNeed;
   @override
   String get serviceName;
   @override
   RequestStatus get status;
+  @override
+  DateTime get createdAt;
 
   /// Create a copy of CaregiverRequest
   /// with the given fields replaced by the non-null parameter values.

@@ -3,7 +3,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'request_model.freezed.dart';
 part 'request_model.g.dart';
 
-/// The status of a service request from a Parent to a Caregiver.
 enum RequestStatus {
   @JsonValue('pending')
   pending,
@@ -15,40 +14,52 @@ enum RequestStatus {
 
 @freezed
 class CaregiverRequest with _$CaregiverRequest {
-  const CaregiverRequest._(); // Needed for our custom getters below
+  const CaregiverRequest._();
 
   const factory CaregiverRequest({
     required String id,
-    
-    // Parent Details (The person paying for the service)
     required String parentId,
     required String parentName,
-    @Default('https://example.com/placeholder.png') String parentImageUrl,
+    String? parentImageUrl,
     required String parentLocation,
-
-    // Child Details (The person receiving the care)
     required String childName,
     required int childAge,
     required String childGender,
     required String specialNeed,
-
-    // Service Context
     required String serviceName,
 
     @Default(RequestStatus.pending) RequestStatus status,
+    required DateTime createdAt,
   }) = _CaregiverRequest;
 
   factory CaregiverRequest.fromJson(Map<String, dynamic> json) =>
       _$CaregiverRequestFromJson(json);
 
-  // --- EASY HELPERS: Makes your UI code look much cleaner ---
+  String get childInfo => "$childName ($childGender, $childAge yrs)";
+  String get serviceHeader => "$serviceName | $specialNeed";
 
-  /// Example: "For Male Child of 8 years"
-  String get childDescription => "For $childGender Child of $childAge years";
-
-  /// Example: "Autism Support | Speech Therapy"
-  String get serviceDescription => "$specialNeed | $serviceName";
-  
-  /// Helper to check if the request is still actionable
   bool get isPending => status == RequestStatus.pending;
+  bool get isAccepted => status == RequestStatus.accepted;
+  bool get isRejected => status == RequestStatus.rejected;
+
+  String get parentInitials {
+    if (parentName.isEmpty) return '?';
+    final names = parentName.trim().split(' ');
+    if (names.length > 1) {
+      return '${names[0][0]}${names[1][0]}'.toUpperCase();
+    }
+    return names[0][0].toUpperCase();
+  }
+
+  String get timeAgo {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
+    if (difference.inHours < 24) return '${difference.inHours}h ago';
+    if (difference.inDays < 7) return '${difference.inDays}d ago';
+
+    return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
+  }
 }

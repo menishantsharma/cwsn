@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/features/requests/models/request_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class RequestTile extends StatelessWidget {
   final CaregiverRequest request;
@@ -16,25 +17,38 @@ class RequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+    final hasImage =
+        request.parentImageUrl != null && request.parentImageUrl!.isNotEmpty;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey.shade100),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: Colors.grey.shade50,
-                  backgroundImage: CachedNetworkImageProvider(
-                    request.parentImageUrl,
-                  ),
+                  backgroundColor: primaryColor.withValues(alpha: 0.1),
+                  backgroundImage: hasImage
+                      ? CachedNetworkImageProvider(request.parentImageUrl!)
+                      : null,
+                  child: !hasImage
+                      ? Text(
+                          request.parentInitials,
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -46,6 +60,7 @@ class RequestTile extends StatelessWidget {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       Row(
@@ -71,44 +86,51 @@ class RequestTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                _StatusBadge(),
+                _StatusBadge(label: request.timeAgo),
               ],
             ),
-            const Divider(height: 32, thickness: 0.5),
-
-            _InfoRow(
-              Icons.medical_services_outlined,
-              "Service",
-              request.serviceDescription,
-            ),
-            const SizedBox(height: 12),
-            _InfoRow(Icons.face_outlined, "Child", request.childDescription),
-
-            const SizedBox(height: 20),
-
-            Row(
+          ),
+          const Divider(height: 1, thickness: 0.5),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
               children: [
-                Expanded(
-                  child: _Btn(
-                    "Decline",
-                    Colors.grey.shade100,
-                    Colors.black87,
-                    onReject,
-                  ),
+                _InfoRow(
+                  Icons.medical_services_outlined,
+                  "Service",
+                  request.serviceHeader,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _Btn(
-                    "Accept",
-                    const Color(0xFFE53935),
-                    Colors.white,
-                    onAccept,
-                  ),
+                const SizedBox(height: 12),
+                _InfoRow(Icons.face_outlined, "Child", request.childInfo),
+
+                const SizedBox(height: 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ActionBtn(
+                        text: "Decline",
+                        bg: Colors.grey.shade100,
+                        tc: Colors.black87,
+                        onTap: onReject,
+                        isDestructive: true,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ActionBtn(
+                        text: "Accept",
+                        bg: const Color(0xFFE53935),
+                        tc: Colors.white,
+                        onTap: onAccept,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -147,46 +169,84 @@ class _InfoRow extends StatelessWidget {
   );
 }
 
-class _Btn extends StatelessWidget {
+class _ActionBtn extends StatefulWidget {
   final String text;
   final Color bg, tc;
-  final VoidCallback press;
-  const _Btn(this.text, this.bg, this.tc, this.press);
+  final VoidCallback onTap;
+  final bool isDestructive;
+
+  const _ActionBtn({
+    required this.text,
+    required this.bg,
+    required this.tc,
+    required this.onTap,
+    this.isDestructive = false,
+  });
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 44,
-    child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: bg,
-        foregroundColor: tc,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  State<_ActionBtn> createState() => _ActionBtnState();
+}
+
+class _ActionBtnState extends State<_ActionBtn> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: () {
+        widget.isDestructive
+            ? HapticFeedback.mediumImpact()
+            : HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _isPressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: widget.bg,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Center(
+            child: Text(
+              widget.text,
+              style: TextStyle(
+                color: widget.tc,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
       ),
-      onPressed: press,
-      child: Text(
-        text,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-      ),
-    ),
-  );
+    );
+  }
 }
 
 class _StatusBadge extends StatelessWidget {
+  final String label;
+  const _StatusBadge({required this.label});
+
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    decoration: BoxDecoration(
-      color: Colors.blue.shade50,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: const Text(
-      "NEW",
-      style: TextStyle(
-        color: Color(0xFF1976D2),
-        fontWeight: FontWeight.bold,
-        fontSize: 10,
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
       ),
-    ),
-  );
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          color: Color(0xFF1976D2),
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+        ),
+      ),
+    );
+  }
 }
