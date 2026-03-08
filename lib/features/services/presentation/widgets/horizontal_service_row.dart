@@ -14,7 +14,6 @@ class HorizontalServiceRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Header Row
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -29,7 +28,6 @@ class HorizontalServiceRow extends StatelessWidget {
                 ),
               ),
 
-              // Standard native TextButton replaces the massive custom InkWell
               TextButton(
                 onPressed: () => context.pushNamed(AppRoutes.specialNeeds),
                 style: TextButton.styleFrom(
@@ -51,12 +49,10 @@ class HorizontalServiceRow extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // 2. Horizontal Scrollable List
         SizedBox(
-          height: 180, // Height locked strictly to the ServiceCard height
+          height: 180,
           child: ListView.separated(
-            physics:
-                const BouncingScrollPhysics(), // Premium horizontal scroll feel
+            physics: const BouncingScrollPhysics(),
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: section.items.length,
