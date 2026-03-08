@@ -1,15 +1,13 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/router/app_routes.dart';
-import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/guest_placeholder.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/settings/presentation/widgets/settings_tile.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -18,35 +16,25 @@ class SettingsPage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Logout',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'Are you sure you want to log out of your account?',
-        ),
+        content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               ref.read(currentUserProvider.notifier).logout();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade50,
-              foregroundColor: Colors.red,
-              elevation: 0,
-            ),
             child: const Text(
               'Logout',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -64,7 +52,7 @@ class SettingsPage extends ConsumerWidget {
 
     if (user.isGuest) {
       return Scaffold(
-        appBar: AppTopBar(title: 'Profile'),
+        appBar: const AppTopBar(title: 'Profile', showBackButton: false),
         body: GuestPlaceholder(
           message:
               "Sign in to manage your profile, children details, and app preferences.",
@@ -73,87 +61,63 @@ class SettingsPage extends ConsumerWidget {
       );
     }
 
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
-      appBar: AppTopBar(title: 'Profile', showBackButton: false,),
-      body: SingleChildScrollView(
+      backgroundColor: const Color(0xFFFBFBFB), // Premium classic off-white
+      appBar: const AppTopBar(title: 'Profile', showBackButton: false),
+      body: ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children:
-              [
-                    _ProfileHeader(user: user),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        children: [
+          _ProfileHeader(user: user),
+          const SizedBox(height: 32),
 
-                    const SizedBox(height: 30),
+          _SwitchModeCard(isCaregiver: isCaregiverMode),
+          const SizedBox(height: 32),
 
-                    _SwitchModeCard(isCaregiver: isCaregiverMode),
+          const _SectionTitle("Account Settings"),
+          SettingsTile(
+            icon: Icons.person_outline_rounded,
+            label: 'Edit Profile',
+            onTap: () => context.pushNamed(AppRoutes.parentEditProfile),
+          ),
 
-                    const SizedBox(height: 24),
+          if (!isCaregiverMode)
+            SettingsTile(
+              icon: Icons.child_care_rounded,
+              label: 'Add Child',
+              iconColor: Colors.orange.shade600,
+              onTap: () => context.pushNamed(AppRoutes.addChild),
+            ),
 
-                    Text(
-                      "Account Settings",
-                      style: textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+          const SizedBox(height: 24),
 
-                    SettingsTile(
-                      icon: Icons.person_outline_rounded,
-                      label: 'Edit Profile',
-                      onTap: () =>
-                          context.pushNamed(AppRoutes.parentEditProfile),
-                    ),
-
-                    if (!isCaregiverMode)
-                      SettingsTile(
-                        icon: Icons.child_care_rounded,
-                        label: 'Add Child',
-                        iconColor: Colors.orange,
-                        onTap: () => context.pushNamed(AppRoutes.addChild),
-                      ),
-
-                    const SizedBox(height: 24),
-
-                    Text(
-                      "Other",
-                      style: textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    SettingsTile(
-                      icon: Icons.logout_rounded,
-                      label: 'Logout',
-                      isDestructive: true,
-                      onTap: () => _confirmLogout(context, ref),
-                    ),
-                    SettingsTile(
-                      icon: Icons.delete_outline_rounded,
-                      label: 'Delete Account',
-                      isDestructive: true,
-                      onTap: () {
-                        // Add account deletion logic here
-                      },
-                    ),
-                  ]
-                  .animate(interval: 50.ms)
-                  .fade(duration: 400.ms)
-                  .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
-        ),
+          const _SectionTitle("Other"),
+          SettingsTile(
+            icon: Icons.logout_rounded,
+            label: 'Logout',
+            isDestructive: true,
+            onTap: () => _confirmLogout(context, ref),
+          ),
+          SettingsTile(
+            icon: Icons.delete_outline_rounded,
+            label: 'Delete Account',
+            isDestructive: true,
+            onTap: () {
+              // Add account deletion logic here
+            },
+          ),
+        ],
       ),
     );
   }
 }
 
+// ==========================================
+// MINIMAL INTERNAL COMPONENTS
+// ==========================================
+
 class _ProfileHeader extends StatelessWidget {
   final User user;
-
   const _ProfileHeader({required this.user});
 
   @override
@@ -164,44 +128,29 @@ class _ProfileHeader extends StatelessWidget {
       child: Column(
         children: [
           Stack(
+            alignment: Alignment.bottomRight,
             children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: user.imageUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: user.imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              Container(color: Colors.grey.shade200),
-                          errorWidget: (context, url, error) =>
-                              _buildFallbackAvatar(),
-                        )
-                      : _buildFallbackAvatar(),
-                ),
+              CircleAvatar(
+                radius: 48,
+                backgroundColor: Colors.grey.shade100,
+                backgroundImage: user.imageUrl.isNotEmpty
+                    ? CachedNetworkImageProvider(user.imageUrl)
+                    : null,
+                child: user.imageUrl.isEmpty
+                    ? Icon(Icons.person, size: 40, color: Colors.grey.shade400)
+                    : null,
               ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: context.colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.edit, color: Colors.white, size: 16),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                ),
+                child: const Icon(
+                  Icons.edit_rounded,
+                  color: Colors.white,
+                  size: 16,
                 ),
               ),
             ],
@@ -222,97 +171,93 @@ class _ProfileHeader extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildFallbackAvatar() {
-    return Container(
-      color: Colors.grey.shade200,
-      child: const Icon(Icons.person, size: 40, color: Colors.grey),
-    );
-  }
 }
 
 class _SwitchModeCard extends StatelessWidget {
   final bool isCaregiver;
-
   const _SwitchModeCard({required this.isCaregiver});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isCaregiver
-              ? const [Color(0xFF4CAF50), Color(0xFF2E7D32)]
-              : const [Color(0xFF535CE8), Color(0xFF3B46C4)],
+              ? const [Color(0xFF4CAF50), Color(0xFF2E7D32)] // Premium Green
+              : const [Color(0xFF535CE8), Color(0xFF3B46C4)], // Premium Blue
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        // A much lighter, optimized shadow that doesn't hurt scroll performance
         boxShadow: [
           BoxShadow(
             color: (isCaregiver ? Colors.green : Colors.blue).withValues(
-              alpha: 0.3,
+              alpha: 0.25,
             ),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: Colors
+            .transparent, // Crucial: Allows the gradient to show through the InkWell
         child: InkWell(
           onTap: () => context.pushNamed(AppRoutes.switching),
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.swap_horiz_rounded,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isCaregiver ? "Switch to Parent" : "Start Caregiving",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isCaregiver
-                            ? "Access services for your child"
-                            : "Switch to caregiver mode",
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ],
+          borderRadius: BorderRadius.circular(16),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 8,
+            ),
+            leading: CircleAvatar(
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              child: const Icon(Icons.swap_horiz_rounded, color: Colors.white),
+            ),
+            title: Text(
+              isCaregiver ? "Switch to Parent" : "Start Caregiving",
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            subtitle: Text(
+              isCaregiver
+                  ? "Access services for your child"
+                  : "Switch to caregiver mode",
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 12,
+              ),
+            ),
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.white70,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  const _SectionTitle(this.title);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey.shade500,
+          letterSpacing: 0.5,
         ),
       ),
     );

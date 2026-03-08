@@ -9,8 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AddChildPage extends ConsumerWidget {
   const AddChildPage({super.key});
 
-  // --- ACTIONS ---
-
   Future<void> _deleteChild(
     BuildContext context,
     WidgetRef ref,
@@ -20,7 +18,6 @@ class AddChildPage extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final previousProfile = user.parentProfile!;
 
-    // 1. Optimistic UI Update
     final optimisticChildren = previousProfile.children
         .where((c) => c.id != child.id)
         .toList();
@@ -31,12 +28,10 @@ class AddChildPage extends ConsumerWidget {
         );
 
     try {
-      // 2. Network Request
       await ref
           .read(parentRepositoryProvider)
           .deleteChild(parentId: user.id, childId: child.id);
     } catch (e) {
-      // 3. Rollback on Failure
       ref
           .read(currentUserProvider.notifier)
           .updateParentProfile(previousProfile);
@@ -93,8 +88,6 @@ class AddChildPage extends ConsumerWidget {
     );
   }
 
-  // --- UI ---
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).value;
@@ -148,10 +141,6 @@ class AddChildPage extends ConsumerWidget {
   }
 }
 
-// ==========================================
-// MINIMAL INTERNAL COMPONENTS
-// ==========================================
-
 class _ChildCard extends StatelessWidget {
   final ChildModel child;
   final VoidCallback onEdit, onDelete;
@@ -174,11 +163,10 @@ class _ChildCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
       ),
-      // ListTile automatically handles standard padding, alignment, and sizing
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: CircleAvatar(
-          backgroundColor: primary.withOpacity(0.1),
+          backgroundColor: primary.withValues(alpha: 0.1),
           foregroundColor: primary,
           child: Icon(isGirl ? Icons.face_3_rounded : Icons.face_rounded),
         ),
@@ -219,7 +207,7 @@ class _AddChildButton extends StatelessWidget {
         minimumSize: const Size.fromHeight(56),
         foregroundColor: Theme.of(context).primaryColor,
         side: BorderSide(
-          color: Theme.of(context).primaryColor.withOpacity(0.3),
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
           width: 1.5,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
