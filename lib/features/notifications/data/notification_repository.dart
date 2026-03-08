@@ -9,6 +9,8 @@ abstract class NotificationRepository {
   Future<List<NotificationItem>> fetchNotifications({
     required String userId,
     required bool isCaregiver,
+    int limit = 20,
+    int offset = 0,
   });
 
   Future<void> markAsRead(String notificationId);
@@ -16,48 +18,28 @@ abstract class NotificationRepository {
 }
 
 class FakeNotificationRepository implements NotificationRepository {
+  List<NotificationItem>? _inMemoryDb;
+
   @override
   Future<List<NotificationItem>> fetchNotifications({
     required String userId,
     required bool isCaregiver,
+    int limit = 20,
+    int offset = 0,
   }) async {
     await Future.delayed(const Duration(seconds: 1));
 
-    // MOCK RESPONSE
-    if (isCaregiver) {
-      return [
-        NotificationItem(
-          id: 'c1',
-          title: 'New Service Request',
-          subtitle: 'A parent has requested your services for their child.',
-          imageUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
-          timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-          type: NotificationType
-              .requestReceived, // Caregivers get received requests
-        ),
-      ];
-    } else {
-      return [
-        NotificationItem(
-          id: 'p1',
-          title: 'Request Accepted!',
-          subtitle: 'Sarah Jenkins has accepted your caregiving request.',
-          imageUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
-          timestamp: DateTime.now().subtract(const Duration(minutes: 10)),
-          type: NotificationType.requestAccepted,
-          relatedId: 'caregiver_123',
-        ),
-        NotificationItem(
-          id: 'p2',
-          title: 'Welcome to CWSN',
-          subtitle: 'Complete your profile to get the best matches.',
-          imageUrl: 'https://randomuser.me/api/portraits/lego/1.jpg',
-          timestamp: DateTime.now().subtract(const Duration(days: 1)),
-          isRead: true,
-          type: NotificationType.system,
-        ),
-      ];
-    }
+    _inMemoryDb = isCaregiver
+        ? _generateCaregiverMocks()
+        : _generateParentMocks();
+
+    if (offset >= _inMemoryDb!.length) return [];
+
+    final end = (offset + limit) > _inMemoryDb!.length
+        ? _inMemoryDb!.length
+        : offset + limit;
+
+    return _inMemoryDb!.sublist(offset, end);
   }
 
   @override
@@ -68,5 +50,41 @@ class FakeNotificationRepository implements NotificationRepository {
   @override
   Future<void> markAllAsRead(String userId) async {
     await Future.delayed(const Duration(milliseconds: 500));
+  }
+
+  List<NotificationItem> _generateCaregiverMocks() {
+    return [
+      NotificationItem(
+        id: 'c1',
+        title: 'New Service Request',
+        subtitle: 'A parent has requested your services for their child.',
+        imageUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
+        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
+        type: NotificationType.requestReceived,
+        relatedId: 'req_889',
+      ),
+    ];
+  }
+
+  List<NotificationItem> _generateParentMocks() {
+    return [
+      NotificationItem(
+        id: 'p1',
+        title: 'Request Accepted!',
+        subtitle: 'Sarah Jenkins has accepted your caregiving request.',
+        imageUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
+        timestamp: DateTime.now().subtract(const Duration(minutes: 10)),
+        type: NotificationType.requestAccepted,
+        relatedId: 'caregiver_123',
+      ),
+      NotificationItem(
+        id: 'p2',
+        title: 'Welcome to CWSN',
+        subtitle: 'Complete your profile to get the best matches.',
+        timestamp: DateTime.now().subtract(const Duration(days: 1)),
+        isRead: true,
+        type: NotificationType.system,
+      ),
+    ];
   }
 }

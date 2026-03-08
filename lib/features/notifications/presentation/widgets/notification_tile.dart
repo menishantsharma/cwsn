@@ -17,44 +17,43 @@ class NotificationTile extends StatelessWidget {
     final bool isUnread = !notification.isRead;
 
     return Material(
-      color: isUnread ? Colors.red.withValues(alpha:  0.03) : Colors.white,
+      color: Colors.white,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.center, // Better vertical alignment
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. SQUIRCLE ICON: Modern standard for notifications
               Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.grey.shade100),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: CachedNetworkImage(
-                    imageUrl: notification.imageUrl,
-                    fit: BoxFit.cover,
-                    errorWidget: (_, _,_) => Icon(
-                      Icons.notifications_rounded,
-                      color: Colors.grey.shade300,
-                      size: 24,
-                    ),
-                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  child:
+                      notification.imageUrl != null &&
+                          notification.imageUrl!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: notification.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, _, _) => _buildFallbackIcon(),
+                        )
+                      : _buildFallbackIcon(),
                 ),
               ),
               const SizedBox(width: 16),
 
-              // 2. CONTENT
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
@@ -64,18 +63,24 @@ class NotificationTile extends StatelessWidget {
                                   ? FontWeight.w800
                                   : FontWeight.w600,
                               fontSize: 15,
-                              color: const Color(0xFF1A1A1A),
+                              color: Colors.black87,
+                              letterSpacing: -0.2,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           _formatTime(notification.timestamp),
                           style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade400,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            color: isUnread
+                                ? const Color(0xFFE53935)
+                                : Colors.grey.shade500,
+                            fontWeight: isUnread
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                           ),
                         ),
                       ],
@@ -84,8 +89,8 @@ class NotificationTile extends StatelessWidget {
                     Text(
                       notification.subtitle,
                       style: TextStyle(
-                        fontSize: 13,
-                        color: isUnread ? Colors.black : Colors.grey.shade500,
+                        fontSize: 14,
+                        color: isUnread ? Colors.black87 : Colors.grey.shade600,
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -96,13 +101,15 @@ class NotificationTile extends StatelessWidget {
               ),
 
               if (isUnread)
-                Container(
-                  margin: const EdgeInsets.only(left: 12),
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE53935),
-                    shape: BoxShape.circle,
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, top: 6),
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE53935),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
             ],
@@ -112,11 +119,37 @@ class NotificationTile extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime timestamp) {
-    final diff = DateTime.now().difference(timestamp);
-    if (diff.inMinutes < 1) return "Now";
-    if (diff.inMinutes < 60) return "${diff.inMinutes}m";
-    if (diff.inHours < 24) return "${diff.inHours}h";
-    return "${diff.inDays}d";
+  Widget _buildFallbackIcon() {
+    return Icon(
+      Icons.notifications_outlined,
+      color: Colors.grey.shade400,
+      size: 24,
+    );
+  }
+
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inHours < 1) return '${difference.inMinutes}m';
+    if (difference.inDays < 1) return '${difference.inHours}h';
+    if (difference.inDays < 7) return '${difference.inDays}d';
+
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[time.month - 1]} ${time.day}';
   }
 }

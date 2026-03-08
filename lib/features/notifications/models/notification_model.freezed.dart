@@ -23,16 +23,14 @@ NotificationItem _$NotificationItemFromJson(Map<String, dynamic> json) {
 mixin _$NotificationItem {
   String get id => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
-  String get subtitle =>
-      throw _privateConstructorUsedError; // Default image if none is provided (e.g., a system logo)
-  String get imageUrl => throw _privateConstructorUsedError;
+  String get subtitle => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
-  bool get isRead => throw _privateConstructorUsedError;
+  bool get isRead =>
+      throw _privateConstructorUsedError; // @Default handles missing fields perfectly without triggering the JsonKey lint error
   NotificationType get type => throw _privateConstructorUsedError;
-
-  /// The ID of the related object (e.g., a CaregiverID or ChatID).
-  /// Used for deep-linking when the user taps the notification.
+  String? get imageUrl => throw _privateConstructorUsedError;
   String? get relatedId => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get payload => throw _privateConstructorUsedError;
 
   /// Serializes this NotificationItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -55,11 +53,12 @@ abstract class $NotificationItemCopyWith<$Res> {
     String id,
     String title,
     String subtitle,
-    String imageUrl,
     DateTime timestamp,
     bool isRead,
     NotificationType type,
+    String? imageUrl,
     String? relatedId,
+    Map<String, dynamic>? payload,
   });
 }
 
@@ -81,11 +80,12 @@ class _$NotificationItemCopyWithImpl<$Res, $Val extends NotificationItem>
     Object? id = null,
     Object? title = null,
     Object? subtitle = null,
-    Object? imageUrl = null,
     Object? timestamp = null,
     Object? isRead = null,
     Object? type = null,
+    Object? imageUrl = freezed,
     Object? relatedId = freezed,
+    Object? payload = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -101,10 +101,6 @@ class _$NotificationItemCopyWithImpl<$Res, $Val extends NotificationItem>
                 ? _value.subtitle
                 : subtitle // ignore: cast_nullable_to_non_nullable
                       as String,
-            imageUrl: null == imageUrl
-                ? _value.imageUrl
-                : imageUrl // ignore: cast_nullable_to_non_nullable
-                      as String,
             timestamp: null == timestamp
                 ? _value.timestamp
                 : timestamp // ignore: cast_nullable_to_non_nullable
@@ -117,10 +113,18 @@ class _$NotificationItemCopyWithImpl<$Res, $Val extends NotificationItem>
                 ? _value.type
                 : type // ignore: cast_nullable_to_non_nullable
                       as NotificationType,
+            imageUrl: freezed == imageUrl
+                ? _value.imageUrl
+                : imageUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
             relatedId: freezed == relatedId
                 ? _value.relatedId
                 : relatedId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            payload: freezed == payload
+                ? _value.payload
+                : payload // ignore: cast_nullable_to_non_nullable
+                      as Map<String, dynamic>?,
           )
           as $Val,
     );
@@ -140,11 +144,12 @@ abstract class _$$NotificationItemImplCopyWith<$Res>
     String id,
     String title,
     String subtitle,
-    String imageUrl,
     DateTime timestamp,
     bool isRead,
     NotificationType type,
+    String? imageUrl,
     String? relatedId,
+    Map<String, dynamic>? payload,
   });
 }
 
@@ -165,11 +170,12 @@ class __$$NotificationItemImplCopyWithImpl<$Res>
     Object? id = null,
     Object? title = null,
     Object? subtitle = null,
-    Object? imageUrl = null,
     Object? timestamp = null,
     Object? isRead = null,
     Object? type = null,
+    Object? imageUrl = freezed,
     Object? relatedId = freezed,
+    Object? payload = freezed,
   }) {
     return _then(
       _$NotificationItemImpl(
@@ -185,10 +191,6 @@ class __$$NotificationItemImplCopyWithImpl<$Res>
             ? _value.subtitle
             : subtitle // ignore: cast_nullable_to_non_nullable
                   as String,
-        imageUrl: null == imageUrl
-            ? _value.imageUrl
-            : imageUrl // ignore: cast_nullable_to_non_nullable
-                  as String,
         timestamp: null == timestamp
             ? _value.timestamp
             : timestamp // ignore: cast_nullable_to_non_nullable
@@ -201,10 +203,18 @@ class __$$NotificationItemImplCopyWithImpl<$Res>
             ? _value.type
             : type // ignore: cast_nullable_to_non_nullable
                   as NotificationType,
+        imageUrl: freezed == imageUrl
+            ? _value.imageUrl
+            : imageUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
         relatedId: freezed == relatedId
             ? _value.relatedId
             : relatedId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        payload: freezed == payload
+            ? _value._payload
+            : payload // ignore: cast_nullable_to_non_nullable
+                  as Map<String, dynamic>?,
       ),
     );
   }
@@ -217,12 +227,14 @@ class _$NotificationItemImpl extends _NotificationItem {
     required this.id,
     required this.title,
     required this.subtitle,
-    this.imageUrl = 'https://example.com/default_notification.png',
     required this.timestamp,
     this.isRead = false,
-    this.type = NotificationType.system,
+    this.type = NotificationType.unknown,
+    this.imageUrl,
     this.relatedId,
-  }) : super._();
+    final Map<String, dynamic>? payload,
+  }) : _payload = payload,
+       super._();
 
   factory _$NotificationItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$NotificationItemImplFromJson(json);
@@ -233,27 +245,32 @@ class _$NotificationItemImpl extends _NotificationItem {
   final String title;
   @override
   final String subtitle;
-  // Default image if none is provided (e.g., a system logo)
-  @override
-  @JsonKey()
-  final String imageUrl;
   @override
   final DateTime timestamp;
   @override
   @JsonKey()
   final bool isRead;
+  // @Default handles missing fields perfectly without triggering the JsonKey lint error
   @override
   @JsonKey()
   final NotificationType type;
-
-  /// The ID of the related object (e.g., a CaregiverID or ChatID).
-  /// Used for deep-linking when the user taps the notification.
+  @override
+  final String? imageUrl;
   @override
   final String? relatedId;
+  final Map<String, dynamic>? _payload;
+  @override
+  Map<String, dynamic>? get payload {
+    final value = _payload;
+    if (value == null) return null;
+    if (_payload is EqualUnmodifiableMapView) return _payload;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
 
   @override
   String toString() {
-    return 'NotificationItem(id: $id, title: $title, subtitle: $subtitle, imageUrl: $imageUrl, timestamp: $timestamp, isRead: $isRead, type: $type, relatedId: $relatedId)';
+    return 'NotificationItem(id: $id, title: $title, subtitle: $subtitle, timestamp: $timestamp, isRead: $isRead, type: $type, imageUrl: $imageUrl, relatedId: $relatedId, payload: $payload)';
   }
 
   @override
@@ -265,14 +282,15 @@ class _$NotificationItemImpl extends _NotificationItem {
             (identical(other.title, title) || other.title == title) &&
             (identical(other.subtitle, subtitle) ||
                 other.subtitle == subtitle) &&
-            (identical(other.imageUrl, imageUrl) ||
-                other.imageUrl == imageUrl) &&
             (identical(other.timestamp, timestamp) ||
                 other.timestamp == timestamp) &&
             (identical(other.isRead, isRead) || other.isRead == isRead) &&
             (identical(other.type, type) || other.type == type) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
             (identical(other.relatedId, relatedId) ||
-                other.relatedId == relatedId));
+                other.relatedId == relatedId) &&
+            const DeepCollectionEquality().equals(other._payload, _payload));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -282,11 +300,12 @@ class _$NotificationItemImpl extends _NotificationItem {
     id,
     title,
     subtitle,
-    imageUrl,
     timestamp,
     isRead,
     type,
+    imageUrl,
     relatedId,
+    const DeepCollectionEquality().hash(_payload),
   );
 
   /// Create a copy of NotificationItem
@@ -311,11 +330,12 @@ abstract class _NotificationItem extends NotificationItem {
     required final String id,
     required final String title,
     required final String subtitle,
-    final String imageUrl,
     required final DateTime timestamp,
     final bool isRead,
     final NotificationType type,
+    final String? imageUrl,
     final String? relatedId,
+    final Map<String, dynamic>? payload,
   }) = _$NotificationItemImpl;
   const _NotificationItem._() : super._();
 
@@ -327,20 +347,19 @@ abstract class _NotificationItem extends NotificationItem {
   @override
   String get title;
   @override
-  String get subtitle; // Default image if none is provided (e.g., a system logo)
-  @override
-  String get imageUrl;
+  String get subtitle;
   @override
   DateTime get timestamp;
   @override
-  bool get isRead;
+  bool get isRead; // @Default handles missing fields perfectly without triggering the JsonKey lint error
   @override
   NotificationType get type;
-
-  /// The ID of the related object (e.g., a CaregiverID or ChatID).
-  /// Used for deep-linking when the user taps the notification.
+  @override
+  String? get imageUrl;
   @override
   String? get relatedId;
+  @override
+  Map<String, dynamic>? get payload;
 
   /// Create a copy of NotificationItem
   /// with the given fields replaced by the non-null parameter values.

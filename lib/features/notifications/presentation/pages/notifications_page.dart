@@ -15,8 +15,7 @@ class NotificationsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(currentUserProvider);
-    final user = userAsync.value;
+    final user = ref.watch(currentUserProvider).value;
 
     if (user == null) return const SizedBox.shrink();
     if (user.isGuest) {

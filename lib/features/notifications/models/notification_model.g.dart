@@ -12,15 +12,14 @@ _$NotificationItemImpl _$$NotificationItemImplFromJson(
   id: json['id'] as String,
   title: json['title'] as String,
   subtitle: json['subtitle'] as String,
-  imageUrl:
-      json['imageUrl'] as String? ??
-      'https://example.com/default_notification.png',
   timestamp: DateTime.parse(json['timestamp'] as String),
   isRead: json['isRead'] as bool? ?? false,
   type:
       $enumDecodeNullable(_$NotificationTypeEnumMap, json['type']) ??
-      NotificationType.system,
+      NotificationType.unknown,
+  imageUrl: json['imageUrl'] as String?,
   relatedId: json['relatedId'] as String?,
+  payload: json['payload'] as Map<String, dynamic>?,
 );
 
 Map<String, dynamic> _$$NotificationItemImplToJson(
@@ -29,11 +28,12 @@ Map<String, dynamic> _$$NotificationItemImplToJson(
   'id': instance.id,
   'title': instance.title,
   'subtitle': instance.subtitle,
-  'imageUrl': instance.imageUrl,
   'timestamp': instance.timestamp.toIso8601String(),
   'isRead': instance.isRead,
   'type': _$NotificationTypeEnumMap[instance.type]!,
+  'imageUrl': instance.imageUrl,
   'relatedId': instance.relatedId,
+  'payload': instance.payload,
 };
 
 const _$NotificationTypeEnumMap = {
@@ -42,4 +42,5 @@ const _$NotificationTypeEnumMap = {
   NotificationType.requestAccepted: 'requestAccepted',
   NotificationType.alert: 'alert',
   NotificationType.system: 'system',
+  NotificationType.unknown: 'unknown',
 };

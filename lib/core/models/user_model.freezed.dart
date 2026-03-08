@@ -23,19 +23,15 @@ User _$UserFromJson(Map<String, dynamic> json) {
 mixin _$User {
   String get id => throw _privateConstructorUsedError;
   String get firstName => throw _privateConstructorUsedError;
-  String? get lastName =>
-      throw _privateConstructorUsedError; // Default image if the user hasn't uploaded one
+  String? get lastName => throw _privateConstructorUsedError;
   String get imageUrl => throw _privateConstructorUsedError;
   String? get location => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
   bool get isGuest => throw _privateConstructorUsedError;
   String? get phoneNumber => throw _privateConstructorUsedError;
-  Gender? get gender =>
-      throw _privateConstructorUsedError; // This tells the app if we are currently looking at the "Parent" or "Caregiver" side
-  UserRole? get activeRole =>
-      throw _privateConstructorUsedError; // Security token for API calls
-  String? get token =>
-      throw _privateConstructorUsedError; // Detailed profiles (Optional: a user could be one or both)
+  Gender? get gender => throw _privateConstructorUsedError;
+  UserRole? get activeRole => throw _privateConstructorUsedError;
+  String? get token => throw _privateConstructorUsedError;
   CaregiverProfile? get caregiverProfile => throw _privateConstructorUsedError;
   ParentModel? get parentProfile => throw _privateConstructorUsedError;
 
@@ -333,7 +329,6 @@ class _$UserImpl extends _User {
   final String firstName;
   @override
   final String? lastName;
-  // Default image if the user hasn't uploaded one
   @override
   @JsonKey()
   final String imageUrl;
@@ -349,13 +344,10 @@ class _$UserImpl extends _User {
   final String? phoneNumber;
   @override
   final Gender? gender;
-  // This tells the app if we are currently looking at the "Parent" or "Caregiver" side
   @override
   final UserRole? activeRole;
-  // Security token for API calls
   @override
   final String? token;
-  // Detailed profiles (Optional: a user could be one or both)
   @override
   final CaregiverProfile? caregiverProfile;
   @override
@@ -452,7 +444,7 @@ abstract class _User extends User {
   @override
   String get firstName;
   @override
-  String? get lastName; // Default image if the user hasn't uploaded one
+  String? get lastName;
   @override
   String get imageUrl;
   @override
@@ -464,11 +456,11 @@ abstract class _User extends User {
   @override
   String? get phoneNumber;
   @override
-  Gender? get gender; // This tells the app if we are currently looking at the "Parent" or "Caregiver" side
+  Gender? get gender;
   @override
-  UserRole? get activeRole; // Security token for API calls
+  UserRole? get activeRole;
   @override
-  String? get token; // Detailed profiles (Optional: a user could be one or both)
+  String? get token;
   @override
   CaregiverProfile? get caregiverProfile;
   @override
@@ -886,14 +878,11 @@ CaregiverProfile _$CaregiverProfileFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$CaregiverProfile {
-  String get about => throw _privateConstructorUsedError; // A short bio
-  List<String> get services =>
-      throw _privateConstructorUsedError; // Skills like 'Shadow Teacher'
-  bool get isVerified =>
-      throw _privateConstructorUsedError; // Blue checkmark status
-  bool get isAvailable => throw _privateConstructorUsedError; // Ready for work?
-  List<String> get languages =>
-      throw _privateConstructorUsedError; // Languages spoken
+  String get about => throw _privateConstructorUsedError;
+  List<String> get services => throw _privateConstructorUsedError;
+  bool get isVerified => throw _privateConstructorUsedError;
+  bool get isAvailable => throw _privateConstructorUsedError;
+  List<String> get languages => throw _privateConstructorUsedError;
   DateTime? get joinedDate => throw _privateConstructorUsedError;
   int get yearsOfExperience => throw _privateConstructorUsedError;
   int get totalRecommendations => throw _privateConstructorUsedError;
@@ -1095,9 +1084,7 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
   @override
   @JsonKey()
   final String about;
-  // A short bio
   final List<String> _services;
-  // A short bio
   @override
   @JsonKey()
   List<String> get services {
@@ -1106,17 +1093,13 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
     return EqualUnmodifiableListView(_services);
   }
 
-  // Skills like 'Shadow Teacher'
   @override
   @JsonKey()
   final bool isVerified;
-  // Blue checkmark status
   @override
   @JsonKey()
   final bool isAvailable;
-  // Ready for work?
   final List<String> _languages;
-  // Ready for work?
   @override
   @JsonKey()
   List<String> get languages {
@@ -1125,7 +1108,6 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
     return EqualUnmodifiableListView(_languages);
   }
 
-  // Languages spoken
   @override
   final DateTime? joinedDate;
   @override
@@ -1210,15 +1192,15 @@ abstract class _CaregiverProfile implements CaregiverProfile {
       _$CaregiverProfileImpl.fromJson;
 
   @override
-  String get about; // A short bio
+  String get about;
   @override
-  List<String> get services; // Skills like 'Shadow Teacher'
+  List<String> get services;
   @override
-  bool get isVerified; // Blue checkmark status
+  bool get isVerified;
   @override
-  bool get isAvailable; // Ready for work?
+  bool get isAvailable;
   @override
-  List<String> get languages; // Languages spoken
+  List<String> get languages;
   @override
   DateTime? get joinedDate;
   @override
