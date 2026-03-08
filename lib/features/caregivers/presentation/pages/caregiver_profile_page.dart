@@ -1,558 +1,346 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
-import 'package:cwsn/core/theme/app_theme.dart';
-import 'package:cwsn/core/utils/utils.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
-import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
-import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_skeleton_profile.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/select_child_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final caregiverProfileProvider = FutureProvider.autoDispose
-    .family<User, String>((ref, caregiverId) async {
+    .family<User, String>((ref, id) async {
       final repository = ref.watch(caregiverRepositoryProvider);
-      return repository.getCaregiverDetails(caregiverId);
+      return repository.getCaregiverDetails(id);
     });
 
-class CaregiverProfilePage extends ConsumerStatefulWidget {
+class CaregiverProfilePage extends ConsumerWidget {
   final String caregiverId;
   const CaregiverProfilePage({super.key, required this.caregiverId});
 
-  @override
-  ConsumerState<CaregiverProfilePage> createState() =>
-      _CaregiverProfilePageState();
-}
+  // COMPACT NUMBER HELPER: Converts 20000 to 20K
+  String _formatCompact(int number) {
+    if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
+    if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}K';
+    return number.toString();
+  }
 
-class _CaregiverProfilePageState extends ConsumerState<CaregiverProfilePage> {
-  bool _isRequestSent = false;
-
-  void _showSelectChildSheet(BuildContext context) {
+  void _openRequestSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => SelectChildSheet(
-        caregiverId: widget.caregiverId,
-        onRequestSent: () {
-          setState(() {
-            _isRequestSent = true;
-          });
-        },
-      ),
+      builder: (_) =>
+          SelectChildSheet(caregiverId: caregiverId, onRequestSent: () {}),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    final profileAsync = ref.watch(
-      caregiverProfileProvider(widget.caregiverId),
-    );
-
-    final currentUser = ref.watch(currentUserProvider).value;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(caregiverProfileProvider(caregiverId));
 
     return Scaffold(
-      appBar: AppTopBar(
-        title: 'Profile',
-        actions: [
-          IconButton(icon: const Icon(Icons.share_rounded), onPressed: () {}),
-        ],
-      ),
-
-      // Only show the bottom action if we successfully loaded the caregiver
-      floatingActionButton: profileAsync.hasValue
-          ? _buildBottomAction(
-              context,
-              caregiverProfile: profileAsync.value!.caregiverProfile!,
-              currentUser: currentUser,
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-
+      backgroundColor: const Color(0xFFFBFBFB),
+      appBar: const AppTopBar(title: 'Caregiver Profile'),
       body: profileAsync.when(
-        loading: () => CaregiverProfileSkeleton(),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        loading: () =>
+            const Center(child: CircularProgressIndicator.adaptive()),
+        error: (err, _) => const Center(child: Text('Failed to load profile')),
         data: (user) {
           final caregiver = user.caregiverProfile!;
+          return Stack(
+            children: [
+              ListView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+                children: [
+                  _CenteredHeader(user: user),
+                  const SizedBox(height: 32),
 
-          return SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CaregiverProfileHeader(user: user),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: StatBox(
-                        label: "Recommended",
-                        value: formatCompactNumber(
-                          caregiver.totalRecommendations,
-                        ),
-                        icon: Icons.thumb_up_rounded,
-                        color: Colors.orange,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: StatBox(
-                        label: "Experience",
-                        value: "${caregiver.yearsOfExperience} Yrs",
-                        icon: Icons.work_history_rounded,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: StatBox(
-                        label: "Parents Connected",
-                        value: "50+",
-                        icon: Icons.family_restroom_rounded,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
-                ).animate().fade().slideY(begin: 0.2, end: 0, delay: 100.ms),
-
-                const SizedBox(height: 32),
-
-                const SectionTitle(title: "About"),
-                Text(
-                  caregiver.about,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.6,
-                    color: Colors.grey.shade700,
+                  // Updated Metrics with Compact Formatting
+                  _MetricsCard(
+                    recs: _formatCompact(caregiver.totalRecommendations),
+                    exp: '${caregiver.yearsOfExperience}y',
+                    parents: '50+',
                   ),
-                ).animate().fade(delay: 200.ms),
 
-                const SizedBox(height: 24),
-
-                const SectionTitle(title: "Specialties"),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: caregiver.services.map((service) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF535CE8).withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFF535CE8).withValues(alpha: 0.1),
-                        ),
-                      ),
-                      child: Text(
-                        service,
-                        style: const TextStyle(
-                          color: Color(0xFF535CE8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ).animate().fade(delay: 300.ms),
-
-                const SizedBox(height: 24),
-
-                const SectionTitle(title: "Details"),
-                DetailRow(
-                  icon: Icons.location_on_outlined,
-                  label: "Location",
-                  value: user.location ?? "Not specified",
-                ),
-                const SizedBox(height: 16),
-                DetailRow(
-                  icon: Icons.translate_rounded,
-                  label: "Languages",
-                  value: caregiver.languages.isNotEmpty
-                      ? caregiver.languages.join(", ")
-                      : "Not specified",
-                ),
-              ],
-            ),
+                  const SizedBox(height: 32),
+                  const _SectionHeader(title: 'About Caregiver'),
+                  Text(
+                    caregiver.about,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      height: 1.6,
+                      color: Color(0xFF4A4A4A),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const _SectionHeader(title: 'Specialties'),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: caregiver.services
+                        .map((s) => _ModernChip(label: s))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 32),
+                  const _SectionHeader(title: 'General Information'),
+                  _InfoTile(
+                    Icons.map_outlined,
+                    'Location',
+                    user.location ?? 'India',
+                  ),
+                  _InfoTile(
+                    Icons.translate_rounded,
+                    'Languages',
+                    caregiver.languages.join(", "),
+                  ),
+                ],
+              ),
+              _FixedRequestButton(onTap: () => _openRequestSheet(context)),
+            ],
           );
         },
       ),
     );
   }
-
-  Widget _buildBottomAction(
-    BuildContext context, {
-    required CaregiverProfile caregiverProfile,
-    required User? currentUser,
-  }) {
-    Widget currentButton;
-
-    if (currentUser == null || currentUser.isGuest) {
-      currentButton = StyledBottomButton(
-        key: const ValueKey('login_btn'),
-        text: "Login to Request Service",
-        icon: Icons.login_rounded,
-        backgroundColor: context.colorScheme.primary,
-        textColor: Colors.white,
-        // OPTIMIZED: Use the correct logout method we built earlier
-        onTap: () => ref.read(currentUserProvider.notifier).logout(),
-      );
-    } else if (_isRequestSent) {
-      currentButton = StyledBottomButton(
-        key: const ValueKey('sent_btn'),
-        text: "Request Sent",
-        subText: "Tap to cancel",
-        icon: Icons.check_circle_rounded,
-        backgroundColor: Colors.grey.shade200,
-        textColor: Colors.grey.shade600,
-        hasShadow: false,
-        onTap: () => setState(() => _isRequestSent = false),
-      );
-    } else if (caregiverProfile.isAvailable) {
-      currentButton = StyledBottomButton(
-        key: const ValueKey('request_btn'),
-        text: "Request Service",
-        icon: Icons.arrow_forward_rounded,
-        backgroundColor: context.colorScheme.primary,
-        textColor: Colors.white,
-        onTap: () => _showSelectChildSheet(context),
-      );
-    } else {
-      currentButton = StyledBottomButton(
-        key: const ValueKey('unavailable_btn'),
-        text: "Currently Unavailable",
-        backgroundColor: Colors.grey.shade200,
-        textColor: Colors.grey.shade400,
-        hasShadow: false,
-      );
-    }
-
-    return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.95, end: 1.0).animate(animation),
-              child: child,
-            ),
-          ),
-          child: currentButton,
-        )
-        .animate(delay: 500.ms)
-        .fade(duration: 400.ms)
-        .slideY(
-          begin: 1.5,
-          end: 0,
-          curve: Curves.easeOutCubic,
-          duration: 400.ms,
-        );
-  }
 }
 
-// ==========================================
-// OPTIMIZED: EXTRACTED STATELESS WIDGETS
-// ==========================================
-
-class CaregiverProfileHeader extends StatelessWidget {
+class _CenteredHeader extends StatelessWidget {
   final User user;
-  const CaregiverProfileHeader({super.key, required this.user});
+  const _CenteredHeader({required this.user});
 
   @override
   Widget build(BuildContext context) {
-    final caregiver = user.caregiverProfile!;
-    return Row(
+    return Column(
       children: [
         Container(
-          width: 80,
-          height: 80,
+          width: 100,
+          height: 100,
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(20),
-            image: user.imageUrl.isNotEmpty
-                ? DecorationImage(
-                    image: CachedNetworkImageProvider(user.imageUrl),
-                    fit: BoxFit.cover,
-                  )
-                : null,
+            borderRadius: BorderRadius.circular(24),
+            image: DecorationImage(
+              image: CachedNetworkImageProvider(user.imageUrl),
+              fit: BoxFit.cover,
+            ),
           ),
-          child: user.imageUrl.isEmpty
-              ? const Icon(Icons.person, color: Colors.grey)
-              : null,
         ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (caregiver.isVerified) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.verified_rounded,
-                        size: 12,
-                        color: Colors.blue,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        "Verified Account",
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ],
-              Text(
-                user.firstName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "${user.firstName} ${user.lastName ?? ''}".trim(),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
+            ),
+            if (user.caregiverProfile?.isVerified ?? false)
+              const Padding(
+                padding: EdgeInsets.only(left: 6),
+                child: Icon(
+                  Icons.verified_rounded,
+                  color: Colors.blue,
+                  size: 22,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                "Certified Caregiver",
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-              ),
-            ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          "CERTIFIED SPECIALIST",
+          style: TextStyle(
+            color: Colors.red.shade700,
+            fontWeight: FontWeight.w900,
+            fontSize: 11,
+            letterSpacing: 1.2,
           ),
         ),
       ],
-    ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
+    );
   }
 }
 
-class StatBox extends StatelessWidget {
-  final String label, value;
-  final IconData icon;
-  final Color color;
-  const StatBox({
-    super.key,
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
+class _MetricsCard extends StatelessWidget {
+  final String recs, exp, parents;
+  const _MetricsCard({
+    required this.recs,
+    required this.exp,
+    required this.parents,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          _MetricItem(recs, 'Recs', Icons.thumb_up_rounded, Colors.orange),
+          Container(height: 30, width: 1, color: Colors.grey.shade100),
+          _MetricItem(exp, 'Exp', Icons.work_history_rounded, Colors.blue),
+          Container(height: 30, width: 1, color: Colors.grey.shade100),
+          _MetricItem(parents, 'Parents', Icons.people_rounded, Colors.green),
         ],
       ),
     );
   }
 }
 
-class DetailRow extends StatelessWidget {
+class _MetricItem extends StatelessWidget {
+  final String value, label;
+  final IconData icon;
+  final Color color;
+  const _MetricItem(this.value, this.label, this.icon, this.color);
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      Icon(icon, color: color, size: 20),
+      const SizedBox(height: 6),
+      Text(
+        value,
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+      ),
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: Colors.grey.shade500,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ],
+  );
+}
+
+class _ModernChip extends StatelessWidget {
+  final String label;
+  const _ModernChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey.shade200),
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+    ),
+  );
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      title,
+      style: const TextStyle(
+        fontSize: 17,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.3,
+      ),
+    ),
+  );
+}
+
+class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String label, value;
-  const DetailRow({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+  const _InfoTile(this.icon, this.label, this.value);
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, size: 20, color: Colors.grey.shade600),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+        Icon(icon, size: 18, color: Colors.grey.shade400),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                  height: 1.3,
-                ),
-              ),
-            ],
-          ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+          ],
         ),
       ],
-    );
-  }
+    ),
+  );
 }
 
-class SectionTitle extends StatelessWidget {
-  final String title;
-  const SectionTitle({super.key, required this.title});
+class _FixedRequestButton extends StatefulWidget {
+  final VoidCallback onTap;
+  const _FixedRequestButton({required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-      ),
-    );
-  }
+  State<_FixedRequestButton> createState() => _FixedRequestButtonState();
 }
 
-class StyledBottomButton extends StatelessWidget {
-  final String text;
-  final String? subText;
-  final Color backgroundColor;
-  final Color textColor;
-  final IconData? icon;
-  final VoidCallback? onTap;
-  final bool hasShadow;
-
-  const StyledBottomButton({
-    super.key,
-    required this.text,
-    this.subText,
-    required this.backgroundColor,
-    required this.textColor,
-    this.icon,
-    this.onTap,
-    this.hasShadow = true,
-  });
+class _FixedRequestButtonState extends State<_FixedRequestButton> {
+  bool _isPressed = false;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 58,
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: hasShadow
-            ? [
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.bottomCenter,
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        onTap: widget.onTap,
+        child: AnimatedScale(
+          scale: _isPressed ? 0.96 : 1.0,
+          duration: const Duration(milliseconds: 100),
+          child: Container(
+            height: 60,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE53935),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
                 BoxShadow(
-                  color: backgroundColor.withValues(alpha: 0.3),
+                  color: const Color(0xFFE53935).withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
-              ]
-            : [],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(30),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, color: textColor, size: 22),
-                  const SizedBox(width: 8),
-                ],
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      text,
-                      style: TextStyle(
-                        color: textColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        height: 1.2,
-                      ),
-                    ),
-                    if (subText != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subText!,
-                        style: TextStyle(
-                          color: textColor.withValues(alpha: 0.8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          height: 1.2,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
               ],
+            ),
+            child: const Center(
+              child: Text(
+                "Request Service",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

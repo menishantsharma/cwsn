@@ -22,7 +22,7 @@ class SpecialNeedsPage extends ConsumerWidget {
         data: (list) => ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           itemCount: list.length,
-          separatorBuilder: (_, __) => Container(
+          separatorBuilder: (_, _) => Container(
             height: 1,
             color: Colors.grey.shade50,
             margin: const EdgeInsets.only(left: 72),
