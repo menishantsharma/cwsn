@@ -71,7 +71,6 @@ class LoginPage extends ConsumerWidget {
                       opacity: isLoading ? 0.6 : 1.0,
                       child: Column(
                         children: [
-                          // OPTIMIZED: The UI simply calls the explicit action!
                           _AuthButton(
                             text: "Continue with Google",
                             icon: FontAwesomeIcons.google,

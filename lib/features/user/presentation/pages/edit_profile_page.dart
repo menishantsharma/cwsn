@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
-import 'package:cwsn/features/auth/data/user_repository.dart';
+import 'package:cwsn/features/user/data/user_repository.dart';
 import 'package:cwsn/features/settings/presentation/widgets/language_selection_dialog.dart';
 import 'package:cwsn/features/settings/presentation/widgets/phone_verification_sheet.dart';
 import 'package:flutter/material.dart';

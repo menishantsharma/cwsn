@@ -14,7 +14,7 @@ import 'package:cwsn/features/notifications/presentation/pages/notifications_pag
 import 'package:cwsn/features/requests/presentation/pages/requests_page.dart';
 import 'package:cwsn/features/services/presentation/pages/services_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/add_child_page.dart';
-import 'package:cwsn/features/settings/presentation/pages/edit_profile_page.dart';
+import 'package:cwsn/features/user/presentation/pages/edit_profile_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/settings_page.dart';
 import 'package:cwsn/features/special_needs/presentation/pages/special_needs_page.dart';
 
