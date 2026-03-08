@@ -25,8 +25,7 @@ mixin _$NotificationItem {
   String get title => throw _privateConstructorUsedError;
   String get subtitle => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
-  bool get isRead =>
-      throw _privateConstructorUsedError; // @Default handles missing fields perfectly without triggering the JsonKey lint error
+  bool get isRead => throw _privateConstructorUsedError;
   NotificationType get type => throw _privateConstructorUsedError;
   String? get imageUrl => throw _privateConstructorUsedError;
   String? get relatedId => throw _privateConstructorUsedError;
@@ -250,7 +249,6 @@ class _$NotificationItemImpl extends _NotificationItem {
   @override
   @JsonKey()
   final bool isRead;
-  // @Default handles missing fields perfectly without triggering the JsonKey lint error
   @override
   @JsonKey()
   final NotificationType type;
@@ -351,7 +349,7 @@ abstract class _NotificationItem extends NotificationItem {
   @override
   DateTime get timestamp;
   @override
-  bool get isRead; // @Default handles missing fields perfectly without triggering the JsonKey lint error
+  bool get isRead;
   @override
   NotificationType get type;
   @override

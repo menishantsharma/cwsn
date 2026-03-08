@@ -14,9 +14,7 @@ class User with _$User {
     required String id,
     required String firstName,
     String? lastName,
-
-    @Default('https://randomuser.me/api/portraits/lego/1.jpg') String imageUrl,
-
+    String? imageUrl,
     String? location,
     @Default('abc@example.com') String email,
     @Default(false) bool isGuest,

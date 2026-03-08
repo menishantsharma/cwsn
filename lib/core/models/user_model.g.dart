@@ -10,9 +10,7 @@ _$UserImpl _$$UserImplFromJson(Map<String, dynamic> json) => _$UserImpl(
   id: json['id'] as String,
   firstName: json['firstName'] as String,
   lastName: json['lastName'] as String?,
-  imageUrl:
-      json['imageUrl'] as String? ??
-      'https://randomuser.me/api/portraits/lego/1.jpg',
+  imageUrl: json['imageUrl'] as String?,
   location: json['location'] as String?,
   email: json['email'] as String? ?? 'abc@example.com',
   isGuest: json['isGuest'] as bool? ?? false,

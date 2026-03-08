@@ -16,7 +16,7 @@ class SettingsPage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Logout',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -48,8 +48,7 @@ class SettingsPage extends ConsumerWidget {
 
     if (user == null) return const SizedBox.shrink();
 
-    final isCaregiverMode = user.activeRole == UserRole.caregiver;
-
+    // 1. Handle Guest State instantly
     if (user.isGuest) {
       return Scaffold(
         appBar: const AppTopBar(title: 'Profile', showBackButton: false),
@@ -61,8 +60,10 @@ class SettingsPage extends ConsumerWidget {
       );
     }
 
+    final isCaregiverMode = user.activeRole == UserRole.caregiver;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB), // Premium classic off-white
+      backgroundColor: const Color(0xFFFBFBFB),
       appBar: const AppTopBar(title: 'Profile', showBackButton: false),
       body: ListView(
         physics: const BouncingScrollPhysics(),
@@ -103,7 +104,7 @@ class SettingsPage extends ConsumerWidget {
             label: 'Delete Account',
             isDestructive: true,
             onTap: () {
-              // Add account deletion logic here
+              // Add deletion logic
             },
           ),
         ],
@@ -112,16 +113,15 @@ class SettingsPage extends ConsumerWidget {
   }
 }
 
-// ==========================================
-// MINIMAL INTERNAL COMPONENTS
-// ==========================================
-
 class _ProfileHeader extends StatelessWidget {
   final User user;
   const _ProfileHeader({required this.user});
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+    final hasImage = user.imageUrl != null && user.imageUrl!.isNotEmpty;
+
     return GestureDetector(
       onTap: () => context.pushNamed(AppRoutes.parentEditProfile),
       behavior: HitTestBehavior.opaque,
@@ -132,25 +132,36 @@ class _ProfileHeader extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 48,
-                backgroundColor: Colors.grey.shade100,
-                backgroundImage: user.imageUrl.isNotEmpty
-                    ? CachedNetworkImageProvider(user.imageUrl)
+                backgroundColor: hasImage
+                    ? Colors.grey.shade100
+                    : primaryColor.withValues(alpha: 0.1),
+                backgroundImage: hasImage
+                    ? CachedNetworkImageProvider(user.imageUrl!)
                     : null,
-                child: user.imageUrl.isEmpty
-                    ? Icon(Icons.person, size: 40, color: Colors.grey.shade400)
+                child: !hasImage
+                    ? Text(
+                        user.firstName.isNotEmpty
+                            ? user.firstName[0].toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      )
                     : null,
               ),
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
+                  color: primaryColor,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 3),
                 ),
                 child: const Icon(
                   Icons.edit_rounded,
                   color: Colors.white,
-                  size: 16,
+                  size: 14,
                 ),
               ),
             ],
@@ -158,9 +169,11 @@ class _ProfileHeader extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             user.fullName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -183,33 +196,31 @@ class _SwitchModeCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isCaregiver
-              ? const [Color(0xFF4CAF50), Color(0xFF2E7D32)] // Premium Green
-              : const [Color(0xFF535CE8), Color(0xFF3B46C4)], // Premium Blue
+              ? const [Color(0xFF4CAF50), Color(0xFF2E7D32)]
+              : const [Color(0xFF535CE8), Color(0xFF3B46C4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-        // A much lighter, optimized shadow that doesn't hurt scroll performance
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: (isCaregiver ? Colors.green : Colors.blue).withValues(
-              alpha: 0.25,
+              alpha: 0.2,
             ),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Material(
-        color: Colors
-            .transparent, // Crucial: Allows the gradient to show through the InkWell
+        color: Colors.transparent,
         child: InkWell(
           onTap: () => context.pushNamed(AppRoutes.switching),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
-              vertical: 8,
+              vertical: 10,
             ),
             leading: CircleAvatar(
               backgroundColor: Colors.white.withValues(alpha: 0.2),
@@ -226,7 +237,7 @@ class _SwitchModeCard extends StatelessWidget {
             subtitle: Text(
               isCaregiver
                   ? "Access services for your child"
-                  : "Switch to caregiver mode",
+                  : "Offer your caregiver services",
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 12,
@@ -254,10 +265,10 @@ class _SectionTitle extends StatelessWidget {
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
           color: Colors.grey.shade500,
-          letterSpacing: 0.5,
+          letterSpacing: 1.1,
         ),
       ),
     );

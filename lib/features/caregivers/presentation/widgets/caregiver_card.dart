@@ -18,6 +18,10 @@ class CaregiverCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final profile = user.caregiverProfile;
     final bool isAvailable = profile?.isAvailable ?? false;
+    final primaryColor = Theme.of(context).primaryColor;
+
+    // Check if imageUrl is present based on our updated model
+    final bool hasImage = user.imageUrl != null && user.imageUrl!.isNotEmpty;
 
     return Material(
       color: Colors.white,
@@ -32,28 +36,32 @@ class CaregiverCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
+              // 1. SQUIRCLE AVATAR (Null-Safe)
               Container(
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey.shade50,
+                  color: hasImage
+                      ? Colors.grey.shade50
+                      : primaryColor.withValues(alpha: 0.1),
+                  border: Border.all(color: Colors.grey.shade100),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: CachedNetworkImage(
-                    imageUrl: user.imageUrl,
-                    fit: BoxFit.cover,
-                    errorWidget: (_, _, _) => Icon(
-                      Icons.person,
-                      color: Colors.grey.shade300,
-                      size: 32,
-                    ),
-                  ),
+                  child: hasImage
+                      ? CachedNetworkImage(
+                          imageUrl: user.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, _, _) =>
+                              _buildFallbackInitial(primaryColor),
+                        )
+                      : _buildFallbackInitial(primaryColor),
                 ),
               ),
               const SizedBox(width: 16),
 
+              // 2. CONTENT
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,11 +70,12 @@ class CaregiverCard extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            "${user.firstName} ${user.lastName ?? ''}".trim(),
+                            user.fullName, // Using our model's getter
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                               color: Color(0xFF1A1A1A),
+                              letterSpacing: -0.2,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -93,11 +102,12 @@ class CaregiverCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
 
+                    // 3. METRICS
                     Row(
                       children: [
                         const Icon(
                           Icons.thumb_up_rounded,
-                          size: 15,
+                          size: 14,
                           color: Color(0xFFFF9800),
                         ),
                         const SizedBox(width: 6),
@@ -105,16 +115,17 @@ class CaregiverCard extends StatelessWidget {
                           _formatCount(profile?.totalRecommendations ?? 0),
                           style: const TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                             color: Color(0xFFFF9800),
                           ),
                         ),
                         const SizedBox(width: 12),
 
+                        // Status Badge
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
-                            vertical: 2.5,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
                             color: isAvailable
@@ -147,6 +158,20 @@ class CaregiverCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // Modern Initial fallback
+  Widget _buildFallbackInitial(Color color) {
+    return Center(
+      child: Text(
+        user.firstName.isNotEmpty ? user.firstName[0].toUpperCase() : '?',
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: color,
         ),
       ),
     );

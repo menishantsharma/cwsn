@@ -16,7 +16,6 @@ class CaregiverProfilePage extends ConsumerWidget {
   final String caregiverId;
   const CaregiverProfilePage({super.key, required this.caregiverId});
 
-  // Helper: Converts 20000 -> 20K, 1200000 -> 1.2M
   String _formatCompact(int number) {
     if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
     if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}K';
@@ -65,8 +64,7 @@ class CaregiverProfilePage extends ConsumerWidget {
 
                   const SizedBox(height: 32),
 
-                  // BUSY STATUS ALERT
-                  if (!isAvailable) _BusyAlert(),
+                  if (!isAvailable) const _BusyAlert(),
 
                   const _SectionHeader(title: 'About Caregiver'),
                   Text(
@@ -103,7 +101,6 @@ class CaregiverProfilePage extends ConsumerWidget {
                 ],
               ),
 
-              // Button is disabled (grey) if caregiver is not available
               _FixedRequestButton(
                 isAvailable: isAvailable,
                 onTap: isAvailable ? () => _openRequestSheet(context) : null,
@@ -116,26 +113,47 @@ class CaregiverProfilePage extends ConsumerWidget {
   }
 }
 
-// --- PRIVATE UI COMPONENTS ---
-
 class _CenteredHeader extends StatelessWidget {
   final User user;
   const _CenteredHeader({required this.user});
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+    final hasImage = user.imageUrl != null && user.imageUrl!.isNotEmpty;
+
     return Column(
       children: [
         Container(
           width: 100,
           height: 100,
           decoration: BoxDecoration(
+            color: hasImage
+                ? Colors.grey.shade50
+                : primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(24),
-            image: DecorationImage(
-              image: CachedNetworkImageProvider(user.imageUrl),
-              fit: BoxFit.cover,
-            ),
+            border: Border.all(color: Colors.grey.shade200),
+            image: hasImage
+                ? DecorationImage(
+                    image: CachedNetworkImageProvider(user.imageUrl!),
+                    fit: BoxFit.cover,
+                  )
+                : null,
           ),
+          child: !hasImage
+              ? Center(
+                  child: Text(
+                    user.firstName.isNotEmpty
+                        ? user.firstName[0].toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                    ),
+                  ),
+                )
+              : null,
         ),
         const SizedBox(height: 16),
         Row(
@@ -234,6 +252,7 @@ class _MetricItem extends StatelessWidget {
 }
 
 class _BusyAlert extends StatelessWidget {
+  const _BusyAlert();
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 32),

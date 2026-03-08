@@ -24,7 +24,7 @@ mixin _$User {
   String get id => throw _privateConstructorUsedError;
   String get firstName => throw _privateConstructorUsedError;
   String? get lastName => throw _privateConstructorUsedError;
-  String get imageUrl => throw _privateConstructorUsedError;
+  String? get imageUrl => throw _privateConstructorUsedError;
   String? get location => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
   bool get isGuest => throw _privateConstructorUsedError;
@@ -53,7 +53,7 @@ abstract class $UserCopyWith<$Res> {
     String id,
     String firstName,
     String? lastName,
-    String imageUrl,
+    String? imageUrl,
     String? location,
     String email,
     bool isGuest,
@@ -87,7 +87,7 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
     Object? id = null,
     Object? firstName = null,
     Object? lastName = freezed,
-    Object? imageUrl = null,
+    Object? imageUrl = freezed,
     Object? location = freezed,
     Object? email = null,
     Object? isGuest = null,
@@ -112,10 +112,10 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
                 ? _value.lastName
                 : lastName // ignore: cast_nullable_to_non_nullable
                       as String?,
-            imageUrl: null == imageUrl
+            imageUrl: freezed == imageUrl
                 ? _value.imageUrl
                 : imageUrl // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
             location: freezed == location
                 ? _value.location
                 : location // ignore: cast_nullable_to_non_nullable
@@ -198,7 +198,7 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
     String id,
     String firstName,
     String? lastName,
-    String imageUrl,
+    String? imageUrl,
     String? location,
     String email,
     bool isGuest,
@@ -231,7 +231,7 @@ class __$$UserImplCopyWithImpl<$Res>
     Object? id = null,
     Object? firstName = null,
     Object? lastName = freezed,
-    Object? imageUrl = null,
+    Object? imageUrl = freezed,
     Object? location = freezed,
     Object? email = null,
     Object? isGuest = null,
@@ -256,10 +256,10 @@ class __$$UserImplCopyWithImpl<$Res>
             ? _value.lastName
             : lastName // ignore: cast_nullable_to_non_nullable
                   as String?,
-        imageUrl: null == imageUrl
+        imageUrl: freezed == imageUrl
             ? _value.imageUrl
             : imageUrl // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
         location: freezed == location
             ? _value.location
             : location // ignore: cast_nullable_to_non_nullable
@@ -308,7 +308,7 @@ class _$UserImpl extends _User {
     required this.id,
     required this.firstName,
     this.lastName,
-    this.imageUrl = 'https://randomuser.me/api/portraits/lego/1.jpg',
+    this.imageUrl,
     this.location,
     this.email = 'abc@example.com',
     this.isGuest = false,
@@ -330,8 +330,7 @@ class _$UserImpl extends _User {
   @override
   final String? lastName;
   @override
-  @JsonKey()
-  final String imageUrl;
+  final String? imageUrl;
   @override
   final String? location;
   @override
@@ -424,7 +423,7 @@ abstract class _User extends User {
     required final String id,
     required final String firstName,
     final String? lastName,
-    final String imageUrl,
+    final String? imageUrl,
     final String? location,
     final String email,
     final bool isGuest,
@@ -446,7 +445,7 @@ abstract class _User extends User {
   @override
   String? get lastName;
   @override
-  String get imageUrl;
+  String? get imageUrl;
   @override
   String? get location;
   @override
