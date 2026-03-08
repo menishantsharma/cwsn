@@ -4,11 +4,12 @@ import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/settings/data/parent_repository.dart';
 import 'package:cwsn/features/settings/presentation/widgets/add_edit_child_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddChildPage extends ConsumerWidget {
   const AddChildPage({super.key});
+
+  // --- ACTIONS ---
 
   Future<void> _deleteChild(
     BuildContext context,
@@ -16,9 +17,10 @@ class AddChildPage extends ConsumerWidget {
     User user,
     ChildModel child,
   ) async {
-    final scaffold = ScaffoldMessenger.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     final previousProfile = user.parentProfile!;
 
+    // 1. Optimistic UI Update
     final optimisticChildren = previousProfile.children
         .where((c) => c.id != child.id)
         .toList();
@@ -29,17 +31,18 @@ class AddChildPage extends ConsumerWidget {
         );
 
     try {
+      // 2. Network Request
       await ref
           .read(parentRepositoryProvider)
           .deleteChild(parentId: user.id, childId: child.id);
     } catch (e) {
+      // 3. Rollback on Failure
       ref
           .read(currentUserProvider.notifier)
           .updateParentProfile(previousProfile);
-
       if (context.mounted) {
-        scaffold.showSnackBar(
-          const SnackBar(content: Text("Failed to delete child. Restoring...")),
+        messenger.showSnackBar(
+          const SnackBar(content: Text("Failed to delete. Restoring...")),
         );
       }
     }
@@ -55,42 +58,33 @@ class AddChildPage extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => AddEditChildSheet(
+      builder: (_) => AddEditChildSheet(
         existingChild: existingChild,
         onSave: (childData) async {
           final repo = ref.read(parentRepositoryProvider);
-
           try {
-            List<ChildModel> updatedChildren;
+            final savedChild = existingChild == null
+                ? await repo.addChild(parentId: user.id, child: childData)
+                : await repo.updateChild(parentId: user.id, child: childData);
 
-            if (existingChild == null) {
-              final savedChild = await repo.addChild(
-                parentId: user.id,
-                child: childData,
-              );
-              updatedChildren = [
-                ...(user.parentProfile?.children ?? <ChildModel>[]),
-                savedChild,
-              ];
-            } else {
-              final updatedChild = await repo.updateChild(
-                parentId: user.id,
-                child: childData,
-              );
-              updatedChildren = user.parentProfile!.children
-                  .map((c) => c.id == updatedChild.id ? updatedChild : c)
-                  .toList();
-            }
+            final currentChildren = user.parentProfile?.children ?? [];
+            final updatedChildren = existingChild == null
+                ? [...currentChildren, savedChild]
+                : currentChildren
+                      .map((c) => c.id == savedChild.id ? savedChild : c)
+                      .toList();
 
-            final updatedProfile = (user.parentProfile ?? const ParentModel())
-                .copyWith(children: updatedChildren);
             ref
                 .read(currentUserProvider.notifier)
-                .updateParentProfile(updatedProfile);
+                .updateParentProfile(
+                  (user.parentProfile ?? const ParentModel()).copyWith(
+                    children: updatedChildren,
+                  ),
+                );
           } catch (e) {
-            if (sheetContext.mounted) {
-              ScaffoldMessenger.of(sheetContext).showSnackBar(
-                const SnackBar(content: Text("Failed to save child profile.")),
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Failed to save profile.")),
               );
             }
           }
@@ -98,6 +92,8 @@ class AddChildPage extends ConsumerWidget {
       ),
     );
   }
+
+  // --- UI ---
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -107,95 +103,58 @@ class AddChildPage extends ConsumerWidget {
     final children = user.parentProfile?.children ?? [];
 
     return Scaffold(
-      appBar: AppTopBar(title: 'Children Details'),
-      body: SingleChildScrollView(
+      backgroundColor: const Color(0xFFFBFBFB),
+      appBar: const AppTopBar(title: 'Children Details'),
+      body: ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            const Text(
-              "Manage Profiles",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        children: [
+          const Text(
+            "Manage Profiles",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Add or edit details about your children.",
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 24),
+
+          if (children.isEmpty)
+            const _EmptyState()
+          else
+            ...children.map(
+              (child) => _ChildCard(
+                child: child,
+                onEdit: () => _openChildFormSheet(
+                  context,
+                  ref,
+                  user,
+                  existingChild: child,
+                ),
+                onDelete: () => _deleteChild(context, ref, user, child),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              "Add basic details about your children.",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 24),
 
-            AnimatedSize(
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: children.isEmpty
-                  ? const _EmptyChildrenState()
-                  : Column(
-                      children: children.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final child = entry.value;
-
-                        return Padding(
-                          key: ValueKey(child.id),
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child:
-                              _ChildCard(
-                                    child: child,
-                                    onEdit: () => _openChildFormSheet(
-                                      context,
-                                      ref,
-                                      user,
-                                      existingChild: child,
-                                    ),
-                                    onDelete: () =>
-                                        _deleteChild(context, ref, user, child),
-                                  )
-                                  .animate()
-                                  .fade(
-                                    duration: 400.ms,
-                                    delay: (100 * index).ms,
-                                  )
-                                  .slideY(
-                                    begin: 0.1,
-                                    end: 0,
-                                    duration: 400.ms,
-                                    delay: (100 * index).ms,
-                                    curve: Curves.easeOutQuad,
-                                  ),
-                        );
-                      }).toList(),
-                    ),
-            ),
-
-            const SizedBox(height: 8),
-
-            _AddChildButton(
-                  onTap: () => _openChildFormSheet(context, ref, user),
-                )
-                .animate()
-                .fade(delay: 300.ms, duration: 400.ms)
-                .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
-          ],
-        ),
+          const SizedBox(height: 16),
+          _AddChildButton(onTap: () => _openChildFormSheet(context, ref, user)),
+        ],
       ),
     );
   }
 }
 
+// ==========================================
+// MINIMAL INTERNAL COMPONENTS
+// ==========================================
+
 class _ChildCard extends StatelessWidget {
   final ChildModel child;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback onEdit, onDelete;
 
   const _ChildCard({
     required this.child,
@@ -205,112 +164,86 @@ class _ChildCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    final isGirl = child.gender == Gender.female;
+    final primary = Theme.of(context).primaryColor;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1D1617).withValues(alpha: 0.05),
-            offset: const Offset(0, 4),
-            blurRadius: 16,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+      // ListTile automatically handles standard padding, alignment, and sizing
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: CircleAvatar(
+          backgroundColor: primary.withOpacity(0.1),
+          foregroundColor: primary,
+          child: Icon(isGirl ? Icons.face_3_rounded : Icons.face_rounded),
+        ),
+        title: Text(
+          child.name,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        subtitle: Text(
+          "${child.age} yrs • ${child.gender.name.toUpperCase()}",
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: Colors.blue),
+              onPressed: onEdit,
             ),
-            child: Icon(
-              child.gender == Gender.female
-                  ? Icons.face_3_rounded
-                  : Icons.face_rounded,
-              color: primaryColor,
-              size: 28,
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: onDelete,
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  child.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "${child.age} yrs • ${child.gender.name[0].toUpperCase()}${child.gender.name.substring(1)}",
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade500,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: onEdit,
-                icon: Icon(
-                  Icons.edit_rounded,
-                  color: Colors.blue.shade400,
-                  size: 22,
-                ),
-              ),
-              IconButton(
-                onPressed: onDelete,
-                icon: Icon(
-                  Icons.delete_outline_rounded,
-                  color: Colors.red.shade400,
-                  size: 22,
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _EmptyChildrenState extends StatelessWidget {
-  const _EmptyChildrenState();
+class _AddChildButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AddChildButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      alignment: Alignment.center,
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(56),
+        foregroundColor: Theme.of(context).primaryColor,
+        side: BorderSide(
+          color: Theme.of(context).primaryColor.withOpacity(0.3),
+          width: 1.5,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      onPressed: onTap,
+      icon: const Icon(Icons.add_rounded),
+      label: const Text(
+        "Add New Child",
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.child_care_rounded,
-              size: 48,
-              color: Colors.grey.shade400,
-            ),
-          ),
+          Icon(Icons.child_care_rounded, size: 48, color: Colors.grey.shade300),
           const SizedBox(height: 16),
           Text(
             "No children added yet.",
@@ -320,59 +253,6 @@ class _EmptyChildrenState extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0);
-  }
-}
-
-class _AddChildButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _AddChildButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: primaryColor.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: primaryColor.withValues(alpha: 0.2),
-            width: 2,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: primaryColor,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.add_rounded,
-                color: Colors.white,
-                size: 16,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              "Add New Child",
-              style: TextStyle(
-                color: primaryColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
