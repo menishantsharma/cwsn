@@ -1,13 +1,10 @@
 import 'package:cwsn/core/router/app_routes.dart';
-import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/features/services/models/service_model.dart';
 import 'package:cwsn/features/services/presentation/widgets/service_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-// Widget displaying a horizontal scrollable row of service cards
 class HorizontalServiceRow extends StatelessWidget {
-  // List of service items to display provided by parent
   final ServiceSection section;
 
   const HorizontalServiceRow({super.key, required this.section});
@@ -17,74 +14,56 @@ class HorizontalServiceRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 1. Header Row
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 16, 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 section.title,
-                style: context.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
+                style: const TextStyle(
                   fontSize: 20,
-                  color: Colors.black87,
+                  fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
                 ),
               ),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => context.pushNamed(AppRoutes.specialNeeds),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.colorScheme.primary.withValues(
-                        alpha: 0.08,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          'View all',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: context.colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 14,
-                          color: context.colorScheme.primary,
-                        ),
-                      ],
-                    ),
+
+              // Standard native TextButton replaces the massive custom InkWell
+              TextButton(
+                onPressed: () => context.pushNamed(AppRoutes.specialNeeds),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).primaryColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  'View all',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ),
         ),
+        const SizedBox(height: 16),
+
+        // 2. Horizontal Scrollable List
         SizedBox(
-          height: 190,
+          height: 180, // Height locked strictly to the ServiceCard height
           child: ListView.separated(
-            clipBehavior: Clip.none,
+            physics:
+                const BouncingScrollPhysics(), // Premium horizontal scroll feel
             scrollDirection: Axis.horizontal,
-            separatorBuilder: (_, _) => const SizedBox(width: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: section.items.length,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+            separatorBuilder: (_, _) => const SizedBox(width: 16),
             itemBuilder: (_, index) => ServiceCard(
               item: section.items[index],
-              onTap: () {
-                context.pushNamed(AppRoutes.specialNeeds);
-              },
+              onTap: () => context.pushNamed(AppRoutes.specialNeeds),
             ),
           ),
         ),

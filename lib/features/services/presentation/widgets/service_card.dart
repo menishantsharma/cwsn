@@ -1,8 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/features/services/models/service_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class ServiceCard extends StatelessWidget {
   final ServiceItem item;
@@ -13,87 +11,60 @@ class ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 143,
+      width: 140,
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1D1617).withValues(alpha: 0.07),
-            offset: const Offset(0, 10),
-            blurRadius: 20,
-            spreadRadius: 0,
-          ),
-        ],
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Material(
-        color: Colors.transparent,
-        clipBehavior: Clip.antiAlias,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CachedNetworkImage(
-                imageUrl: item.imgUrl,
-                fit: BoxFit.cover,
-                placeholder: (_, _) => Container(
-                  color: context.colorScheme.surfaceDim,
-                  child: Center(
-                    child: SpinKitThreeBounce(
-                      color: context.colorScheme.primary.withValues(alpha: 0.5),
-                      size: 20.0,
-                    ),
-                  ),
-                ),
-                errorWidget: (_, _, _) => const Center(
-                  child: Icon(Icons.error_outline, color: Colors.grey),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CachedNetworkImage(
+              imageUrl: item.imgUrl,
+              fit: BoxFit.cover,
+              placeholder: (_, _) => Container(color: Colors.grey.shade100),
+              errorWidget: (_, _, _) => Container(
+                color: Colors.grey.shade50,
+                child: const Icon(
+                  Icons.image_not_supported_outlined,
+                  color: Colors.grey,
                 ),
               ),
+            ),
 
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 80,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.8),
-                      ],
-                    ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(12, 32, 12, 12),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black87],
                   ),
                 ),
-              ),
-
-              Positioned(
-                bottom: 12,
-                left: 12,
-                right: 12,
                 child: Text(
                   item.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.labelLarge?.copyWith(
+                  style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    shadows: [
-                      Shadow(
-                        offset: const Offset(0, 1),
-                        blurRadius: 2,
-                        color: Colors.black.withValues(alpha: 0.5),
-                      ),
-                    ],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    height: 1.2,
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+
+            Material(
+              color: Colors.transparent,
+              child: InkWell(onTap: onTap),
+            ),
+          ],
         ),
       ),
     );
