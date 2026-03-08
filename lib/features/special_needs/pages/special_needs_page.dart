@@ -1,9 +1,7 @@
 import 'package:cwsn/core/router/app_routes.dart';
-import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/features/special_needs/data/special_needs_data.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 class SpecialNeedsPage extends StatelessWidget {
@@ -14,108 +12,76 @@ class SpecialNeedsPage extends StatelessWidget {
     final List<String> specialNeeds = mockSpecialNeeds;
 
     return Scaffold(
-      appBar: AppTopBar(title: 'Special Needs'),
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: const AppTopBar(title: 'Special Needs'),
+
       body: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         itemCount: specialNeeds.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (_, index) {
           final item = specialNeeds[index];
+          final themeColor = _getPastelColor(index);
 
-          return Animate(
-            effects: [
-              FadeEffect(duration: 400.ms, delay: (50 * index).ms),
-              SlideEffect(
-                begin: const Offset(0, 0.1),
-                curve: Curves.easeOutQuad,
-              ),
-            ],
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade100),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                onTap: () => context.pushNamed(AppRoutes.caregiversList),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(12),
+
+                  leading: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: themeColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        item[0].toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: themeColor,
+                        ),
+                      ),
+                    ),
                   ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  onTap: () => context.pushNamed(AppRoutes.caregiversList),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
+
+                  title: Text(
+                    item,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A1A1A),
+                      fontSize: 16,
+                      letterSpacing: -0.2,
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: _getPastelColor(
-                              index,
-                            ).withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              item[0].toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: _getPastelColor(index),
-                              ),
-                            ),
-                            // child: Icon(Icons.favorite, color: _getPastelColor(index)),
-                          ),
-                        ),
+                  ),
 
-                        const SizedBox(width: 16),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item,
-                                style: context.textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              // const SizedBox(height: 2),
-                              // Text(
-                              //   "Explore specialists",
-                              //   style: context.textTheme.bodySmall?.copyWith(
-                              //     color: Colors.grey.shade500,
-                              //   ),
-                              // ),
-                            ],
-                          ),
-                        ),
-
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 16,
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
-                      ],
-                    ),
+                  // 5. Contextual Subtitle: Adds "Standard App" depth
+                  // subtitle: Text(
+                  //   'Find specialized caregivers',
+                  //   style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                  // ),
+                  trailing: Icon(
+                    Icons.chevron_right_rounded,
+                    size: 24,
+                    color: Colors.grey.shade400,
                   ),
                 ),
               ),
@@ -127,13 +93,13 @@ class SpecialNeedsPage extends StatelessWidget {
   }
 
   Color _getPastelColor(int index) {
-    final colors = [
-      const Color(0xFF535CE8), // Blue
-      const Color(0xFFFF4B55), // Red
-      const Color(0xFF4CAF50), // Green
-      const Color(0xFFFF9800), // Orange
-      const Color(0xFF9C27B0), // Purple
-      const Color(0xFF00BCD4), // Cyan
+    const colors = [
+      Color(0xFF535CE8), // Indigo
+      Color(0xFFE91E63), // Pink
+      Color(0xFF009688), // Teal
+      Color(0xFF673AB7), // Deep Purple
+      Color(0xFFFF9800), // Orange
+      Color(0xFF2196F3), // Blue
     ];
     return colors[index % colors.length];
   }
