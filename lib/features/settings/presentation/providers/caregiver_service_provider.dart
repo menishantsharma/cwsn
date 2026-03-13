@@ -1,3 +1,4 @@
+import 'package:cwsn/core/models/caregiver_service_model.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/settings/data/caregiver_service_repository.dart';
@@ -24,8 +25,8 @@ class CaregiverServiceNotifier {
   CaregiverServiceRepository get _repo =>
       _ref.read(caregiverServiceRepositoryProvider);
 
-  /// Adds a new service. Returns the saved service name.
-  Future<String> addService(String service) async {
+  /// Adds a new service. Returns the saved [CaregiverService] with server ID.
+  Future<CaregiverService> addService(CaregiverService service) async {
     final user = _user;
     if (user == null) throw StateError('No authenticated user');
 
@@ -41,22 +42,18 @@ class CaregiverServiceNotifier {
     return saved;
   }
 
-  /// Updates an existing service. Returns the new service name.
-  Future<String> updateService({
-    required String oldService,
-    required String newService,
-  }) async {
+  /// Updates an existing service. Returns the updated [CaregiverService].
+  Future<CaregiverService> updateService(CaregiverService service) async {
     final user = _user;
     if (user == null) throw StateError('No authenticated user');
 
     final saved = await _repo.updateService(
       caregiverId: user.id,
-      oldService: oldService,
-      newService: newService,
+      service: service,
     );
 
     final updatedServices = (user.caregiverProfile?.services ?? [])
-        .map((s) => s == oldService ? saved : s)
+        .map((s) => s.id == saved.id ? saved : s)
         .toList();
     final updatedProfile = (user.caregiverProfile ?? const CaregiverProfile())
         .copyWith(services: updatedServices);
@@ -65,19 +62,51 @@ class CaregiverServiceNotifier {
   }
 
   /// Deletes a service with optimistic removal and rollback on failure.
-  Future<void> deleteService(String service) async {
+  Future<void> deleteService(String serviceId) async {
     final user = _user;
     if (user == null) return;
     final previousProfile = user.caregiverProfile!;
 
     // Optimistic removal
     final optimistic = previousProfile.copyWith(
-      services: previousProfile.services.where((s) => s != service).toList(),
+      services:
+          previousProfile.services.where((s) => s.id != serviceId).toList(),
     );
     _auth.updateUser(user.copyWith(caregiverProfile: optimistic));
 
     try {
-      await _repo.deleteService(caregiverId: user.id, service: service);
+      await _repo.deleteService(caregiverId: user.id, serviceId: serviceId);
+    } catch (_) {
+      _auth.updateUser(user.copyWith(caregiverProfile: previousProfile));
+      rethrow;
+    }
+  }
+
+  /// Toggles active/inactive with optimistic UI and rollback on failure.
+  Future<void> toggleActive(String serviceId) async {
+    final user = _user;
+    if (user == null) return;
+    final previousProfile = user.caregiverProfile!;
+
+    final target = previousProfile.services.firstWhere(
+      (s) => s.id == serviceId,
+    );
+    final newIsActive = !target.isActive;
+
+    // Optimistic toggle
+    final optimistic = previousProfile.copyWith(
+      services: previousProfile.services
+          .map((s) => s.id == serviceId ? s.copyWith(isActive: newIsActive) : s)
+          .toList(),
+    );
+    _auth.updateUser(user.copyWith(caregiverProfile: optimistic));
+
+    try {
+      await _repo.toggleServiceActive(
+        caregiverId: user.id,
+        serviceId: serviceId,
+        isActive: newIsActive,
+      );
     } catch (_) {
       _auth.updateUser(user.copyWith(caregiverProfile: previousProfile));
       rethrow;

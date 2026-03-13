@@ -878,7 +878,7 @@ CaregiverProfile _$CaregiverProfileFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$CaregiverProfile {
   String get about => throw _privateConstructorUsedError;
-  List<String> get services => throw _privateConstructorUsedError;
+  List<CaregiverService> get services => throw _privateConstructorUsedError;
   bool get isVerified => throw _privateConstructorUsedError;
   bool get isAvailable => throw _privateConstructorUsedError;
   List<String> get languages => throw _privateConstructorUsedError;
@@ -905,7 +905,7 @@ abstract class $CaregiverProfileCopyWith<$Res> {
   @useResult
   $Res call({
     String about,
-    List<String> services,
+    List<CaregiverService> services,
     bool isVerified,
     bool isAvailable,
     List<String> languages,
@@ -948,7 +948,7 @@ class _$CaregiverProfileCopyWithImpl<$Res, $Val extends CaregiverProfile>
             services: null == services
                 ? _value.services
                 : services // ignore: cast_nullable_to_non_nullable
-                      as List<String>,
+                      as List<CaregiverService>,
             isVerified: null == isVerified
                 ? _value.isVerified
                 : isVerified // ignore: cast_nullable_to_non_nullable
@@ -990,7 +990,7 @@ abstract class _$$CaregiverProfileImplCopyWith<$Res>
   @useResult
   $Res call({
     String about,
-    List<String> services,
+    List<CaregiverService> services,
     bool isVerified,
     bool isAvailable,
     List<String> languages,
@@ -1032,7 +1032,7 @@ class __$$CaregiverProfileImplCopyWithImpl<$Res>
         services: null == services
             ? _value._services
             : services // ignore: cast_nullable_to_non_nullable
-                  as List<String>,
+                  as List<CaregiverService>,
         isVerified: null == isVerified
             ? _value.isVerified
             : isVerified // ignore: cast_nullable_to_non_nullable
@@ -1067,7 +1067,7 @@ class __$$CaregiverProfileImplCopyWithImpl<$Res>
 class _$CaregiverProfileImpl implements _CaregiverProfile {
   const _$CaregiverProfileImpl({
     this.about = '',
-    final List<String> services = const [],
+    final List<CaregiverService> services = const [],
     this.isVerified = false,
     this.isAvailable = true,
     final List<String> languages = const [],
@@ -1083,10 +1083,10 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
   @override
   @JsonKey()
   final String about;
-  final List<String> _services;
+  final List<CaregiverService> _services;
   @override
   @JsonKey()
-  List<String> get services {
+  List<CaregiverService> get services {
     if (_services is EqualUnmodifiableListView) return _services;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_services);
@@ -1178,7 +1178,7 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
 abstract class _CaregiverProfile implements CaregiverProfile {
   const factory _CaregiverProfile({
     final String about,
-    final List<String> services,
+    final List<CaregiverService> services,
     final bool isVerified,
     final bool isAvailable,
     final List<String> languages,
@@ -1193,7 +1193,7 @@ abstract class _CaregiverProfile implements CaregiverProfile {
   @override
   String get about;
   @override
-  List<String> get services;
+  List<CaregiverService> get services;
   @override
   bool get isVerified;
   @override

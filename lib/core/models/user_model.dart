@@ -1,3 +1,4 @@
+import 'package:cwsn/core/models/caregiver_service_model.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 part 'user_model.freezed.dart';
 part 'user_model.g.dart';
@@ -79,7 +80,7 @@ class ParentModel with _$ParentModel {
 class CaregiverProfile with _$CaregiverProfile {
   const factory CaregiverProfile({
     @Default('') String about,
-    @Default([]) List<String> services,
+    @Default([]) List<CaregiverService> services,
     @Default(false) bool isVerified,
     @Default(true) bool isAvailable,
     @Default([]) List<String> languages,

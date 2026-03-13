@@ -1,10 +1,14 @@
+import 'package:cwsn/core/models/caregiver_service_model.dart';
 import 'package:cwsn/core/widgets/bottom_sheet_drag_handle.dart';
+import 'package:cwsn/features/services/presentation/providers/services_provider.dart';
+import 'package:cwsn/features/special_needs/data/special_needs_data.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class AddEditServiceSheet extends StatefulWidget {
-  final String? existingService;
-  final Function(String) onSave;
+class AddEditServiceSheet extends ConsumerStatefulWidget {
+  final CaregiverService? existingService;
+  final Future<void> Function(CaregiverService) onSave;
 
   const AddEditServiceSheet({
     super.key,
@@ -13,43 +17,49 @@ class AddEditServiceSheet extends StatefulWidget {
   });
 
   @override
-  State<AddEditServiceSheet> createState() => _AddEditServiceSheetState();
+  ConsumerState<AddEditServiceSheet> createState() =>
+      _AddEditServiceSheetState();
 }
 
-class _AddEditServiceSheetState extends State<AddEditServiceSheet> {
-  late final TextEditingController _serviceController;
+class _AddEditServiceSheetState extends ConsumerState<AddEditServiceSheet> {
+  String? _selectedServiceName;
+  final Set<String> _selectedSpecialNeeds = {};
+  bool _isActive = true;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _serviceController = TextEditingController(text: widget.existingService)
-      ..addListener(_onTextChanged);
+    if (widget.existingService != null) {
+      _selectedServiceName = widget.existingService!.name;
+      _selectedSpecialNeeds.addAll(widget.existingService!.specialNeeds);
+      _isActive = widget.existingService!.isActive;
+    }
   }
 
-  @override
-  void dispose() {
-    _serviceController.dispose();
-    super.dispose();
-  }
-
-  void _onTextChanged() => setState(() {});
-
-  bool get _isValid => _serviceController.text.trim().isNotEmpty;
+  bool get _isValid =>
+      _selectedServiceName != null && _selectedServiceName!.isNotEmpty;
 
   Future<void> _submit() async {
+    if (!_isValid) return;
     setState(() => _isLoading = true);
 
-    final serviceData = _serviceController.text.trim();
-    await widget.onSave(serviceData);
+    final service = CaregiverService(
+      id: widget.existingService?.id ?? '',
+      name: _selectedServiceName!,
+      specialNeeds: _selectedSpecialNeeds.toList(),
+      isActive: _isActive,
+    );
 
+    await widget.onSave(service);
     if (mounted) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    final primary = Theme.of(context).primaryColor;
     final isEditing = widget.existingService != null;
+    final masterNames = ref.watch(masterServiceNamesProvider);
 
     return Container(
       padding: EdgeInsets.only(
@@ -82,48 +92,139 @@ class _AddEditServiceSheetState extends State<AddEditServiceSheet> {
               ),
               const SizedBox(height: 24),
 
+              // Service name picker
+              const Text(
+                'Service',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+              const SizedBox(height: 8),
+              masterNames.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: CircularProgressIndicator.adaptive(),
+                  ),
+                ),
+                error: (_, _) => Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text('Failed to load services'),
+                ),
+                data: (names) => Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _selectedServiceName,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      icon: Icon(
+                        Icons.medical_services_outlined,
+                        color: Colors.grey.shade400,
+                        size: 20,
+                      ),
+                    ),
+                    hint: Text(
+                      'Select a service',
+                      style: TextStyle(color: Colors.grey.shade500),
+                    ),
+                    items: names
+                        .map(
+                          (n) => DropdownMenuItem(value: n, child: Text(n)),
+                        )
+                        .toList(),
+                    onChanged: (val) =>
+                        setState(() => _selectedServiceName = val),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Special needs multi-select
+              const Text(
+                'Special Needs Covered',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Select conditions this service supports',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: mockSpecialNeeds
+                    .map(
+                      (need) => FilterChip(
+                        label: Text(
+                          need,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight:
+                                _selectedSpecialNeeds.contains(need)
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                          ),
+                        ),
+                        selected: _selectedSpecialNeeds.contains(need),
+                        selectedColor: primary.withValues(alpha: 0.1),
+                        checkmarkColor: primary,
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        onSelected: (selected) => setState(
+                          () => selected
+                              ? _selectedSpecialNeeds.add(need)
+                              : _selectedSpecialNeeds.remove(need),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 24),
+
+              // Active toggle
               Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: TextField(
-                  controller: _serviceController,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                child: SwitchListTile.adaptive(
+                  title: const Text(
+                    'Active',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
-                  textCapitalization: TextCapitalization.words,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    labelText: "Service Name",
-                    labelStyle: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 14,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.medical_services_outlined,
-                      color: Colors.grey.shade400,
-                      size: 20,
-                    ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 36),
+                  subtitle: Text(
+                    'Clients can see this service when active',
+                    style:
+                        TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
+                  value: _isActive,
+                  activeTrackColor: primary,
+                  onChanged: (val) => setState(() => _isActive = val),
                 ),
               ),
               const SizedBox(height: 32),
 
+              // Submit button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
                   onPressed: (_isValid && !_isLoading) ? _submit : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
+                    backgroundColor: primary,
                     disabledBackgroundColor: Colors.grey.shade200,
                     disabledForegroundColor: Colors.grey.shade400,
                     foregroundColor: Colors.white,
@@ -131,10 +232,11 @@ class _AddEditServiceSheetState extends State<AddEditServiceSheet> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                     elevation: _isValid ? 4 : 0,
-                    shadowColor: primaryColor.withValues(alpha: 0.4),
+                    shadowColor: primary.withValues(alpha: 0.4),
                   ),
                   child: _isLoading
-                      ? const SpinKitThreeBounce(color: Colors.white, size: 20)
+                      ? const SpinKitThreeBounce(
+                          color: Colors.white, size: 20)
                       : Text(
                           isEditing ? "Save Changes" : "Add Service",
                           style: const TextStyle(

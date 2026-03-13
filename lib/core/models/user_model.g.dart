@@ -95,7 +95,9 @@ _$CaregiverProfileImpl _$$CaregiverProfileImplFromJson(
 ) => _$CaregiverProfileImpl(
   about: json['about'] as String? ?? '',
   services:
-      (json['services'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      (json['services'] as List<dynamic>?)
+          ?.map((e) => CaregiverService.fromJson(e as Map<String, dynamic>))
+          .toList() ??
       const [],
   isVerified: json['isVerified'] as bool? ?? false,
   isAvailable: json['isAvailable'] as bool? ?? true,

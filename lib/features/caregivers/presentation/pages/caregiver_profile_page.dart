@@ -71,7 +71,8 @@ class CaregiverProfilePage extends ConsumerWidget {
                     spacing: 10,
                     runSpacing: 10,
                     children: caregiver.services
-                        .map((s) => _ModernChip(label: s))
+                        .where((s) => s.isActive)
+                        .map((s) => _ModernChip(label: s.name))
                         .toList(),
                   ),
                   const SizedBox(height: 32),

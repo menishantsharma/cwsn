@@ -1,3 +1,4 @@
+import 'package:cwsn/core/models/caregiver_service_model.dart';
 import 'package:cwsn/core/models/user_model.dart';
 
 final user = User(
@@ -15,7 +16,23 @@ final caregivers = [
     gender: Gender.male,
     caregiverProfile: CaregiverProfile(
       about: 'Experienced caregiver with a passion for helping others.',
-      services: ['Elderly Care', 'Child Care', 'Disability Support'],
+      services: [
+        CaregiverService(
+          id: 's1',
+          name: 'Shadow Teacher',
+          specialNeeds: ['Autism Spectrum Disorder (ASD)', 'ADHD'],
+        ),
+        CaregiverService(
+          id: 's2',
+          name: 'Occupational',
+          specialNeeds: ['Cerebral Palsy', 'Physical Disabilities'],
+        ),
+        CaregiverService(
+          id: 's3',
+          name: 'Speech Tutor',
+          specialNeeds: ['Speech and Language Disorders'],
+        ),
+      ],
       isVerified: true,
       isAvailable: true,
       languages: ['English', 'Hindi'],
@@ -31,7 +48,22 @@ final caregivers = [
     gender: Gender.female,
     caregiverProfile: CaregiverProfile(
       about: 'Compassionate caregiver with 3 years of experience.',
-      services: ['Child Care', 'Special Needs Support'],
+      services: [
+        CaregiverService(
+          id: 's4',
+          name: 'Behavioral (ABA)',
+          specialNeeds: [
+            'Autism Spectrum Disorder (ASD)',
+            'Emotional and Behavioral Disorders',
+          ],
+        ),
+        CaregiverService(
+          id: 's5',
+          name: 'Early Intervention',
+          specialNeeds: ['Down Syndrome', 'Intellectual Disabilities'],
+          isActive: false,
+        ),
+      ],
       isVerified: true,
       isAvailable: false,
       languages: ['English', 'Hindi', 'Marathi'],
@@ -47,7 +79,21 @@ final caregivers = [
     gender: Gender.male,
     caregiverProfile: CaregiverProfile(
       about: 'Reliable caregiver specializing in elderly care.',
-      services: ['Elderly Care', 'Disability Support'],
+      services: [
+        CaregiverService(
+          id: 's6',
+          name: 'Physical Therapy',
+          specialNeeds: ['Cerebral Palsy', 'Physical Disabilities'],
+        ),
+        CaregiverService(
+          id: 's7',
+          name: 'Pediatric Neuro',
+          specialNeeds: [
+            'Autism Spectrum Disorder (ASD)',
+            'Sensory Processing Disorder',
+          ],
+        ),
+      ],
       isVerified: false,
       isAvailable: true,
       languages: ['English', 'Hindi'],

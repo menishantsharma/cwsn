@@ -1,3 +1,4 @@
+import 'package:cwsn/core/models/caregiver_service_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Provides the active [CaregiverServiceRepository] implementation.
@@ -7,46 +8,61 @@ final caregiverServiceRepositoryProvider = Provider<CaregiverServiceRepository>(
 
 /// Contract for managing a caregiver's offered services.
 abstract class CaregiverServiceRepository {
-  Future<String> addService({
+  Future<CaregiverService> addService({
     required String caregiverId,
-    required String service,
+    required CaregiverService service,
   });
-  Future<String> updateService({
+  Future<CaregiverService> updateService({
     required String caregiverId,
-    required String oldService,
-    required String newService,
+    required CaregiverService service,
   });
   Future<void> deleteService({
     required String caregiverId,
-    required String service,
+    required String serviceId,
+  });
+  Future<CaregiverService> toggleServiceActive({
+    required String caregiverId,
+    required String serviceId,
+    required bool isActive,
   });
 }
 
 class FakeCaregiverServiceRepository implements CaregiverServiceRepository {
   @override
-  Future<String> addService({
+  Future<CaregiverService> addService({
     required String caregiverId,
-    required String service,
+    required CaregiverService service,
+  }) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return service.copyWith(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    );
+  }
+
+  @override
+  Future<CaregiverService> updateService({
+    required String caregiverId,
+    required CaregiverService service,
   }) async {
     await Future.delayed(const Duration(seconds: 1));
     return service;
   }
 
   @override
-  Future<String> updateService({
+  Future<void> deleteService({
     required String caregiverId,
-    required String oldService,
-    required String newService,
+    required String serviceId,
   }) async {
     await Future.delayed(const Duration(seconds: 1));
-    return newService;
   }
 
   @override
-  Future<void> deleteService({
+  Future<CaregiverService> toggleServiceActive({
     required String caregiverId,
-    required String service,
+    required String serviceId,
+    required bool isActive,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 500));
+    return CaregiverService(id: serviceId, name: '', isActive: isActive);
   }
 }
