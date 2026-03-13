@@ -1,12 +1,14 @@
 /// Centralized route names and path constants for the app's navigation.
+///
+/// Tab routes (home, notifications, profile) are defined in [NavConfig].
+/// This class holds non-tab routes and shared constants only.
 class AppRoutes {
-  // Route Names
+  // Route Names — Auth
   static const String login = 'login';
   static const String roleSelection = 'role-selection';
   static const String switching = 'switching';
-  static const String home = 'home';
-  static const String notifications = 'notifications';
-  static const String profile = 'profile';
+
+  // Route Names — Feature Pages (outside shell)
   static const String specialNeeds = 'special-needs';
   static const String caregiversList = 'caregivers';
   static const String caregiverProfile = 'caregiver-profile';
@@ -14,13 +16,12 @@ class AppRoutes {
   static const String addChild = 'add-child';
   static const String caregiverServices = 'caregiver-services';
 
-  // Route Paths
+  // Route Paths — Auth
   static const String loginPath = '/login';
   static const String roleSelectionPath = '/role-selection';
   static const String switchingPath = '/switching';
-  static const String homePath = '/';
-  static const String notificationsPath = '/notifications';
-  static const String profilePath = '/profile';
+
+  // Route Paths — Feature Pages (outside shell)
   static const String specialNeedsPath = '/special-needs';
   static const String caregiversListPath = '/caregivers';
   static const String caregiverProfilePath = '/caregiver-profile';
@@ -30,9 +31,10 @@ class AppRoutes {
 
   /// Paths accessible to unauthenticated guest users.
   static const Set<String> guestWhitelist = {
-    homePath,
-    notificationsPath,
-    profilePath,
+    '/', // parent home
+    '/caregiver-home',
+    '/notifications',
+    '/profile',
     specialNeedsPath,
     caregiversListPath,
     caregiverProfilePath,

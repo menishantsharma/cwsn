@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:cwsn/core/models/user_model.dart';
-import 'package:cwsn/core/router/app_routes.dart';
+import 'package:cwsn/core/router/nav_config.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +38,7 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
 
     if (!mounted) return;
 
-    context.goNamed(AppRoutes.home);
+    context.go(NavConfig.homePathForRole(newRole));
   }
 
   @override
