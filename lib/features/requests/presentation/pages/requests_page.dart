@@ -1,4 +1,6 @@
 import 'package:cwsn/core/widgets/app_top_bar.dart';
+import 'package:cwsn/core/widgets/empty_state_widget.dart';
+import 'package:cwsn/core/widgets/error_state_widget.dart';
 import 'package:cwsn/features/requests/presentation/providers/requests_provider.dart';
 import 'package:cwsn/features/requests/presentation/widgets/request_tile.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +42,8 @@ class RequestsPage extends ConsumerWidget {
         loading: () =>
             const Center(child: CircularProgressIndicator.adaptive()),
 
-        error: (error, _) => _ErrorState(
+        error: (error, _) => ErrorStateWidget(
+          message: 'Failed to load requests',
           onRetry: () => ref.read(pendingRequestsProvider.notifier).refresh(),
         ),
 
@@ -86,7 +89,7 @@ class RequestsPage extends ConsumerWidget {
   ) {
     HapticFeedback.mediumImpact();
 
-    _showFeedback(context, accepted ? "Request Accepted" : "Request Declined");
+    _showFeedback(context, accepted ? "Request Accepted" : "Request Declined", accepted: accepted);
 
     ref.read(pendingRequestsProvider.notifier).handleAction(id, accepted);
   }
@@ -95,6 +98,7 @@ class RequestsPage extends ConsumerWidget {
     BuildContext context,
     String message, {
     bool isError = false,
+    bool accepted = false,
   }) {
     final messenger = ScaffoldMessenger.of(context);
     messenger.clearSnackBars();
@@ -106,9 +110,7 @@ class RequestsPage extends ConsumerWidget {
         ),
         backgroundColor: isError
             ? Colors.black87
-            : (message.contains("Accepted")
-                  ? Colors.green.shade700
-                  : Colors.red.shade700),
+            : (accepted ? Colors.green.shade700 : Colors.red.shade700),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),
@@ -122,62 +124,13 @@ class RequestsPage extends ConsumerWidget {
       ),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-        const _EmptyState(),
+        const EmptyStateWidget(
+          icon: Icons.inbox_outlined,
+          iconSize: 64,
+          title: 'No Pending Requests',
+          subtitle: 'New bookings will appear here.',
+        ),
       ],
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
-          const Text(
-            'No Pending Requests',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'New bookings will appear here.',
-            style: TextStyle(color: Colors.grey.shade500),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  final VoidCallback onRetry;
-  const _ErrorState({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.wifi_off_rounded, color: Colors.grey.shade300, size: 48),
-          const SizedBox(height: 16),
-          const Text(
-            'Failed to load requests',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text("Retry"),
-          ),
-        ],
-      ),
     );
   }
 }

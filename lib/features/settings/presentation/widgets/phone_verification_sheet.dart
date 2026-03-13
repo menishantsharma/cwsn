@@ -1,3 +1,4 @@
+import 'package:cwsn/core/widgets/bottom_sheet_drag_handle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -116,17 +117,7 @@ class _PhoneVerificationSheetState extends State<PhoneVerificationSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
+        const BottomSheetDragHandle(),
         const Text(
           "Update Phone Number",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -227,17 +218,7 @@ class _PhoneVerificationSheetState extends State<PhoneVerificationSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
+        const BottomSheetDragHandle(),
         Row(
           children: [
             // 5. OPTIMIZED: Allow users to fix typos in their phone number

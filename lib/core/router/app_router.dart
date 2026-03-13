@@ -22,6 +22,7 @@ import 'package:cwsn/features/special_needs/presentation/pages/special_needs_pag
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
+/// Displays the appropriate home page based on the user's active role.
 class HomeWrapperPage extends ConsumerWidget {
   const HomeWrapperPage({super.key});
 
@@ -37,6 +38,7 @@ class HomeWrapperPage extends ConsumerWidget {
   }
 }
 
+/// Triggers GoRouter refresh when authentication state changes.
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
   RouterNotifier(this._ref) {
@@ -59,6 +61,7 @@ final _shellNavigatorProfileKey = GlobalKey<NavigatorState>(
   debugLabel: 'shellProfile',
 );
 
+/// The application's top-level router configuration.
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = RouterNotifier(ref);
 
@@ -85,16 +88,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       if (isGuest) {
         if (onLoginPage || onRolePage) return AppRoutes.homePath;
 
-        final guestWhitelist = {
-          AppRoutes.homePath,
-          AppRoutes.notificationsPath,
-          AppRoutes.profilePath,
-          AppRoutes.specialNeedsPath,
-          AppRoutes.caregiversListPath,
-          AppRoutes.caregiverProfilePath,
-        };
-
-        final isAllowed = guestWhitelist.any(
+        final isAllowed = AppRoutes.guestWhitelist.any(
           (route) => currentPath == route || currentPath.startsWith('$route/'),
         );
 
@@ -150,7 +144,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // BRANCH 2: Notifications
           StatefulShellBranch(
             navigatorKey: _shellNavigatorNotificationsKey,
             routes: [
@@ -162,7 +155,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // BRANCH 3: Profile
           StatefulShellBranch(
             navigatorKey: _shellNavigatorProfileKey,
             routes: [
@@ -176,7 +168,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Sub-Pages
       GoRoute(
         path: AppRoutes.specialNeedsPath,
         name: AppRoutes.specialNeeds,

@@ -1,6 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/utils/utils.dart';
+import 'package:cwsn/core/widgets/user_avatar.dart';
 import 'package:flutter/material.dart';
 
 class CaregiverCard extends StatelessWidget {
@@ -13,9 +13,6 @@ class CaregiverCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final profile = user.caregiverProfile;
     final bool isAvailable = profile?.isAvailable ?? false;
-    final primaryColor = Theme.of(context).primaryColor;
-
-    final bool hasImage = user.imageUrl != null && user.imageUrl!.isNotEmpty;
 
     return Material(
       color: Colors.white,
@@ -30,27 +27,11 @@ class CaregiverCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: hasImage
-                      ? Colors.grey.shade50
-                      : primaryColor.withValues(alpha: 0.1),
-                  border: Border.all(color: Colors.grey.shade100),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: hasImage
-                      ? CachedNetworkImage(
-                          imageUrl: user.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, _, _) =>
-                              _buildFallbackInitial(primaryColor),
-                        )
-                      : _buildFallbackInitial(primaryColor),
-                ),
+              UserAvatar(
+                imageUrl: user.imageUrl,
+                name: user.firstName,
+                size: 72,
+                borderRadius: 12,
               ),
               const SizedBox(width: 16),
 
@@ -148,19 +129,6 @@ class CaregiverCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFallbackInitial(Color color) {
-    return Center(
-      child: Text(
-        user.firstName.isNotEmpty ? user.firstName[0].toUpperCase() : '?',
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: color,
         ),
       ),
     );

@@ -1,5 +1,6 @@
+/// Centralized route names and path constants for the app's navigation.
 class AppRoutes {
-  // --- Route Names ---
+  // Route Names
   static const String login = 'login';
   static const String roleSelection = 'role-selection';
   static const String switching = 'switching';
@@ -13,7 +14,7 @@ class AppRoutes {
   static const String addChild = 'add-child';
   static const String caregiverServices = 'caregiver-services';
 
-  // --- Route Paths ---
+  // Route Paths
   static const String loginPath = '/login';
   static const String roleSelectionPath = '/role-selection';
   static const String switchingPath = '/switching';
@@ -26,6 +27,16 @@ class AppRoutes {
   static const String parentEditProfilePath = '/edit-profile';
   static const String addChildPath = '/add-child';
   static const String caregiverServicesPath = '/caregiver-services';
+
+  /// Paths accessible to unauthenticated guest users.
+  static const Set<String> guestWhitelist = {
+    homePath,
+    notificationsPath,
+    profilePath,
+    specialNeedsPath,
+    caregiversListPath,
+    caregiverProfilePath,
+  };
 
   AppRoutes._();
 }

@@ -1,7 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/utils/utils.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
+import 'package:cwsn/core/widgets/user_avatar.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/select_child_sheet.dart';
 import 'package:flutter/material.dart';
@@ -114,48 +114,20 @@ class _CenteredHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
-    final hasImage = user.imageUrl != null && user.imageUrl!.isNotEmpty;
-
     return Column(
       children: [
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: hasImage
-                ? Colors.grey.shade50
-                : primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
-            image: hasImage
-                ? DecorationImage(
-                    image: CachedNetworkImageProvider(user.imageUrl!),
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-          child: !hasImage
-              ? Center(
-                  child: Text(
-                    user.firstName.isNotEmpty
-                        ? user.firstName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                  ),
-                )
-              : null,
+        UserAvatar(
+          imageUrl: user.imageUrl,
+          name: user.firstName,
+          size: 100,
+          borderRadius: 24,
         ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "${user.firstName} ${user.lastName ?? ''}".trim(),
+              user.fullName,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,

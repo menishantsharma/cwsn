@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:cwsn/core/widgets/user_avatar.dart';
 import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/guest_placeholder.dart';
@@ -129,7 +129,6 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
-    final hasImage = user.imageUrl != null && user.imageUrl!.isNotEmpty;
 
     return GestureDetector(
       onTap: () => context.pushNamed(AppRoutes.parentEditProfile),
@@ -139,26 +138,11 @@ class _ProfileHeader extends StatelessWidget {
           Stack(
             alignment: Alignment.bottomRight,
             children: [
-              CircleAvatar(
-                radius: 48,
-                backgroundColor: hasImage
-                    ? Colors.grey.shade100
-                    : primaryColor.withValues(alpha: 0.1),
-                backgroundImage: hasImage
-                    ? CachedNetworkImageProvider(user.imageUrl!)
-                    : null,
-                child: !hasImage
-                    ? Text(
-                        user.firstName.isNotEmpty
-                            ? user.firstName[0].toUpperCase()
-                            : '?',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
-                        ),
-                      )
-                    : null,
+              UserAvatar(
+                imageUrl: user.imageUrl,
+                name: user.firstName,
+                size: 96,
+                isCircle: true,
               ),
               Container(
                 padding: const EdgeInsets.all(6),

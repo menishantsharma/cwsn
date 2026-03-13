@@ -1,3 +1,4 @@
+import 'package:cwsn/core/widgets/bottom_sheet_drag_handle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -69,17 +70,7 @@ class _AddEditServiceSheetState extends State<AddEditServiceSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const BottomSheetDragHandle(),
 
               Text(
                 isEditing ? "Edit Service" : "Add New Service",
@@ -91,7 +82,6 @@ class _AddEditServiceSheetState extends State<AddEditServiceSheet> {
               ),
               const SizedBox(height: 24),
 
-              // Service Input
               Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,

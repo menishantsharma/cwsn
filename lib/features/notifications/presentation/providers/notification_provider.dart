@@ -5,11 +5,14 @@ import 'package:cwsn/features/notifications/data/notification_repository.dart';
 import 'package:cwsn/features/notifications/models/notification_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Manages the in-app notification list with optimistic read-state updates.
 final notificationsProvider =
     AsyncNotifierProvider<NotificationsNotifier, List<NotificationItem>>(
       NotificationsNotifier.new,
     );
 
+/// Fetches notifications for the current user's active role and handles
+/// mark-as-read operations with rollback on failure.
 class NotificationsNotifier extends AsyncNotifier<List<NotificationItem>> {
   @override
   FutureOr<List<NotificationItem>> build() async {

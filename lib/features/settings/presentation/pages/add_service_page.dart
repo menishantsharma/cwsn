@@ -1,5 +1,6 @@
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
+import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/settings/data/caregiver_repository.dart';
 import 'package:cwsn/features/settings/presentation/widgets/add_edit_service_sheet.dart';
@@ -130,7 +131,10 @@ class AddServicePage extends ConsumerWidget {
           const SizedBox(height: 24),
 
           if (services.isEmpty)
-            const _EmptyState()
+            const EmptyStateWidget(
+              icon: Icons.medical_information_rounded,
+              title: 'No services added yet.',
+            )
           else
             ...services.map(
               (service) => _ServiceCard(
@@ -226,34 +230,6 @@ class _AddServiceButton extends StatelessWidget {
       label: const Text(
         "Add New Service",
         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Column(
-        children: [
-          Icon(
-            Icons.medical_information_rounded,
-            size: 48,
-            color: Colors.grey.shade300,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            "No services added yet.",
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }

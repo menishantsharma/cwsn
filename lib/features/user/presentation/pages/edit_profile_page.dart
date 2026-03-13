@@ -1,6 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cwsn/core/constants/app_constants.dart';
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
+import 'package:cwsn/core/widgets/gender_selector.dart';
+import 'package:cwsn/core/widgets/user_avatar.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/user/data/user_repository.dart';
 import 'package:cwsn/features/settings/presentation/widgets/language_selection_dialog.dart';
@@ -27,19 +29,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   bool _isLoading = false;
   bool _isFetchingLocation = false;
   String? _avatarUrl;
-
-  final List<String> _allLanguages = [
-    "Hindi",
-    "English",
-    "Marathi",
-    "Tamil",
-    "Telugu",
-    "Kannada",
-    "Malayalam",
-    "Bengali",
-    "Gujarati",
-    "Punjabi",
-  ];
 
   @override
   void initState() {
@@ -121,12 +110,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  IconData _getGenderIcon(Gender gender) {
-    if (gender == Gender.male) return Icons.male_rounded;
-    if (gender == Gender.female) return Icons.female_rounded;
-    return Icons.transgender_rounded;
-  }
-
   InputDecoration _inputStyle(String label, IconData icon, {Widget? trailing}) {
     return InputDecoration(
       labelText: label,
@@ -201,24 +184,15 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           children: [
-            // 1. AVATAR
+            // Avatar
             Center(
               child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.grey.shade100,
-                    backgroundImage:
-                        _avatarUrl != null && _avatarUrl!.isNotEmpty
-                        ? CachedNetworkImageProvider(_avatarUrl!)
-                        : null,
-                    child: (_avatarUrl == null || _avatarUrl!.isEmpty)
-                        ? Icon(
-                            Icons.person,
-                            size: 40,
-                            color: Colors.grey.shade400,
-                          )
-                        : null,
+                  UserAvatar(
+                    imageUrl: _avatarUrl,
+                    name: _nameController.text,
+                    size: 100,
+                    isCircle: true,
                   ),
                   Positioned(
                     bottom: 0,
@@ -242,7 +216,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             ),
             const SizedBox(height: 40),
 
-            // 2. NAME
             TextFormField(
               controller: _nameController,
               style: const TextStyle(fontWeight: FontWeight.w600),
@@ -253,7 +226,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             ),
             const SizedBox(height: 16),
 
-            // 3. LOCATION
             TextFormField(
               controller: _locationController,
               style: const TextStyle(fontWeight: FontWeight.w600),
@@ -277,7 +249,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             ),
             const SizedBox(height: 24),
 
-            // 4. GENDER
+            // Gender
             Text(
               "Gender",
               style: TextStyle(
@@ -287,61 +259,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               ),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: Gender.values.map((gender) {
-                final isSelected = _selectedGender == gender;
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      FocusScope.of(context).unfocus();
-                      setState(() => _selectedGender = gender);
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? primaryColor.withValues(alpha: 0.1)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? primaryColor
-                              : Colors.grey.shade200,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            _getGenderIcon(gender),
-                            color: isSelected
-                                ? primaryColor
-                                : Colors.grey.shade400,
-                            size: 24,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            gender.name[0].toUpperCase() +
-                                gender.name.substring(1),
-                            style: TextStyle(
-                              color: isSelected
-                                  ? primaryColor
-                                  : Colors.grey.shade600,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+            GenderSelector(
+              selectedGender: _selectedGender,
+              onChanged: (gender) => setState(() => _selectedGender = gender),
             ),
             const SizedBox(height: 24),
 
-            // 5. PHONE
             TextFormField(
               controller: _phoneController,
               readOnly: true,
@@ -381,7 +304,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             ),
             const SizedBox(height: 16),
 
-            // 6. LANGUAGES
             TextFormField(
               controller: _langController,
               readOnly: true,
@@ -390,7 +312,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 final List<String>? result = await showDialog(
                   context: context,
                   builder: (_) => LanguageSelectionDialog(
-                    allLanguages: _allLanguages,
+                    allLanguages: AppConstants.supportedLanguages,
                     selectedLanguages: _selectedLanguages,
                   ),
                 );

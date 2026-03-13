@@ -16,7 +16,6 @@ class LanguageSelectionDialog extends StatefulWidget {
 }
 
 class _LanguageSelectionDialogState extends State<LanguageSelectionDialog> {
-  // 1. OPTIMIZED: Use a Set for O(1) lookups and guaranteed uniqueness instead of an O(N) List.
   late final Set<String> _tempSelected;
 
   @override
@@ -30,7 +29,6 @@ class _LanguageSelectionDialogState extends State<LanguageSelectionDialog> {
     final primaryColor = Theme.of(context).primaryColor;
 
     return AlertDialog(
-      // 2. OPTIMIZED: Modern production UI styling to match the app's theme
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       titlePadding: const EdgeInsets.only(
         left: 24,
@@ -54,8 +52,7 @@ class _LanguageSelectionDialogState extends State<LanguageSelectionDialog> {
         physics: const BouncingScrollPhysics(),
         child: Wrap(
           spacing: 8,
-          runSpacing: 12, // Slightly more vertical breathing room
-          // 3. OPTIMIZED: Using a 'for' loop is more memory efficient than .map().toList()
+          runSpacing: 12,
           children: [
             for (final lang in widget.allLanguages)
               _LanguageChip(
@@ -87,7 +84,6 @@ class _LanguageSelectionDialogState extends State<LanguageSelectionDialog> {
           ),
         ),
         ElevatedButton(
-          // 4. OPTIMIZED: Convert the Set back to a List to fulfill the expected return type
           onPressed: () => Navigator.pop(context, _tempSelected.toList()),
           style: ElevatedButton.styleFrom(
             backgroundColor: primaryColor,
@@ -108,10 +104,6 @@ class _LanguageSelectionDialogState extends State<LanguageSelectionDialog> {
   }
 }
 
-// ==========================================
-// OPTIMIZED: EXTRACTED STATELESS WIDGETS
-// ==========================================
-
 class _LanguageChip extends StatelessWidget {
   final String lang;
   final bool isSelected;
@@ -131,8 +123,7 @@ class _LanguageChip extends StatelessWidget {
       label: Text(lang),
       selected: isSelected,
       onSelected: onSelected,
-      showCheckmark:
-          false, // Cleaner look without the native checkmark shifting the text
+      showCheckmark: false,
       selectedColor: primaryColor.withValues(alpha: 0.1),
       backgroundColor: Colors.grey.shade100,
       side: BorderSide(

@@ -1,3 +1,6 @@
+import 'package:cwsn/core/constants/app_constants.dart';
+import 'package:cwsn/core/widgets/bottom_sheet_drag_handle.dart';
+import 'package:cwsn/features/caregivers/models/caregiver_filter.dart';
 import 'package:flutter/material.dart';
 
 class CaregiverFilterSheet extends StatefulWidget {
@@ -11,14 +14,13 @@ class _CaregiverFilterSheetState extends State<CaregiverFilterSheet> {
   String? _selectedGender;
   final Set<String> _selectedLanguages = {};
 
-  final _languages = ['English', 'Hindi', 'Marathi', 'Punjabi'];
+  final _languages = AppConstants.supportedLanguages.take(4).toList();
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).primaryColor;
 
     return Container(
-      // 1. THIS IS THE FIX: Explicit white background and rounded top corners
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -30,20 +32,8 @@ class _CaregiverFilterSheetState extends State<CaregiverFilterSheet> {
             mainAxisSize: MainAxisSize.min, // Wraps tightly to content
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 2. Standard Drag Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const BottomSheetDragHandle(),
 
-              // 3. Header & Reset
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -68,7 +58,6 @@ class _CaregiverFilterSheetState extends State<CaregiverFilterSheet> {
               ),
               const SizedBox(height: 24),
 
-              // 4. Gender (Single Selection)
               const Text(
                 'Gender',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -104,7 +93,6 @@ class _CaregiverFilterSheetState extends State<CaregiverFilterSheet> {
               ),
               const SizedBox(height: 24),
 
-              // 5. Languages (Multiple Selection)
               const Text(
                 'Language',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -143,7 +131,6 @@ class _CaregiverFilterSheetState extends State<CaregiverFilterSheet> {
               ),
               const SizedBox(height: 32),
 
-              // 6. Apply Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -157,11 +144,10 @@ class _CaregiverFilterSheetState extends State<CaregiverFilterSheet> {
                     ),
                   ),
                   onPressed: () {
-                    // Passes the selected filters back to the page that opened it
-                    Navigator.pop(context, {
-                      'gender': _selectedGender,
-                      'languages': _selectedLanguages.toList(),
-                    });
+                    Navigator.pop(context, CaregiverFilter(
+                      gender: _selectedGender,
+                      languages: _selectedLanguages.toList(),
+                    ));
                   },
                   child: const Text(
                     'Apply Filters',

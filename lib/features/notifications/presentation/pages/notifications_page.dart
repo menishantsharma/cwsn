@@ -7,7 +7,7 @@ import 'package:cwsn/features/notifications/models/notification_model.dart';
 import 'package:cwsn/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:cwsn/features/notifications/presentation/widgets/notification_tile.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Required for HapticFeedback
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -31,7 +31,6 @@ class NotificationsPage extends ConsumerWidget {
       );
     }
 
-    // Watch notifications list state
     final notificationsAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
@@ -40,13 +39,12 @@ class NotificationsPage extends ConsumerWidget {
         title: 'Notifications',
         showBackButton: false,
         actions: [
-          // Logic to show "Mark all as read" only if unread items exist
           if (notificationsAsync.value?.any((n) => !n.isRead) ?? false)
             IconButton(
               tooltip: 'Mark all as read',
               icon: const Icon(Icons.done_all_rounded, color: Colors.black87),
               onPressed: () {
-                HapticFeedback.mediumImpact(); // Premium tactile feel
+                HapticFeedback.mediumImpact();
                 ref.read(notificationsProvider.notifier).markAllAsRead();
               },
             ),

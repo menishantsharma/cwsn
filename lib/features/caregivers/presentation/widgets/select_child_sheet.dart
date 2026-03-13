@@ -1,5 +1,7 @@
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/router/app_routes.dart';
+import 'package:cwsn/core/widgets/bottom_sheet_drag_handle.dart';
+import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:flutter/material.dart';
@@ -86,17 +88,7 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const BottomSheetDragHandle(),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -142,7 +134,10 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
                   child: Column(
                     children: [
                       if (children.isEmpty)
-                        const _EmptyState()
+                        const EmptyStateWidget(
+                          icon: Icons.child_care_rounded,
+                          title: "You haven't added any children yet.",
+                        )
                       else
                         ...children.map(
                           (child) => _buildChildTile(child, primaryColor),
@@ -254,27 +249,6 @@ class _SelectChildSheetState extends ConsumerState<SelectChildSheet> {
             : Icon(Icons.circle_outlined, color: Colors.grey.shade300),
         onTap: () => setState(() => _selectedChild = child),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Column(
-        children: [
-          Icon(Icons.child_care_rounded, size: 48, color: Colors.grey.shade300),
-          const SizedBox(height: 12),
-          Text(
-            "You haven't added any children yet.",
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-          ),
-        ],
       ),
     );
   }

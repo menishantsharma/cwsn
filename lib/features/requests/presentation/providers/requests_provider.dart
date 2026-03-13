@@ -3,11 +3,13 @@ import 'package:cwsn/features/requests/data/requests_repository.dart';
 import 'package:cwsn/features/requests/models/request_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Exposes the list of pending service requests with optimistic accept/reject.
 final pendingRequestsProvider =
     AsyncNotifierProvider<PendingRequestsNotifier, List<CaregiverRequest>>(
       PendingRequestsNotifier.new,
     );
 
+/// Filters requests to pending-only and handles accept/reject with rollback.
 class PendingRequestsNotifier extends AsyncNotifier<List<CaregiverRequest>> {
   @override
   FutureOr<List<CaregiverRequest>> build() async {

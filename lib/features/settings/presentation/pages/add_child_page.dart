@@ -1,5 +1,6 @@
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
+import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/settings/data/parent_repository.dart';
 import 'package:cwsn/features/settings/presentation/widgets/add_edit_child_sheet.dart';
@@ -118,7 +119,10 @@ class AddChildPage extends ConsumerWidget {
           const SizedBox(height: 24),
 
           if (children.isEmpty)
-            const _EmptyState()
+            const EmptyStateWidget(
+              icon: Icons.child_care_rounded,
+              title: 'No children added yet.',
+            )
           else
             ...children.map(
               (child) => _ChildCard(
@@ -217,30 +221,6 @@ class _AddChildButton extends StatelessWidget {
       label: const Text(
         "Add New Child",
         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Column(
-        children: [
-          Icon(Icons.child_care_rounded, size: 48, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
-          Text(
-            "No children added yet.",
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }

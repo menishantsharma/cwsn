@@ -1,4 +1,6 @@
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:cwsn/core/widgets/bottom_sheet_drag_handle.dart';
+import 'package:cwsn/core/widgets/gender_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -84,17 +86,7 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const BottomSheetDragHandle(),
 
               Text(
                 isEditing ? "Edit Profile" : "Add New Child",
@@ -116,10 +108,11 @@ class _AddEditChildSheetState extends State<AddEditChildSheet> {
               ),
               const SizedBox(height: 24),
 
-              _GenderSelector(
+              GenderSelector(
                 selectedGender: _selectedGender,
                 onChanged: (gender) => setState(() => _selectedGender = gender),
-                primaryColor: primaryColor,
+                allowDeselect: true,
+                useFilled: true,
               ),
               const SizedBox(height: 32),
 
@@ -272,89 +265,3 @@ class _DateSelector extends StatelessWidget {
   }
 }
 
-class _GenderSelector extends StatelessWidget {
-  final Gender? selectedGender;
-  final ValueChanged<Gender?> onChanged;
-  final Color primaryColor;
-
-  const _GenderSelector({
-    required this.selectedGender,
-    required this.onChanged,
-    required this.primaryColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 12, bottom: 10),
-          child: Text(
-            "Gender",
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Row(
-          children: Gender.values.map((gender) {
-            final isSelected = selectedGender == gender;
-            final label =
-                gender.name[0].toUpperCase() + gender.name.substring(1);
-
-            IconData icon = Icons.transgender_rounded;
-            if (gender == Gender.male) icon = Icons.male_rounded;
-            if (gender == Gender.female) icon = Icons.female_rounded;
-
-            return Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  FocusScope.of(context).unfocus();
-
-                  // OPTIMIZED: If already selected, pass null to unselect. Otherwise, pass the gender.
-                  onChanged(isSelected ? null : gender);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected ? primaryColor : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected ? primaryColor : Colors.grey.shade200,
-                      width: 2,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        icon,
-                        color: isSelected ? Colors.white : Colors.grey.shade400,
-                        size: 24,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : Colors.grey.shade600,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-}

@@ -1,10 +1,7 @@
-// You can make this 'const' if all data inside is const,
-// otherwise 'final' is fine.
 import 'package:cwsn/features/services/models/service_model.dart';
 
-// Mock data representing a list of service sections with service items
+/// Mock data representing the available service categories with their items.
 final List<ServiceSection> mockServiceSections = [
-  // SECTION 1
   ServiceSection(
     title: 'Educational Support',
     items: [
@@ -36,7 +33,6 @@ final List<ServiceSection> mockServiceSections = [
     ],
   ),
 
-  // SECTION 2
   ServiceSection(
     title: 'Therapy Services',
     items: [
@@ -68,7 +64,6 @@ final List<ServiceSection> mockServiceSections = [
     ],
   ),
 
-  // SECTION 3
   ServiceSection(
     title: 'Recreational & Sports',
     items: [
@@ -95,111 +90,6 @@ final List<ServiceSection> mockServiceSections = [
       ServiceItem(
         title: 'Yoga Classes',
         imgUrl: 'https://assets.mixkit.co/art/175/175-square.png-500h.png',
-      ),
-    ],
-  ),
-
-  // SECTION 4
-  ServiceSection(
-    title: 'Medical & Health',
-    items: [
-      ServiceItem(
-        title: 'Pediatric Neuro',
-        imgUrl:
-            'https://mir-s3-cdn-cf.behance.net/projects/404/d1aa66240960689.Y3JvcCwxMDIyLDc5OSwxODcsODM0.png',
-      ),
-      ServiceItem(
-        title: 'Dietician',
-        imgUrl:
-            'https://img.freepik.com/free-vector/gradient-level-up-illustration_23-2150130793.jpg',
-      ),
-      ServiceItem(
-        title: 'Psychologist',
-        imgUrl:
-            'https://mir-s3-cdn-cf.behance.net/project_modules/fs/046cf1113605001.602b92cbac318.jpg',
-      ),
-      ServiceItem(
-        title: 'Dental Care',
-        imgUrl:
-            'https://cdn.dribbble.com/userupload/16566774/file/original-db228ce3f4ec8586d638dd2dc87be3c9.jpg?resize=400x0',
-      ),
-    ],
-  ),
-
-  ServiceSection(
-    title: 'Medical & Health',
-    items: [
-      ServiceItem(
-        title: 'Pediatric Neuro',
-        imgUrl:
-            'https://mir-s3-cdn-cf.behance.net/projects/404/d1aa66240960689.Y3JvcCwxMDIyLDc5OSwxODcsODM0.png',
-      ),
-      ServiceItem(
-        title: 'Dietician',
-        imgUrl:
-            'https://img.freepik.com/free-vector/gradient-level-up-illustration_23-2150130793.jpg',
-      ),
-      ServiceItem(
-        title: 'Psychologist',
-        imgUrl:
-            'https://mir-s3-cdn-cf.behance.net/project_modules/fs/046cf1113605001.602b92cbac318.jpg',
-      ),
-      ServiceItem(
-        title: 'Dental Care',
-        imgUrl:
-            'https://cdn.dribbble.com/userupload/16566774/file/original-db228ce3f4ec8586d638dd2dc87be3c9.jpg?resize=400x0',
-      ),
-    ],
-  ),
-
-  ServiceSection(
-    title: 'Medical & Health',
-    items: [
-      ServiceItem(
-        title: 'Pediatric Neuro',
-        imgUrl:
-            'https://mir-s3-cdn-cf.behance.net/projects/404/d1aa66240960689.Y3JvcCwxMDIyLDc5OSwxODcsODM0.png',
-      ),
-      ServiceItem(
-        title: 'Dietician',
-        imgUrl:
-            'https://img.freepik.com/free-vector/gradient-level-up-illustration_23-2150130793.jpg',
-      ),
-      ServiceItem(
-        title: 'Psychologist',
-        imgUrl:
-            'https://mir-s3-cdn-cf.behance.net/project_modules/fs/046cf1113605001.602b92cbac318.jpg',
-      ),
-      ServiceItem(
-        title: 'Dental Care',
-        imgUrl:
-            'https://cdn.dribbble.com/userupload/16566774/file/original-db228ce3f4ec8586d638dd2dc87be3c9.jpg?resize=400x0',
-      ),
-    ],
-  ),
-
-  ServiceSection(
-    title: 'Medical & Health',
-    items: [
-      ServiceItem(
-        title: 'Pediatric Neuro',
-        imgUrl:
-            'https://mir-s3-cdn-cf.behance.net/projects/404/d1aa66240960689.Y3JvcCwxMDIyLDc5OSwxODcsODM0.png',
-      ),
-      ServiceItem(
-        title: 'Dietician',
-        imgUrl:
-            'https://img.freepik.com/free-vector/gradient-level-up-illustration_23-2150130793.jpg',
-      ),
-      ServiceItem(
-        title: 'Psychologist',
-        imgUrl:
-            'https://mir-s3-cdn-cf.behance.net/project_modules/fs/046cf1113605001.602b92cbac318.jpg',
-      ),
-      ServiceItem(
-        title: 'Dental Care',
-        imgUrl:
-            'https://cdn.dribbble.com/userupload/16566774/file/original-db228ce3f4ec8586d638dd2dc87be3c9.jpg?resize=400x0',
       ),
     ],
   ),
