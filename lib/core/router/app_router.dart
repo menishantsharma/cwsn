@@ -35,8 +35,9 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 /// One navigator key per shell branch, generated from [NavConfig.allItems].
 final _branchNavigatorKeys = {
   for (final item in NavConfig.allItems)
-    item.routeName:
-        GlobalKey<NavigatorState>(debugLabel: 'shell-${item.routeName}'),
+    item.routeName: GlobalKey<NavigatorState>(
+      debugLabel: 'shell-${item.routeName}',
+    ),
 };
 
 /// The application's top-level router configuration.
@@ -72,8 +73,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         }
 
         final isAllowed = AppRoutes.guestWhitelist.any(
-          (route) =>
-              currentPath == route || currentPath.startsWith('$route/'),
+          (route) => currentPath == route || currentPath.startsWith('$route/'),
         );
 
         if (!isAllowed) return AppRoutes.loginPath;
@@ -115,8 +115,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       // ── Tabbed shell — branches generated from NavConfig ──────────
       StatefulShellRoute.indexedStack(
-        pageBuilder: (context, state, navigationShell) =>
-            CustomTransitionPage(
+        pageBuilder: (context, state, navigationShell) => CustomTransitionPage(
           key: state.pageKey,
           child: MainShell(navigationShell: navigationShell),
           transitionsBuilder: (context, anim, _, child) =>
