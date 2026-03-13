@@ -1,28 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final caregiverRepositoryProvider = Provider<CaregiverRepository>(
-  (ref) => FakeCaregiverRepository(),
+/// Provides the active [CaregiverServiceRepository] implementation.
+final caregiverServiceRepositoryProvider = Provider<CaregiverServiceRepository>(
+  (ref) => FakeCaregiverServiceRepository(),
 );
 
-abstract class CaregiverRepository {
+/// Contract for managing a caregiver's offered services.
+abstract class CaregiverServiceRepository {
   Future<String> addService({
     required String caregiverId,
     required String service,
   });
-
   Future<String> updateService({
     required String caregiverId,
     required String oldService,
     required String newService,
   });
-
   Future<void> deleteService({
     required String caregiverId,
     required String service,
   });
 }
 
-class FakeCaregiverRepository implements CaregiverRepository {
+class FakeCaregiverServiceRepository implements CaregiverServiceRepository {
   @override
   Future<String> addService({
     required String caregiverId,

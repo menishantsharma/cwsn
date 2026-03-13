@@ -1,25 +1,25 @@
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final parentRepositoryProvider = Provider<ParentRepository>(
-  (ref) => FakeParentRepository(),
+/// Provides the active [ChildRepository] implementation.
+final childRepositoryProvider = Provider<ChildRepository>(
+  (ref) => FakeChildRepository(),
 );
 
-abstract class ParentRepository {
+/// Contract for managing a parent's children profiles.
+abstract class ChildRepository {
   Future<ChildModel> addChild({
     required String parentId,
     required ChildModel child,
   });
-
   Future<ChildModel> updateChild({
     required String parentId,
     required ChildModel child,
   });
-
   Future<void> deleteChild({required String parentId, required String childId});
 }
 
-class FakeParentRepository implements ParentRepository {
+class FakeChildRepository implements ChildRepository {
   @override
   Future<ChildModel> addChild({
     required String parentId,

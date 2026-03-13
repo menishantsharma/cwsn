@@ -2,7 +2,7 @@ import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
-import 'package:cwsn/features/settings/data/caregiver_repository.dart';
+import 'package:cwsn/features/settings/presentation/providers/caregiver_service_provider.dart';
 import 'package:cwsn/features/settings/presentation/widgets/add_edit_service_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,35 +10,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AddServicePage extends ConsumerWidget {
   const AddServicePage({super.key});
 
-  Future<void> _deleteService(
-    BuildContext context,
-    WidgetRef ref,
-    User user,
-    String service,
-  ) async {
+  Future<void> _deleteService(BuildContext context, WidgetRef ref, String service) async {
     final messenger = ScaffoldMessenger.of(context);
-    final previousProfile = user.caregiverProfile!;
-
-    // Optimistically remove the service
-    final optimisticServices = previousProfile.services
-        .where((s) => s != service)
-        .toList();
-
-    ref
-        .read(currentUserProvider.notifier)
-        .updateCaregiverProfile(
-          previousProfile.copyWith(services: optimisticServices),
-        );
-
     try {
-      await ref
-          .read(caregiverRepositoryProvider)
-          .deleteService(caregiverId: user.id, service: service);
-    } catch (e) {
-      // Rollback on failure
-      ref
-          .read(currentUserProvider.notifier)
-          .updateCaregiverProfile(previousProfile);
+      await ref.read(caregiverServiceNotifierProvider).deleteService(service);
+    } catch (_) {
       if (context.mounted) {
         messenger.showSnackBar(
           const SnackBar(content: Text("Failed to delete. Restoring...")),
@@ -47,12 +23,7 @@ class AddServicePage extends ConsumerWidget {
     }
   }
 
-  void _openServiceFormSheet(
-    BuildContext context,
-    WidgetRef ref,
-    User user, {
-    String? existingService,
-  }) {
+  void _openServiceFormSheet(BuildContext context, WidgetRef ref, User user, {String? existingService}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -60,36 +31,17 @@ class AddServicePage extends ConsumerWidget {
       builder: (_) => AddEditServiceSheet(
         existingService: existingService,
         onSave: (serviceData) async {
-          final repo = ref.read(caregiverRepositoryProvider);
+          final notifier = ref.read(caregiverServiceNotifierProvider);
           try {
-            final savedService = existingService == null
-                ? await repo.addService(
-                    caregiverId: user.id,
-                    service: serviceData,
-                  )
-                : await repo.updateService(
-                    caregiverId: user.id,
-                    oldService: existingService,
-                    newService: serviceData,
-                  );
-
-            final currentServices = user.caregiverProfile?.services ?? [];
-
-            // Rebuild the list with the new/updated service
-            final updatedServices = existingService == null
-                ? [...currentServices, savedService]
-                : currentServices
-                      .map((s) => s == existingService ? savedService : s)
-                      .toList();
-
-            ref
-                .read(currentUserProvider.notifier)
-                .updateCaregiverProfile(
-                  (user.caregiverProfile ?? const CaregiverProfile()).copyWith(
-                    services: updatedServices,
-                  ),
-                );
-          } catch (e) {
+            if (existingService == null) {
+              await notifier.addService(serviceData);
+            } else {
+              await notifier.updateService(
+                oldService: existingService,
+                newService: serviceData,
+              );
+            }
+          } catch (_) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Failed to save service.")),
@@ -145,7 +97,7 @@ class AddServicePage extends ConsumerWidget {
                   user,
                   existingService: service,
                 ),
-                onDelete: () => _deleteService(context, ref, user, service),
+                onDelete: () => _deleteService(context, ref, service),
               ),
             ),
 

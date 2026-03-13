@@ -4,7 +4,7 @@ import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/gender_selector.dart';
 import 'package:cwsn/core/widgets/user_avatar.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
-import 'package:cwsn/features/user/data/user_repository.dart';
+import 'package:cwsn/features/user/presentation/providers/user_provider.dart';
 import 'package:cwsn/features/settings/presentation/widgets/language_selection_dialog.dart';
 import 'package:cwsn/features/settings/presentation/widgets/phone_verification_sheet.dart';
 import 'package:flutter/material.dart';
@@ -90,14 +90,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         gender: _selectedGender,
       );
 
-      final savedUser = await ref
-          .read(userRepositoryProvider)
-          .updateUserProfile(updatedUser);
+      await ref.read(userProfileNotifierProvider).saveProfile(updatedUser);
 
       if (!mounted) return;
 
       context.pop();
-      ref.read(currentUserProvider.notifier).updateProfile(savedUser);
     } catch (e) {
       if (mounted) _showSnack("Failed to update profile. Please try again.");
       setState(() {

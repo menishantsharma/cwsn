@@ -2,17 +2,12 @@ import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/core/widgets/error_state_widget.dart';
-import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
+import 'package:cwsn/features/caregivers/presentation/providers/caregiver_providers.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_card.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_filter_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-final caregiversListProvider = FutureProvider.autoDispose((ref) async {
-  final repo = ref.read(caregiverRepositoryProvider);
-  return await repo.getCaregiversList();
-});
 
 class CaregiversListPage extends ConsumerWidget {
   const CaregiversListPage({super.key});

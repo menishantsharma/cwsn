@@ -2,7 +2,7 @@ import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
-import 'package:cwsn/features/settings/data/parent_repository.dart';
+import 'package:cwsn/features/settings/presentation/providers/child_provider.dart';
 import 'package:cwsn/features/settings/presentation/widgets/add_edit_child_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,32 +10,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AddChildPage extends ConsumerWidget {
   const AddChildPage({super.key});
 
-  Future<void> _deleteChild(
-    BuildContext context,
-    WidgetRef ref,
-    User user,
-    ChildModel child,
-  ) async {
+  Future<void> _deleteChild(BuildContext context, WidgetRef ref, ChildModel child) async {
     final messenger = ScaffoldMessenger.of(context);
-    final previousProfile = user.parentProfile!;
-
-    final optimisticChildren = previousProfile.children
-        .where((c) => c.id != child.id)
-        .toList();
-    ref
-        .read(currentUserProvider.notifier)
-        .updateParentProfile(
-          previousProfile.copyWith(children: optimisticChildren),
-        );
-
     try {
-      await ref
-          .read(parentRepositoryProvider)
-          .deleteChild(parentId: user.id, childId: child.id);
-    } catch (e) {
-      ref
-          .read(currentUserProvider.notifier)
-          .updateParentProfile(previousProfile);
+      await ref.read(childNotifierProvider).deleteChild(child);
+    } catch (_) {
       if (context.mounted) {
         messenger.showSnackBar(
           const SnackBar(content: Text("Failed to delete. Restoring...")),
@@ -44,12 +23,7 @@ class AddChildPage extends ConsumerWidget {
     }
   }
 
-  void _openChildFormSheet(
-    BuildContext context,
-    WidgetRef ref,
-    User user, {
-    ChildModel? existingChild,
-  }) {
+  void _openChildFormSheet(BuildContext context, WidgetRef ref, User user, {ChildModel? existingChild}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -57,27 +31,14 @@ class AddChildPage extends ConsumerWidget {
       builder: (_) => AddEditChildSheet(
         existingChild: existingChild,
         onSave: (childData) async {
-          final repo = ref.read(parentRepositoryProvider);
+          final notifier = ref.read(childNotifierProvider);
           try {
-            final savedChild = existingChild == null
-                ? await repo.addChild(parentId: user.id, child: childData)
-                : await repo.updateChild(parentId: user.id, child: childData);
-
-            final currentChildren = user.parentProfile?.children ?? [];
-            final updatedChildren = existingChild == null
-                ? [...currentChildren, savedChild]
-                : currentChildren
-                      .map((c) => c.id == savedChild.id ? savedChild : c)
-                      .toList();
-
-            ref
-                .read(currentUserProvider.notifier)
-                .updateParentProfile(
-                  (user.parentProfile ?? const ParentModel()).copyWith(
-                    children: updatedChildren,
-                  ),
-                );
-          } catch (e) {
+            if (existingChild == null) {
+              await notifier.addChild(childData);
+            } else {
+              await notifier.updateChild(childData);
+            }
+          } catch (_) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Failed to save profile.")),
@@ -133,7 +94,7 @@ class AddChildPage extends ConsumerWidget {
                   user,
                   existingChild: child,
                 ),
-                onDelete: () => _deleteChild(context, ref, user, child),
+                onDelete: () => _deleteChild(context, ref, child),
               ),
             ),
 

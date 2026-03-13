@@ -2,16 +2,10 @@ import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/utils/utils.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/user_avatar.dart';
-import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
+import 'package:cwsn/features/caregivers/presentation/providers/caregiver_providers.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/select_child_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-final caregiverProfileProvider = FutureProvider.autoDispose
-    .family<User, String>((ref, id) async {
-      final repository = ref.watch(caregiverRepositoryProvider);
-      return repository.getCaregiverDetails(id);
-    });
 
 class CaregiverProfilePage extends ConsumerWidget {
   final String caregiverId;

@@ -8,7 +8,11 @@ final currentUserProvider = AsyncNotifierProvider<AuthNotifier, User?>(
   AuthNotifier.new,
 );
 
-/// Manages authentication state: login, logout, role switching, and profile updates.
+/// Manages authentication lifecycle only: login, logout, role switching.
+///
+/// Feature-specific profile mutations (children, services, profile edits)
+/// are handled by their own notifiers, which call [updateUser] to write
+/// back into this shared state.
 class AuthNotifier extends AsyncNotifier<User?> {
   @override
   FutureOr<User?> build() async {
@@ -27,9 +31,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
 
   Future<void> _authenticate(Future<User> Function() authMethod) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      return await authMethod();
-    });
+    state = await AsyncValue.guard(() async => authMethod());
   }
 
   void logout() {
@@ -42,21 +44,10 @@ class AuthNotifier extends AsyncNotifier<User?> {
     state = AsyncData(currentUser.copyWith(activeRole: newRole));
   }
 
-  /// Replaces the parent profile on the current user in-memory.
-  void updateParentProfile(ParentModel updatedProfile) {
-    final currentUser = state.value;
-    if (currentUser == null) return;
-    state = AsyncData(currentUser.copyWith(parentProfile: updatedProfile));
-  }
-
-  /// Replaces the caregiver profile on the current user in-memory.
-  void updateCaregiverProfile(CaregiverProfile updatedProfile) {
-    final currentUser = state.value;
-    if (currentUser == null) return;
-    state = AsyncData(currentUser.copyWith(caregiverProfile: updatedProfile));
-  }
-
-  void updateProfile(User updatedUser) {
+  /// Replaces the entire user object. Used by sibling notifiers
+  /// (ChildNotifier, CaregiverServiceNotifier, UserProfileNotifier)
+  /// after they persist changes through their repositories.
+  void updateUser(User updatedUser) {
     state = AsyncData(updatedUser);
   }
 }
