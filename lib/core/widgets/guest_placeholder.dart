@@ -25,7 +25,6 @@ class GuestPlaceholder extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 1. Stylish Icon Background
             Container(
               width: 120,
               height: 120,
@@ -42,7 +41,6 @@ class GuestPlaceholder extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // 2. Text
             Text(
               title,
               style: const TextStyle(
@@ -66,7 +64,6 @@ class GuestPlaceholder extends StatelessWidget {
 
             const SizedBox(height: 32),
 
-            // 3. Login Button
             SizedBox(
               width: double.infinity,
               height: 54,

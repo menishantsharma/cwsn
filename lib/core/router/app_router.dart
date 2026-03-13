@@ -140,7 +140,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
         branches: [
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorHomeKey, // Attached Key
+            navigatorKey: _shellNavigatorHomeKey,
             routes: [
               GoRoute(
                 path: AppRoutes.homePath,
@@ -152,7 +152,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
           // BRANCH 2: Notifications
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorNotificationsKey, // Attached Key
+            navigatorKey: _shellNavigatorNotificationsKey,
             routes: [
               GoRoute(
                 path: AppRoutes.notificationsPath,
@@ -164,7 +164,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
           // BRANCH 3: Profile
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorProfileKey, // Attached Key
+            navigatorKey: _shellNavigatorProfileKey,
             routes: [
               GoRoute(
                 path: AppRoutes.profilePath,
