@@ -1,10 +1,28 @@
 import 'package:cwsn/core/models/user_model.dart';
-import 'package:cwsn/core/router/nav_item.dart';
 import 'package:cwsn/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:cwsn/features/requests/presentation/pages/requests_page.dart';
 import 'package:cwsn/features/services/presentation/pages/services_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/settings_page.dart';
 import 'package:flutter/material.dart';
+
+/// A single tab destination in the bottom navigation bar.
+class NavItem {
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  final String routePath;
+  final String routeName;
+  final Widget Function() pageBuilder;
+
+  const NavItem({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+    required this.routePath,
+    required this.routeName,
+    required this.pageBuilder,
+  });
+}
 
 /// Centralized navigation configuration for role-based tab structures.
 ///
@@ -73,6 +91,12 @@ class NavConfig {
     profile,
   ];
 
+  // ── Derived sets ─────────────────────────────────────────────────
+
+  /// Every tab path registered in the shell. Used by the guest whitelist.
+  static final Set<String> allTabPaths =
+      allItems.map((item) => item.routePath).toSet();
+
   // ── Helpers ──────────────────────────────────────────────────────
 
   /// Returns the tab list for the given role. Defaults to parent.
@@ -95,5 +119,13 @@ class NavConfig {
     return role == UserRole.caregiver
         ? caregiverHome.routePath
         : parentHome.routePath;
+  }
+
+  /// Returns true if [path] is a role-specific home that doesn't
+  /// belong to [role]. Used by the redirect guard.
+  static bool isWrongHomeForRole(String path, UserRole role) {
+    if (role == UserRole.caregiver && path == parentHome.routePath) return true;
+    if (role == UserRole.parent && path == caregiverHome.routePath) return true;
+    return false;
   }
 }

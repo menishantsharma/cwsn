@@ -88,6 +88,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return NavConfig.homePathForRole(user.activeRole);
       }
 
+      // Guard: redirect if user landed on the wrong role's home.
+      if (NavConfig.isWrongHomeForRole(currentPath, user.activeRole!)) {
+        return NavConfig.homePathForRole(user.activeRole);
+      }
+
       return null;
     },
 

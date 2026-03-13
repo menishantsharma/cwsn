@@ -1,6 +1,8 @@
+import 'package:cwsn/core/router/nav_config.dart';
+
 /// Centralized route names and path constants for the app's navigation.
 ///
-/// Tab routes (home, notifications, profile) are defined in [NavConfig].
+/// Tab routes are defined in [NavConfig].
 /// This class holds non-tab routes and shared constants only.
 class AppRoutes {
   // Route Names — Auth
@@ -30,11 +32,9 @@ class AppRoutes {
   static const String caregiverServicesPath = '/caregiver-services';
 
   /// Paths accessible to unauthenticated guest users.
-  static const Set<String> guestWhitelist = {
-    '/', // parent home
-    '/caregiver-home',
-    '/notifications',
-    '/profile',
+  /// Tab paths are sourced from [NavConfig] — no hardcoded duplicates.
+  static final Set<String> guestWhitelist = {
+    ...NavConfig.allTabPaths,
     specialNeedsPath,
     caregiversListPath,
     caregiverProfilePath,
