@@ -89,6 +89,15 @@ class SettingsPage extends ConsumerWidget {
               iconColor: Colors.orange.shade600,
               onTap: () => context.pushNamed(AppRoutes.addChild),
             ),
+          
+          if(isCaregiverMode) 
+            SettingsTile(
+              icon: Icons.work_outline_rounded,
+              label: 'Manage Services',
+              iconColor: Colors.blue.shade600,
+              onTap: () => context.pushNamed(AppRoutes.caregiverServices),
+            ),
+          
 
           const SizedBox(height: 24),
 

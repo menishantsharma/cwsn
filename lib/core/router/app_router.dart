@@ -1,5 +1,6 @@
 import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/widgets/main_shell.dart';
+import 'package:cwsn/features/settings/presentation/pages/add_service_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -201,6 +202,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.addChildPath,
         name: AppRoutes.addChild,
         builder: (_, _) => const AddChildPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.caregiverServicesPath,
+        name: AppRoutes.caregiverServices,
+        builder: (_, _) => const AddServicePage(),
       ),
     ],
   );

@@ -11,6 +11,7 @@ class AppRoutes {
   static const String caregiverProfile = 'caregiver-profile';
   static const String parentEditProfile = 'edit-profile';
   static const String addChild = 'add-child';
+  static const String caregiverServices = 'caregiver-services';
 
   // --- Route Paths ---
   static const String loginPath = '/login';
@@ -24,6 +25,7 @@ class AppRoutes {
   static const String caregiverProfilePath = '/caregiver-profile';
   static const String parentEditProfilePath = '/edit-profile';
   static const String addChildPath = '/add-child';
+  static const String caregiverServicesPath = '/caregiver-services';
 
   AppRoutes._();
 }
