@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:cwsn/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class CaregiverCard extends StatelessWidget {
@@ -8,19 +9,12 @@ class CaregiverCard extends StatelessWidget {
 
   const CaregiverCard({super.key, required this.onCardTap, required this.user});
 
-  String _formatCount(int count) {
-    if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-    if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-    return count.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
     final profile = user.caregiverProfile;
     final bool isAvailable = profile?.isAvailable ?? false;
     final primaryColor = Theme.of(context).primaryColor;
 
-    // Check if imageUrl is present based on our updated model
     final bool hasImage = user.imageUrl != null && user.imageUrl!.isNotEmpty;
 
     return Material(
@@ -36,7 +30,6 @@ class CaregiverCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // 1. SQUIRCLE AVATAR (Null-Safe)
               Container(
                 width: 72,
                 height: 72,
@@ -61,7 +54,6 @@ class CaregiverCard extends StatelessWidget {
               ),
               const SizedBox(width: 16),
 
-              // 2. CONTENT
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +62,7 @@ class CaregiverCard extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            user.fullName, // Using our model's getter
+                            user.fullName,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -102,7 +94,6 @@ class CaregiverCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
 
-                    // 3. METRICS
                     Row(
                       children: [
                         const Icon(
@@ -112,7 +103,7 @@ class CaregiverCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          _formatCount(profile?.totalRecommendations ?? 0),
+                          formatCompactNumber(profile?.totalRecommendations ?? 0),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -121,7 +112,6 @@ class CaregiverCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
 
-                        // Status Badge
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -163,7 +153,6 @@ class CaregiverCard extends StatelessWidget {
     );
   }
 
-  // Modern Initial fallback
   Widget _buildFallbackInitial(Color color) {
     return Center(
       child: Text(

@@ -40,15 +40,12 @@ class AuthNotifier extends AsyncNotifier<User?> {
     state = AsyncData(currentUser.copyWith(activeRole: newRole));
   }
 
-  // --- PROFILE MANAGEMENT ---
-
   void updateParentProfile(ParentModel updatedProfile) {
     final currentUser = state.value;
     if (currentUser == null) return;
     state = AsyncData(currentUser.copyWith(parentProfile: updatedProfile));
   }
 
-  // OPTIMIZED: Added this method to perfectly support the Caregiver Services UI!
   void updateCaregiverProfile(CaregiverProfile updatedProfile) {
     final currentUser = state.value;
     if (currentUser == null) return;

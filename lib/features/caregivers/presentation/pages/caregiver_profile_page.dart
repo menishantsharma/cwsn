@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:cwsn/core/utils/utils.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/select_child_sheet.dart';
@@ -15,12 +16,6 @@ final caregiverProfileProvider = FutureProvider.autoDispose
 class CaregiverProfilePage extends ConsumerWidget {
   final String caregiverId;
   const CaregiverProfilePage({super.key, required this.caregiverId});
-
-  String _formatCompact(int number) {
-    if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
-    if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}K';
-    return number.toString();
-  }
 
   void _openRequestSheet(BuildContext context) {
     showModalBottomSheet(
@@ -57,7 +52,7 @@ class CaregiverProfilePage extends ConsumerWidget {
                   const SizedBox(height: 32),
 
                   _MetricsCard(
-                    recs: _formatCompact(caregiver.totalRecommendations),
+                    recs: formatCompactNumber(caregiver.totalRecommendations),
                     exp: '${caregiver.yearsOfExperience}y',
                     parents: '50+',
                   ),
