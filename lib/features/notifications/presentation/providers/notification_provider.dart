@@ -85,11 +85,3 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationItem>> {
 
   Future<void> refresh() async => ref.invalidateSelf();
 }
-
-/// Derived provider: number of unread notifications.
-/// Returns 0 when notifications are loading or errored.
-final unreadCountProvider = Provider<int>((ref) {
-  final notifications = ref.watch(notificationsProvider).value;
-  if (notifications == null) return 0;
-  return notifications.where((n) => !n.isRead).length;
-});

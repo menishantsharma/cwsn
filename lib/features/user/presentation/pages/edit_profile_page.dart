@@ -139,7 +139,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppTopBar(title: 'Edit Profile'),
+        appBar: const AppTopBar(title: 'Edit Profile'),
 
         bottomNavigationBar: SafeArea(
           child: Padding(

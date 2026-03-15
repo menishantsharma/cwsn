@@ -14,7 +14,7 @@ class SpecialNeedsPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppTopBar(title: 'Special Needs'),
+      appBar: const AppTopBar(title: 'Special Needs'),
       body: specialNeedsAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator.adaptive()),

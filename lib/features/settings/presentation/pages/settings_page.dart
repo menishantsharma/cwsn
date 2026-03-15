@@ -51,7 +51,7 @@ class SettingsPage extends ConsumerWidget {
     // 1. Handle Guest State instantly
     if (user.isGuest) {
       return Scaffold(
-        appBar: AppTopBar(title: 'Profile', showBackButton: false),
+        appBar: const AppTopBar(title: 'Profile', showBackButton: false),
         body: GuestPlaceholder(
           message:
               "Sign in to manage your profile, children details, and app preferences.",
@@ -64,7 +64,7 @@ class SettingsPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      appBar: AppTopBar(title: 'Profile', showBackButton: false),
+      appBar: const AppTopBar(title: 'Profile', showBackButton: false),
       body: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
