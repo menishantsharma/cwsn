@@ -22,7 +22,7 @@ class NotificationsPage extends ConsumerWidget {
 
     if (user.isGuest) {
       return Scaffold(
-        appBar: const AppTopBar(title: 'Notifications', showBackButton: false),
+        appBar: AppTopBar(title: 'Notifications', showBackButton: false),
         body: GuestPlaceholder(
           title: "No Notifications",
           message: "Please login to see your updates and messages.",
@@ -38,6 +38,7 @@ class NotificationsPage extends ConsumerWidget {
       appBar: AppTopBar(
         title: 'Notifications',
         showBackButton: false,
+        showProfileAvatar: true,
         actions: [
           if (notificationsAsync.value?.any((n) => !n.isRead) ?? false)
             IconButton(

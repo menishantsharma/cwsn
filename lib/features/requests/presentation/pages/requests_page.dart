@@ -28,6 +28,7 @@ class RequestsPage extends ConsumerWidget {
       backgroundColor: const Color(0xFFFBFBFB),
       appBar: AppTopBar(
         title: 'Service Requests',
+        showProfileAvatar: true,
         actions: [
           IconButton(
             tooltip: 'Request History',

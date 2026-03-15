@@ -85,7 +85,7 @@ class AddServicePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      appBar: const AppTopBar(title: 'Provided Services'),
+      appBar: AppTopBar(title: 'Provided Services'),
       body: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),

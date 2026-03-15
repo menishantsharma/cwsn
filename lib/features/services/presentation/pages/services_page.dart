@@ -15,7 +15,7 @@ class ServicesPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      appBar: const AppTopBar(title: 'Services', showBackButton: false),
+      appBar: AppTopBar(title: 'Services', showBackButton: false, showProfileAvatar: true),
       body: servicesAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator.adaptive()),

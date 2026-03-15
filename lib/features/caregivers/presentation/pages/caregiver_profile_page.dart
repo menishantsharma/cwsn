@@ -27,7 +27,7 @@ class CaregiverProfilePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      appBar: const AppTopBar(title: 'Caregiver Profile'),
+      appBar: AppTopBar(title: 'Caregiver Profile'),
       body: profileAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator.adaptive()),
