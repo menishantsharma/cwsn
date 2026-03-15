@@ -42,9 +42,10 @@ class _AddEditServiceSheetState extends ConsumerState<AddEditServiceSheet> {
       _selectedServiceName!.isNotEmpty &&
       _selectedSpecialNeeds.isNotEmpty;
 
-  void _onServiceChanged(String? value) {
+  void _onServiceChanged(String? val) {
+    if (val == _selectedServiceName) return;
     setState(() {
-      _selectedServiceName = value;
+      _selectedServiceName = val;
       _selectedSpecialNeeds.clear();
     });
   }
@@ -101,7 +102,7 @@ class _AddEditServiceSheetState extends ConsumerState<AddEditServiceSheet> {
               ),
               const SizedBox(height: 24),
 
-              // Service name picker
+              // ── Service name picker ─────────────────────────────────
               const Text(
                 'Service',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
@@ -155,21 +156,23 @@ class _AddEditServiceSheetState extends ConsumerState<AddEditServiceSheet> {
               ),
               const SizedBox(height: 24),
 
-              // Special needs multi-select
+              // ── Special needs multi-select (service-dependent) ──────
               const Text(
                 'Special Needs Covered',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               const SizedBox(height: 4),
               Text(
-                'Select conditions this service supports',
+                _selectedServiceName == null
+                    ? 'Select a service first'
+                    : 'Select conditions this service supports',
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 12),
               _buildSpecialNeedsSection(primary),
               const SizedBox(height: 24),
 
-              // Active toggle
+              // ── Active toggle ───────────────────────────────────────
               Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
@@ -193,7 +196,7 @@ class _AddEditServiceSheetState extends ConsumerState<AddEditServiceSheet> {
               ),
               const SizedBox(height: 32),
 
-              // Submit button
+              // ── Submit button ───────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -233,61 +236,69 @@ class _AddEditServiceSheetState extends ConsumerState<AddEditServiceSheet> {
     if (_selectedServiceName == null) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey.shade200),
         ),
-        child: Text(
-          'Select a service first to see available options',
-          style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-          textAlign: TextAlign.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.info_outline, size: 16, color: Colors.grey.shade400),
+            const SizedBox(width: 8),
+            Text(
+              'Select a service to see available options',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+            ),
+          ],
         ),
       );
     }
 
-    final needsAsync =
+    final asyncNeeds =
         ref.watch(specialNeedsByServiceProvider(_selectedServiceName!));
 
-    return needsAsync.when(
+    return asyncNeeds.when(
       loading: () => Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(vertical: 24),
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
         ),
         child: const Center(
-          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+          ),
         ),
       ),
       error: (_, _) => Container(
-        width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.red.shade50,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Text(
-          'Failed to load special needs',
-          style: TextStyle(color: Colors.red),
-          textAlign: TextAlign.center,
-        ),
+        child: const Text('Failed to load special needs'),
       ),
       data: (needs) {
         if (needs.isEmpty) {
           return Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding:
+                const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200),
             ),
             child: Text(
-              'No special needs mapped for this service',
-              style: TextStyle(color: Colors.orange.shade700, fontSize: 13),
+              'No special needs mapped to this service yet',
               textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
             ),
           );
         }

@@ -1,4 +1,8 @@
-/// Master list of all special needs categories.
+/// Mock data representing special needs categories.
+///
+/// [mockSpecialNeeds] is the flat master list (used by the browsing page).
+/// [mockSpecialNeedsByService] maps each service to the subset of special
+/// needs it can address (used by the Add Service sheet).
 final List<String> mockSpecialNeeds = [
   'Autism Spectrum Disorder (ASD)',
   'Attention Deficit Hyperactivity Disorder (ADHD)',
@@ -12,10 +16,9 @@ final List<String> mockSpecialNeeds = [
   'Physical Disabilities',
 ];
 
-/// Maps each service name (must match titles in services_data.dart) to the
-/// special needs it can address.
+/// Service name → applicable special needs.
+/// When a real backend is available, replace with an API call keyed by service ID.
 final Map<String, List<String>> mockSpecialNeedsByService = {
-  // ── Educational Support ──
   'Shadow Teacher': [
     'Autism Spectrum Disorder (ASD)',
     'Attention Deficit Hyperactivity Disorder (ADHD)',
@@ -36,7 +39,6 @@ final Map<String, List<String>> mockSpecialNeedsByService = {
     'Cerebral Palsy',
     'Speech and Language Disorders',
     'Sensory Processing Disorder',
-    'Intellectual Disabilities',
   ],
   'Speech Tutor': [
     'Autism Spectrum Disorder (ASD)',
@@ -45,24 +47,22 @@ final Map<String, List<String>> mockSpecialNeedsByService = {
     'Cerebral Palsy',
   ],
   'Math Coach': [
-    'Learning Disabilities',
     'Attention Deficit Hyperactivity Disorder (ADHD)',
+    'Learning Disabilities',
     'Down Syndrome',
-    'Intellectual Disabilities',
   ],
-
-  // ── Therapy Services ──
   'Occupational': [
+    'Autism Spectrum Disorder (ASD)',
     'Cerebral Palsy',
     'Sensory Processing Disorder',
     'Down Syndrome',
     'Physical Disabilities',
-    'Learning Disabilities',
   ],
   'Behavioral (ABA)': [
     'Autism Spectrum Disorder (ASD)',
     'Attention Deficit Hyperactivity Disorder (ADHD)',
     'Emotional and Behavioral Disorders',
+    'Intellectual Disabilities',
   ],
   'Physical Therapy': [
     'Cerebral Palsy',
@@ -73,66 +73,56 @@ final Map<String, List<String>> mockSpecialNeedsByService = {
     'Autism Spectrum Disorder (ASD)',
     'Emotional and Behavioral Disorders',
     'Sensory Processing Disorder',
-    'Cerebral Palsy',
+    'Intellectual Disabilities',
   ],
   'Art Therapy': [
     'Autism Spectrum Disorder (ASD)',
+    'Attention Deficit Hyperactivity Disorder (ADHD)',
     'Emotional and Behavioral Disorders',
     'Sensory Processing Disorder',
-    'Intellectual Disabilities',
   ],
-
-  // ── Recreational & Sports ──
   'Adaptive Swimming': [
     'Cerebral Palsy',
     'Physical Disabilities',
     'Down Syndrome',
     'Autism Spectrum Disorder (ASD)',
   ],
-  'Wheelchair Basketball': [
-    'Physical Disabilities',
-    'Cerebral Palsy',
-  ],
+  'Wheelchair Basketball': ['Physical Disabilities', 'Cerebral Palsy'],
   'Sensory Gym': [
-    'Sensory Processing Disorder',
     'Autism Spectrum Disorder (ASD)',
+    'Sensory Processing Disorder',
     'Attention Deficit Hyperactivity Disorder (ADHD)',
   ],
   'Soccer Club': [
+    'Attention Deficit Hyperactivity Disorder (ADHD)',
     'Down Syndrome',
-    'Intellectual Disabilities',
-    'Emotional and Behavioral Disorders',
     'Physical Disabilities',
   ],
   'Yoga Classes': [
-    'Cerebral Palsy',
-    'Sensory Processing Disorder',
-    'Emotional and Behavioral Disorders',
-    'Physical Disabilities',
-  ],
-
-  // ── Medical & Health ──
-  'Pediatric Neuro': [
     'Autism Spectrum Disorder (ASD)',
     'Attention Deficit Hyperactivity Disorder (ADHD)',
     'Cerebral Palsy',
-    'Down Syndrome',
     'Sensory Processing Disorder',
+    'Emotional and Behavioral Disorders',
   ],
-  'Dietician': [
-    'Down Syndrome',
+  'Pediatric Neuro': [
+    'Autism Spectrum Disorder (ASD)',
     'Cerebral Palsy',
-    'Physical Disabilities',
+    'Down Syndrome',
+    'Intellectual Disabilities',
   ],
+  'Dietician': ['Down Syndrome', 'Cerebral Palsy', 'Physical Disabilities'],
   'Psychologist': [
+    'Autism Spectrum Disorder (ASD)',
     'Attention Deficit Hyperactivity Disorder (ADHD)',
     'Emotional and Behavioral Disorders',
     'Learning Disabilities',
-    'Autism Spectrum Disorder (ASD)',
+    'Intellectual Disabilities',
   ],
   'Dental Care': [
     'Down Syndrome',
     'Cerebral Palsy',
     'Intellectual Disabilities',
+    'Physical Disabilities',
   ],
 };
