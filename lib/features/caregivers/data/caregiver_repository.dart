@@ -151,7 +151,6 @@ class FakeCaregiverRepository implements CaregiverRepository {
     required String parentId,
     required String caregiverId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
     try {
       final match = mockRequests.firstWhere(
         (r) => r.parentId == parentId && r.caregiverId == caregiverId,
@@ -204,7 +203,6 @@ class FakeCaregiverRepository implements CaregiverRepository {
     required String parentId,
     required String caregiverId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 200));
     return _recommendations.contains(_recKey('*', caregiverId));
   }
 }

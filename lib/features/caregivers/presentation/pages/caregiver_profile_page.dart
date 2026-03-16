@@ -2,6 +2,7 @@ import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/utils/utils.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/user_avatar.dart';
+import 'package:cwsn/features/caregivers/presentation/providers/caregiver_action_state_provider.dart';
 import 'package:cwsn/features/caregivers/presentation/providers/caregiver_providers.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_action_zone.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,11 @@ class CaregiverProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(caregiverProfileProvider(caregiverId));
+
+    // Eagerly warm up action zone providers in parallel with the profile.
+    // By the time the profile resolves, these are already cached → no skeleton.
+    ref.watch(actionZoneStateProvider(caregiverId));
+    ref.watch(hasRecommendedProvider(caregiverId));
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
