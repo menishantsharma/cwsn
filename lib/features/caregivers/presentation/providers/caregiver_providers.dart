@@ -5,8 +5,10 @@ import 'package:cwsn/features/caregivers/models/caregiver_sort.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Holds the current filter state. UI writes to it; list provider watches it.
+/// Auto-disposes when the caregivers list page is no longer visible,
+/// so filters reset on back-navigation and logout.
 final caregiverFilterProvider =
-    NotifierProvider<CaregiverFilterNotifier, CaregiverFilter>(
+    NotifierProvider.autoDispose<CaregiverFilterNotifier, CaregiverFilter>(
   CaregiverFilterNotifier.new,
 );
 
@@ -20,8 +22,9 @@ class CaregiverFilterNotifier extends Notifier<CaregiverFilter> {
 }
 
 /// Holds the current sort option. UI writes to it; list provider watches it.
+/// Auto-disposes alongside the filter when the list page is removed.
 final caregiverSortProvider =
-    NotifierProvider<CaregiverSortNotifier, CaregiverSortOption>(
+    NotifierProvider.autoDispose<CaregiverSortNotifier, CaregiverSortOption>(
   CaregiverSortNotifier.new,
 );
 

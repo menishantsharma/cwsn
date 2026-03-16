@@ -57,6 +57,9 @@ class _CaregiverFilterSheetState extends ConsumerState<CaregiverFilterSheet> {
     final masterNames = ref.watch(masterServiceNamesProvider);
 
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+      ),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
