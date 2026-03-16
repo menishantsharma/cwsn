@@ -1,9 +1,10 @@
-import 'dart:async';
 import 'package:cwsn/core/models/user_model.dart';
+import 'package:cwsn/core/router/app_router.dart';
 import 'package:cwsn/core/router/nav_config.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,31 +22,39 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
   @override
   void initState() {
     super.initState();
+    // Clear snackbars immediately on entry. The 400ms delay before
+    // switchRole() gives the dismiss animation time to finish, so
+    // the shell can be safely destroyed without orphaned controllers.
+    rootScaffoldMessengerKey.currentState?.clearSnackBars();
+
     final currentUser = ref.read(currentUserProvider).value;
     _isSwitchingToCaregiver = currentUser?.activeRole == UserRole.parent;
     _startSwitchingProcess();
   }
 
   Future<void> _startSwitchingProcess() async {
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 400));
 
     if (!mounted) return;
 
-    final newRole = _isSwitchingToCaregiver
-        ? UserRole.caregiver
-        : UserRole.parent;
+    final newRole =
+        _isSwitchingToCaregiver ? UserRole.caregiver : UserRole.parent;
+
     ref.read(currentUserProvider.notifier).switchRole(newRole);
 
-    if (!mounted) return;
-
-    context.go(NavConfig.homePathForRole(newRole));
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go(NavConfig.homePathForRole(newRole));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = context.colorScheme.primary;
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
@@ -144,6 +153,7 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }

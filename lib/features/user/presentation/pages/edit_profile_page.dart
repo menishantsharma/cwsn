@@ -90,11 +90,15 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         gender: _selectedGender,
       );
 
-      await ref.read(userProfileNotifierProvider).saveProfile(updatedUser);
+      final saved =
+          await ref.read(userProfileNotifierProvider).saveProfile(updatedUser);
 
       if (!mounted) return;
 
+      // Pop first so the router refresh from updateUser doesn't
+      // rebuild this page and swallow the pop.
       context.pop();
+      ref.read(currentUserProvider.notifier).updateUser(saved);
     } catch (e) {
       if (mounted) _showSnack("Failed to update profile. Please try again.");
       setState(() {

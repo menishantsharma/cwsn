@@ -16,10 +16,12 @@ class UserProfileNotifier {
   final Ref _ref;
   const UserProfileNotifier(this._ref);
 
-  /// Saves the updated user profile to the backend and updates local state.
-  Future<void> saveProfile(User updatedUser) async {
+  /// Saves the updated user profile to the backend.
+  /// Returns the persisted [User] so the caller can pop first,
+  /// then write back to [currentUserProvider] without triggering
+  /// a GoRouter refresh before navigation completes.
+  Future<User> saveProfile(User updatedUser) async {
     final repo = _ref.read(userRepositoryProvider);
-    final saved = await repo.updateUserProfile(updatedUser);
-    _ref.read(currentUserProvider.notifier).updateUser(saved);
+    return repo.updateUserProfile(updatedUser);
   }
 }

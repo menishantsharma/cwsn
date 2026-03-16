@@ -115,13 +115,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       // ── Tabbed shell — branches generated from NavConfig ──────────
       StatefulShellRoute.indexedStack(
-        pageBuilder: (context, state, navigationShell) => CustomTransitionPage(
-          key: state.pageKey,
-          child: MainShell(navigationShell: navigationShell),
-          transitionsBuilder: (context, anim, _, child) =>
-              FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 400),
-        ),
+        pageBuilder: (context, state, navigationShell) {
+          // Key on the active role so the entire shell (and its
+          // IndexedStack state) is destroyed and rebuilt on role switch.
+          final role = ref.read(currentUserProvider).value?.activeRole;
+          return CustomTransitionPage(
+            key: ValueKey('shell-$role'),
+            child: MainShell(navigationShell: navigationShell),
+            transitionsBuilder: (context, anim, _, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          );
+        },
         branches: NavConfig.allItems
             .map(
               (item) => StatefulShellBranch(
