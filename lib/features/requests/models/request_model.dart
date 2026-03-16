@@ -19,6 +19,7 @@ class CaregiverRequest with _$CaregiverRequest {
   const factory CaregiverRequest({
     required String id,
     required String parentId,
+    required String caregiverId,
     required String parentName,
     String? parentImageUrl,
     required String parentLocation,

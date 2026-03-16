@@ -4,6 +4,7 @@ final mockRequests = [
   CaregiverRequest(
     id: '1',
     parentId: '1',
+    caregiverId: '2',
     parentName: 'Nishant Sharma',
     parentImageUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
     parentLocation: 'IIT Bombay',
@@ -18,6 +19,7 @@ final mockRequests = [
   CaregiverRequest(
     id: '2',
     parentId: '2',
+    caregiverId: '3',
     parentName: 'Anjali Verma',
     parentImageUrl: 'https://randomuser.me/api/portraits/women/2.jpg',
     parentLocation: 'Powai',
@@ -32,6 +34,7 @@ final mockRequests = [
   CaregiverRequest(
     id: '3',
     parentId: '3',
+    caregiverId: '4',
     parentName: 'Rohit Singh',
     parentImageUrl: 'https://randomuser.me/api/portraits/men/3.jpg',
     parentLocation: 'Andheri',
@@ -40,6 +43,23 @@ final mockRequests = [
     childGender: 'Female',
     specialNeed: 'Cerebral Palsy',
     serviceName: 'Physical Therapy',
+    status: RequestStatus.accepted,
     createdAt: DateTime.now().subtract(Duration(days: 3)),
+  ),
+
+  CaregiverRequest(
+    id: '4',
+    parentId: '1',
+    caregiverId: '4',
+    parentName: 'Nishant Sharma',
+    parentImageUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
+    parentLocation: 'IIT Bombay',
+    childName: 'Raghav',
+    childAge: 12,
+    childGender: 'Male',
+    specialNeed: 'Cerebral Palsy',
+    serviceName: 'Physical Therapy',
+    status: RequestStatus.accepted,
+    createdAt: DateTime.now().subtract(Duration(days: 5)),
   ),
 ];

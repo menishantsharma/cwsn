@@ -23,6 +23,7 @@ CaregiverRequest _$CaregiverRequestFromJson(Map<String, dynamic> json) {
 mixin _$CaregiverRequest {
   String get id => throw _privateConstructorUsedError;
   String get parentId => throw _privateConstructorUsedError;
+  String get caregiverId => throw _privateConstructorUsedError;
   String get parentName => throw _privateConstructorUsedError;
   String? get parentImageUrl => throw _privateConstructorUsedError;
   String get parentLocation => throw _privateConstructorUsedError;
@@ -54,6 +55,7 @@ abstract class $CaregiverRequestCopyWith<$Res> {
   $Res call({
     String id,
     String parentId,
+    String caregiverId,
     String parentName,
     String? parentImageUrl,
     String parentLocation,
@@ -84,6 +86,7 @@ class _$CaregiverRequestCopyWithImpl<$Res, $Val extends CaregiverRequest>
   $Res call({
     Object? id = null,
     Object? parentId = null,
+    Object? caregiverId = null,
     Object? parentName = null,
     Object? parentImageUrl = freezed,
     Object? parentLocation = null,
@@ -104,6 +107,10 @@ class _$CaregiverRequestCopyWithImpl<$Res, $Val extends CaregiverRequest>
             parentId: null == parentId
                 ? _value.parentId
                 : parentId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            caregiverId: null == caregiverId
+                ? _value.caregiverId
+                : caregiverId // ignore: cast_nullable_to_non_nullable
                       as String,
             parentName: null == parentName
                 ? _value.parentName
@@ -163,6 +170,7 @@ abstract class _$$CaregiverRequestImplCopyWith<$Res>
   $Res call({
     String id,
     String parentId,
+    String caregiverId,
     String parentName,
     String? parentImageUrl,
     String parentLocation,
@@ -192,6 +200,7 @@ class __$$CaregiverRequestImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? parentId = null,
+    Object? caregiverId = null,
     Object? parentName = null,
     Object? parentImageUrl = freezed,
     Object? parentLocation = null,
@@ -212,6 +221,10 @@ class __$$CaregiverRequestImplCopyWithImpl<$Res>
         parentId: null == parentId
             ? _value.parentId
             : parentId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        caregiverId: null == caregiverId
+            ? _value.caregiverId
+            : caregiverId // ignore: cast_nullable_to_non_nullable
                   as String,
         parentName: null == parentName
             ? _value.parentName
@@ -264,6 +277,7 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
   const _$CaregiverRequestImpl({
     required this.id,
     required this.parentId,
+    required this.caregiverId,
     required this.parentName,
     this.parentImageUrl,
     required this.parentLocation,
@@ -283,6 +297,8 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
   final String id;
   @override
   final String parentId;
+  @override
+  final String caregiverId;
   @override
   final String parentName;
   @override
@@ -307,7 +323,7 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
 
   @override
   String toString() {
-    return 'CaregiverRequest(id: $id, parentId: $parentId, parentName: $parentName, parentImageUrl: $parentImageUrl, parentLocation: $parentLocation, childName: $childName, childAge: $childAge, childGender: $childGender, specialNeed: $specialNeed, serviceName: $serviceName, status: $status, createdAt: $createdAt)';
+    return 'CaregiverRequest(id: $id, parentId: $parentId, caregiverId: $caregiverId, parentName: $parentName, parentImageUrl: $parentImageUrl, parentLocation: $parentLocation, childName: $childName, childAge: $childAge, childGender: $childGender, specialNeed: $specialNeed, serviceName: $serviceName, status: $status, createdAt: $createdAt)';
   }
 
   @override
@@ -318,6 +334,8 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.parentId, parentId) ||
                 other.parentId == parentId) &&
+            (identical(other.caregiverId, caregiverId) ||
+                other.caregiverId == caregiverId) &&
             (identical(other.parentName, parentName) ||
                 other.parentName == parentName) &&
             (identical(other.parentImageUrl, parentImageUrl) ||
@@ -345,6 +363,7 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
     runtimeType,
     id,
     parentId,
+    caregiverId,
     parentName,
     parentImageUrl,
     parentLocation,
@@ -378,6 +397,7 @@ abstract class _CaregiverRequest extends CaregiverRequest {
   const factory _CaregiverRequest({
     required final String id,
     required final String parentId,
+    required final String caregiverId,
     required final String parentName,
     final String? parentImageUrl,
     required final String parentLocation,
@@ -398,6 +418,8 @@ abstract class _CaregiverRequest extends CaregiverRequest {
   String get id;
   @override
   String get parentId;
+  @override
+  String get caregiverId;
   @override
   String get parentName;
   @override

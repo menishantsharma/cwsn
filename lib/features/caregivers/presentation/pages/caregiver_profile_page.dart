@@ -3,23 +3,13 @@ import 'package:cwsn/core/utils/utils.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/user_avatar.dart';
 import 'package:cwsn/features/caregivers/presentation/providers/caregiver_providers.dart';
-import 'package:cwsn/features/caregivers/presentation/widgets/select_child_sheet.dart';
+import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_action_zone.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CaregiverProfilePage extends ConsumerWidget {
   final String caregiverId;
   const CaregiverProfilePage({super.key, required this.caregiverId});
-
-  void _openRequestSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) =>
-          SelectChildSheet(caregiverId: caregiverId, onRequestSent: () {}),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -91,9 +81,9 @@ class CaregiverProfilePage extends ConsumerWidget {
                 ],
               ),
 
-              _FixedRequestButton(
+              CaregiverActionZone(
+                caregiverId: caregiverId,
                 isAvailable: isAvailable,
-                onTap: isAvailable ? () => _openRequestSheet(context) : null,
               ),
             ],
           );
@@ -306,67 +296,4 @@ class _InfoTile extends StatelessWidget {
       ],
     ),
   );
-}
-
-class _FixedRequestButton extends StatefulWidget {
-  final VoidCallback? onTap;
-  final bool isAvailable;
-  const _FixedRequestButton({required this.onTap, required this.isAvailable});
-
-  @override
-  State<_FixedRequestButton> createState() => _FixedRequestButtonState();
-}
-
-class _FixedRequestButtonState extends State<_FixedRequestButton> {
-  bool _isPressed = false;
-  @override
-  Widget build(BuildContext context) {
-    final Color color = widget.isAvailable
-        ? const Color(0xFFE53935)
-        : Colors.grey.shade400;
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: GestureDetector(
-          onTapDown: (_) =>
-              widget.isAvailable ? setState(() => _isPressed = true) : null,
-          onTapUp: (_) => setState(() => _isPressed = false),
-          onTapCancel: () => setState(() => _isPressed = false),
-          onTap: widget.onTap,
-          child: AnimatedScale(
-            scale: _isPressed ? 0.96 : 1.0,
-            duration: const Duration(milliseconds: 100),
-            child: Container(
-              height: 60,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: widget.isAvailable
-                    ? [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ]
-                    : [],
-              ),
-              child: Center(
-                child: Text(
-                  widget.isAvailable ? "Request Service" : "Currently Busy",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

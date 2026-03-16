@@ -11,6 +11,7 @@ _$CaregiverRequestImpl _$$CaregiverRequestImplFromJson(
 ) => _$CaregiverRequestImpl(
   id: json['id'] as String,
   parentId: json['parentId'] as String,
+  caregiverId: json['caregiverId'] as String,
   parentName: json['parentName'] as String,
   parentImageUrl: json['parentImageUrl'] as String?,
   parentLocation: json['parentLocation'] as String,
@@ -30,6 +31,7 @@ Map<String, dynamic> _$$CaregiverRequestImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'parentId': instance.parentId,
+  'caregiverId': instance.caregiverId,
   'parentName': instance.parentName,
   'parentImageUrl': instance.parentImageUrl,
   'parentLocation': instance.parentLocation,
