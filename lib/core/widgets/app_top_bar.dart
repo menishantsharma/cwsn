@@ -14,7 +14,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 1);
 
   @override
   Widget build(BuildContext context) {
@@ -24,29 +24,52 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(
         title,
         style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          fontSize: 20,
           color: Colors.black87,
+          letterSpacing: -0.3,
         ),
       ),
       centerTitle: false,
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
-      elevation: 1,
-      shadowColor: Colors.black.withValues(alpha: 0.2),
+      backgroundColor: const Color(0xFFFBFBFB),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
 
       leading: canPop
-          ? IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 20,
-                color: Colors.black87,
+          ? Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 6,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 16,
+                    color: Colors.black87,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: () => context.pop(),
+                ),
               ),
-              onPressed: () => context.pop(),
             )
           : null,
 
       actions: actions,
+
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(height: 1, thickness: 0.5, color: Colors.grey.shade200),
+      ),
     );
   }
 }

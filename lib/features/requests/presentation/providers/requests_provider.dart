@@ -69,3 +69,9 @@ class RequestHistoryNotifier extends AsyncNotifier<List<CaregiverRequest>> {
 
   Future<void> refresh() async => ref.invalidateSelf();
 }
+
+/// Derived count of pending requests for badge display.
+final pendingRequestCountProvider = Provider<int>((ref) {
+  final requests = ref.watch(pendingRequestsProvider).value ?? [];
+  return requests.length;
+});

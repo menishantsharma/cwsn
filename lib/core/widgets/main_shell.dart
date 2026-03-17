@@ -1,5 +1,7 @@
 import 'package:cwsn/core/router/nav_config.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
+import 'package:cwsn/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:cwsn/features/requests/presentation/providers/requests_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,48 +23,80 @@ class MainShell extends ConsumerWidget {
       navigationShell.currentIndex,
       tabs,
     );
+    final primary = Theme.of(context).primaryColor;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8F8),
+      backgroundColor: const Color(0xFFFBFBFB),
       body: navigationShell,
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, -2),
+            ),
+          ],
         ),
-        child: BottomNavigationBar(
-          currentIndex: visibleIndex.clamp(0, tabs.length - 1),
-          onTap: (visibleIdx) {
+        child: NavigationBar(
+          selectedIndex: visibleIndex.clamp(0, tabs.length - 1),
+          onDestinationSelected: (visibleIdx) {
             final branchIndex = NavConfig.branchIndexOf(tabs[visibleIdx]);
             navigationShell.goBranch(
               branchIndex,
               initialLocation: branchIndex == navigationShell.currentIndex,
             );
           },
-          backgroundColor: Colors.white,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Theme.of(context).primaryColor,
-          unselectedItemColor: Colors.grey.shade500,
-          selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.normal,
-            fontSize: 12,
-          ),
-          elevation: 1,
-          items: tabs
-              .map(
-                (tab) => BottomNavigationBarItem(
-                  icon: Icon(tab.icon),
-                  activeIcon: Icon(tab.activeIcon),
-                  label: tab.label,
-                ),
-              )
-              .toList(),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          indicatorColor: primary.withValues(alpha: 0.1),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations:
+              tabs.map((tab) => _buildDestination(context, ref, tab)).toList(),
         ),
       ),
     );
+  }
+
+  NavigationDestination _buildDestination(
+    BuildContext context,
+    WidgetRef ref,
+    NavItem tab,
+  ) {
+    final badgeCount = _badgeCountFor(ref, tab);
+
+    Widget iconWidget(IconData iconData) {
+      if (badgeCount > 0) {
+        return Badge(
+          label: Text(
+            badgeCount > 99 ? '99+' : '$badgeCount',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          child: Icon(iconData),
+        );
+      }
+      return Icon(iconData);
+    }
+
+    return NavigationDestination(
+      icon: iconWidget(tab.icon),
+      selectedIcon: iconWidget(tab.activeIcon),
+      label: tab.label,
+    );
+  }
+
+  int _badgeCountFor(WidgetRef ref, NavItem tab) {
+    if (identical(tab, NavConfig.notifications)) {
+      return ref.watch(unreadNotificationCountProvider);
+    }
+    if (identical(tab, NavConfig.caregiverHome)) {
+      return ref.watch(pendingRequestCountProvider);
+    }
+    return 0;
   }
 }

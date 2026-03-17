@@ -85,3 +85,9 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationItem>> {
 
   Future<void> refresh() async => ref.invalidateSelf();
 }
+
+/// Derived count of unread notifications for badge display.
+final unreadNotificationCountProvider = Provider<int>((ref) {
+  final notifications = ref.watch(notificationsProvider).value ?? [];
+  return notifications.where((n) => !n.isRead).length;
+});
