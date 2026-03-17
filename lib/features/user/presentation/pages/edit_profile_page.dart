@@ -142,7 +142,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFFBFBFB),
         appBar: const AppTopBar(title: 'Edit Profile'),
 
         bottomNavigationBar: SafeArea(
