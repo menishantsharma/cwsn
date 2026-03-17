@@ -18,6 +18,7 @@ class AppRoutes {
   static const String addChild = 'add-child';
   static const String caregiverServices = 'caregiver-services';
   static const String acceptedRequests = 'accepted-requests';
+  static const String categoryServices = 'category-services';
 
   // Route Paths — Auth
   static const String loginPath = '/login';
@@ -32,6 +33,7 @@ class AppRoutes {
   static const String addChildPath = '/add-child';
   static const String caregiverServicesPath = '/caregiver-services';
   static const String acceptedRequestsPath = '/accepted-requests';
+  static const String categoryServicesPath = '/category-services';
 
   /// Paths accessible to unauthenticated guest users.
   /// Tab paths are sourced from [NavConfig] — no hardcoded duplicates.
@@ -40,6 +42,7 @@ class AppRoutes {
     specialNeedsPath,
     caregiversListPath,
     caregiverProfilePath,
+    categoryServicesPath,
   };
 
   AppRoutes._();

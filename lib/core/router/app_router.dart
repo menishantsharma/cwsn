@@ -8,6 +8,8 @@ import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregiver_profile_page.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregivers_list_page.dart';
 import 'package:cwsn/features/requests/presentation/pages/accepted_requests_page.dart';
+import 'package:cwsn/features/services/models/service_model.dart';
+import 'package:cwsn/features/services/presentation/pages/category_services_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/add_child_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/add_service_page.dart';
 import 'package:cwsn/features/special_needs/presentation/pages/special_needs_page.dart';
@@ -180,6 +182,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.acceptedRequestsPath,
         name: AppRoutes.acceptedRequests,
         builder: (_, _) => const AcceptedRequestsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.categoryServicesPath,
+        name: AppRoutes.categoryServices,
+        builder: (_, state) => CategoryServicesPage(
+          section: state.extra! as ServiceSection,
+        ),
       ),
     ],
   );

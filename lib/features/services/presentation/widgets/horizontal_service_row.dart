@@ -29,7 +29,10 @@ class HorizontalServiceRow extends StatelessWidget {
               ),
 
               TextButton(
-                onPressed: () => context.pushNamed(AppRoutes.specialNeeds),
+                onPressed: () => context.pushNamed(
+                  AppRoutes.categoryServices,
+                  extra: section,
+                ),
                 style: TextButton.styleFrom(
                   foregroundColor: Theme.of(context).primaryColor,
                   padding: const EdgeInsets.symmetric(
