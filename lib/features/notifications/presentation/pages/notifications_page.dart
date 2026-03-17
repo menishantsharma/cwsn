@@ -4,6 +4,7 @@ import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/core/widgets/error_state_widget.dart';
 import 'package:cwsn/core/widgets/guest_placeholder.dart';
+import 'package:cwsn/core/widgets/modern_refresh_indicator.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/notifications/models/notification_model.dart';
 import 'package:cwsn/features/notifications/presentation/providers/notification_provider.dart';
@@ -59,18 +60,17 @@ class NotificationsPage extends ConsumerWidget {
           message: 'Failed to load notifications',
           onRetry: () => ref.read(notificationsProvider.notifier).refresh(),
         ),
-        data: (notifications) => RefreshIndicator.adaptive(
+        data: (notifications) => ModernRefreshIndicatorList(
           onRefresh: () =>
               ref.read(notificationsProvider.notifier).refresh(),
-          child: notifications.isEmpty
-              ? ListView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  children: [
-                    SizedBox(
-                        height: MediaQuery.sizeOf(context).height * 0.25),
-                    EmptyStateWidget(
+          itemCount: notifications.length,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          emptyWidget: notifications.isEmpty
+              ? SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.25,
+                  child: Center(
+                    child: EmptyStateWidget(
                       icon: user.activeRole == UserRole.caregiver
                           ? Icons.work_outline_rounded
                           : Icons.notifications_none_rounded,
@@ -80,25 +80,17 @@ class NotificationsPage extends ConsumerWidget {
                           ? 'No new service requests yet.'
                           : 'No new updates for you.',
                     ),
-                  ],
-                )
-              : ListView.separated(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 16),
-                  itemCount: notifications.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (_, index) {
-                    final item = notifications[index];
-                    return NotificationTile(
-                      key: ValueKey(item.id),
-                      notification: item,
-                      onTap: () => _act(context, ref, item),
-                    );
-                  },
-                ),
+                )
+              : null,
+          itemBuilder: (_, index) {
+            final item = notifications[index];
+            return NotificationTile(
+              key: ValueKey(item.id),
+              notification: item,
+              onTap: () => _act(context, ref, item),
+            );
+          },
         ),
       ),
     );
