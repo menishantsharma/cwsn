@@ -8,68 +8,69 @@ class RoleSelectionPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final primaryColor = Theme.of(context).primaryColor;
+    final primary = Theme.of(context).primaryColor;
     final user = ref.watch(currentUserProvider).value;
+    final notifier = ref.read(currentUserProvider.notifier);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 48,
-                backgroundColor: primaryColor.withValues(alpha: 0.08),
+              const Spacer(flex: 2),
+
+              // Icon
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(22),
+                ),
                 child: Icon(
                   Icons.waving_hand_rounded,
-                  size: 48,
-                  color: primaryColor,
+                  size: 36,
+                  color: primary,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
               Text(
-                "Welcome, ${user?.firstName ?? 'User'}!",
-                textAlign: TextAlign.center,
+                'Hi, ${user?.firstName ?? 'there'}!',
                 style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 12),
-
+              const SizedBox(height: 6),
               Text(
-                "How would you like to continue today?",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                'How would you like to continue?',
+                style: TextStyle(fontSize: 15, color: Colors.grey.shade500),
               ),
-              const SizedBox(height: 48),
 
+              const Spacer(flex: 2),
+
+              // Role cards
               _RoleCard(
-                title: "Continue as Parent",
-                subtitle:
-                    "Find trusted caregivers and specialized services for your child.",
                 icon: Icons.family_restroom_rounded,
+                label: 'Parent',
+                hint: 'Find caregivers & services for your child',
                 color: Colors.blue.shade600,
-                onTap: () => ref
-                    .read(currentUserProvider.notifier)
-                    .switchRole(UserRole.parent),
+                onTap: () => notifier.switchRole(UserRole.parent),
               ),
-              const SizedBox(height: 16),
-
+              const SizedBox(height: 14),
               _RoleCard(
-                title: "Continue as Caregiver",
-                subtitle:
-                    "Manage your profile, view requests, and offer your services.",
                 icon: Icons.volunteer_activism_rounded,
-                color: primaryColor,
-                onTap: () => ref
-                    .read(currentUserProvider.notifier)
-                    .switchRole(UserRole.caregiver),
+                label: 'Caregiver',
+                hint: 'Offer your services & manage requests',
+                color: primary,
+                onTap: () => notifier.switchRole(UserRole.caregiver),
               ),
+
+              const Spacer(),
             ],
           ),
         ),
@@ -79,59 +80,76 @@ class RoleSelectionPage extends ConsumerWidget {
 }
 
 class _RoleCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
   final IconData icon;
+  final String label;
+  final String hint;
   final Color color;
   final VoidCallback onTap;
 
   const _RoleCard({
-    required this.title,
-    required this.subtitle,
     required this.icon,
+    required this.label,
+    required this.hint,
     required this.color,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
         onTap: onTap,
-
-        leading: CircleAvatar(
-          radius: 28,
-          backgroundColor: color.withValues(alpha: 0.1),
-          child: Icon(icon, color: color, size: 28),
-        ),
-
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.4,
-              color: Colors.grey.shade600,
-            ),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.grey.shade200),
           ),
-        ),
-
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          color: Colors.grey.shade300,
-          size: 16,
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: color, size: 26),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      hint,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade500,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.grey.shade300,
+                size: 22,
+              ),
+            ],
+          ),
         ),
       ),
     );
