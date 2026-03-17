@@ -34,6 +34,7 @@ mixin _$CaregiverRequest {
   String get serviceName => throw _privateConstructorUsedError;
   RequestStatus get status => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime? get resolvedAt => throw _privateConstructorUsedError;
 
   /// Serializes this CaregiverRequest to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -66,6 +67,7 @@ abstract class $CaregiverRequestCopyWith<$Res> {
     String serviceName,
     RequestStatus status,
     DateTime createdAt,
+    DateTime? resolvedAt,
   });
 }
 
@@ -97,6 +99,7 @@ class _$CaregiverRequestCopyWithImpl<$Res, $Val extends CaregiverRequest>
     Object? serviceName = null,
     Object? status = null,
     Object? createdAt = null,
+    Object? resolvedAt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -152,6 +155,10 @@ class _$CaregiverRequestCopyWithImpl<$Res, $Val extends CaregiverRequest>
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
+            resolvedAt: freezed == resolvedAt
+                ? _value.resolvedAt
+                : resolvedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
           )
           as $Val,
     );
@@ -181,6 +188,7 @@ abstract class _$$CaregiverRequestImplCopyWith<$Res>
     String serviceName,
     RequestStatus status,
     DateTime createdAt,
+    DateTime? resolvedAt,
   });
 }
 
@@ -211,6 +219,7 @@ class __$$CaregiverRequestImplCopyWithImpl<$Res>
     Object? serviceName = null,
     Object? status = null,
     Object? createdAt = null,
+    Object? resolvedAt = freezed,
   }) {
     return _then(
       _$CaregiverRequestImpl(
@@ -266,6 +275,10 @@ class __$$CaregiverRequestImplCopyWithImpl<$Res>
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
+        resolvedAt: freezed == resolvedAt
+            ? _value.resolvedAt
+            : resolvedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
       ),
     );
   }
@@ -288,6 +301,7 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
     required this.serviceName,
     this.status = RequestStatus.pending,
     required this.createdAt,
+    this.resolvedAt,
   }) : super._();
 
   factory _$CaregiverRequestImpl.fromJson(Map<String, dynamic> json) =>
@@ -320,10 +334,12 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
   final RequestStatus status;
   @override
   final DateTime createdAt;
+  @override
+  final DateTime? resolvedAt;
 
   @override
   String toString() {
-    return 'CaregiverRequest(id: $id, parentId: $parentId, caregiverId: $caregiverId, parentName: $parentName, parentImageUrl: $parentImageUrl, parentLocation: $parentLocation, childName: $childName, childAge: $childAge, childGender: $childGender, specialNeed: $specialNeed, serviceName: $serviceName, status: $status, createdAt: $createdAt)';
+    return 'CaregiverRequest(id: $id, parentId: $parentId, caregiverId: $caregiverId, parentName: $parentName, parentImageUrl: $parentImageUrl, parentLocation: $parentLocation, childName: $childName, childAge: $childAge, childGender: $childGender, specialNeed: $specialNeed, serviceName: $serviceName, status: $status, createdAt: $createdAt, resolvedAt: $resolvedAt)';
   }
 
   @override
@@ -354,7 +370,9 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
                 other.serviceName == serviceName) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+                other.createdAt == createdAt) &&
+            (identical(other.resolvedAt, resolvedAt) ||
+                other.resolvedAt == resolvedAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -374,6 +392,7 @@ class _$CaregiverRequestImpl extends _CaregiverRequest {
     serviceName,
     status,
     createdAt,
+    resolvedAt,
   );
 
   /// Create a copy of CaregiverRequest
@@ -408,6 +427,7 @@ abstract class _CaregiverRequest extends CaregiverRequest {
     required final String serviceName,
     final RequestStatus status,
     required final DateTime createdAt,
+    final DateTime? resolvedAt,
   }) = _$CaregiverRequestImpl;
   const _CaregiverRequest._() : super._();
 
@@ -440,6 +460,8 @@ abstract class _CaregiverRequest extends CaregiverRequest {
   RequestStatus get status;
   @override
   DateTime get createdAt;
+  @override
+  DateTime? get resolvedAt;
 
   /// Create a copy of CaregiverRequest
   /// with the given fields replaced by the non-null parameter values.

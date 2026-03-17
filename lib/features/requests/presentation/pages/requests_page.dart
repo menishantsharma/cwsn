@@ -1,3 +1,4 @@
+import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/core/widgets/error_state_widget.dart';
@@ -6,6 +7,7 @@ import 'package:cwsn/features/requests/presentation/widgets/request_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class RequestsPage extends ConsumerWidget {
   const RequestsPage({super.key});
@@ -32,9 +34,8 @@ class RequestsPage extends ConsumerWidget {
           IconButton(
             tooltip: 'Request History',
             icon: const Icon(Icons.history_rounded),
-            onPressed: () {
-              // Navigation to History Page goes here
-            },
+            onPressed: () =>
+                context.pushNamed(AppRoutes.acceptedRequests),
           ),
         ],
       ),

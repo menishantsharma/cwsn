@@ -24,6 +24,9 @@ _$CaregiverRequestImpl _$$CaregiverRequestImplFromJson(
       $enumDecodeNullable(_$RequestStatusEnumMap, json['status']) ??
       RequestStatus.pending,
   createdAt: DateTime.parse(json['createdAt'] as String),
+  resolvedAt: json['resolvedAt'] == null
+      ? null
+      : DateTime.parse(json['resolvedAt'] as String),
 );
 
 Map<String, dynamic> _$$CaregiverRequestImplToJson(
@@ -42,6 +45,7 @@ Map<String, dynamic> _$$CaregiverRequestImplToJson(
   'serviceName': instance.serviceName,
   'status': _$RequestStatusEnumMap[instance.status]!,
   'createdAt': instance.createdAt.toIso8601String(),
+  'resolvedAt': instance.resolvedAt?.toIso8601String(),
 };
 
 const _$RequestStatusEnumMap = {

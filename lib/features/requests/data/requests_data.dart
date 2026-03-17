@@ -45,6 +45,7 @@ final mockRequests = [
     serviceName: 'Physical Therapy',
     status: RequestStatus.accepted,
     createdAt: DateTime.now().subtract(Duration(days: 3)),
+    resolvedAt: DateTime.now().subtract(Duration(days: 2)),
   ),
 
   CaregiverRequest(
@@ -61,5 +62,6 @@ final mockRequests = [
     serviceName: 'Physical Therapy',
     status: RequestStatus.accepted,
     createdAt: DateTime.now().subtract(Duration(days: 5)),
+    resolvedAt: DateTime.now().subtract(Duration(days: 4)),
   ),
 ];

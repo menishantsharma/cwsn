@@ -38,7 +38,10 @@ class FakeRequestsRepository implements RequestsRepository {
     if (_db == null) return;
     final index = _db!.indexWhere((r) => r.id == id);
     if (index != -1) {
-      _db![index] = _db![index].copyWith(status: newStatus);
+      _db![index] = _db![index].copyWith(
+        status: newStatus,
+        resolvedAt: DateTime.now(),
+      );
     }
   }
 }

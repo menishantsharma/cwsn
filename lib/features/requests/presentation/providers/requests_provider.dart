@@ -30,6 +30,8 @@ class PendingRequestsNotifier extends AsyncNotifier<List<CaregiverRequest>> {
       } else {
         await repo.rejectRequest(requestId);
       }
+      // Refresh history so the accepted/rejected request appears there.
+      ref.invalidate(requestHistoryProvider);
     } catch (e) {
       state = AsyncData(previousState);
       rethrow;
@@ -39,4 +41,31 @@ class PendingRequestsNotifier extends AsyncNotifier<List<CaregiverRequest>> {
   Future<void> refresh() async {
     return ref.invalidateSelf();
   }
+}
+
+/// Exposes accepted and rejected requests (request history).
+final requestHistoryProvider =
+    AsyncNotifierProvider<RequestHistoryNotifier, List<CaregiverRequest>>(
+      RequestHistoryNotifier.new,
+    );
+
+class RequestHistoryNotifier extends AsyncNotifier<List<CaregiverRequest>> {
+  @override
+  FutureOr<List<CaregiverRequest>> build() async {
+    final repo = ref.watch(requestsRepositoryProvider);
+    final allRequests = await repo.getRequests();
+    final history = allRequests
+        .where((r) =>
+            r.status == RequestStatus.accepted ||
+            r.status == RequestStatus.rejected)
+        .toList()
+      ..sort((a, b) {
+        final aTime = a.resolvedAt ?? a.createdAt;
+        final bTime = b.resolvedAt ?? b.createdAt;
+        return bTime.compareTo(aTime); // most recent first
+      });
+    return history;
+  }
+
+  Future<void> refresh() async => ref.invalidateSelf();
 }

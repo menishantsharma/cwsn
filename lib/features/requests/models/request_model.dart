@@ -31,6 +31,7 @@ class CaregiverRequest with _$CaregiverRequest {
 
     @Default(RequestStatus.pending) RequestStatus status,
     required DateTime createdAt,
+    DateTime? resolvedAt,
   }) = _CaregiverRequest;
 
   factory CaregiverRequest.fromJson(Map<String, dynamic> json) =>
