@@ -4,12 +4,14 @@ import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/gender_selector.dart';
 import 'package:cwsn/core/widgets/user_avatar.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
+import 'package:cwsn/features/user/data/user_repository.dart';
 import 'package:cwsn/features/user/presentation/providers/user_provider.dart';
 import 'package:cwsn/features/settings/presentation/widgets/language_selection_dialog.dart';
 import 'package:cwsn/features/settings/presentation/widgets/phone_verification_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
@@ -28,6 +30,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   List<String> _selectedLanguages = [];
   bool _isLoading = false;
   bool _isFetchingLocation = false;
+  bool _isUploadingImage = false;
   String? _avatarUrl;
 
   @override
@@ -68,6 +71,102 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     setState(() => _isFetchingLocation = false);
   }
 
+  void _showImagePickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Profile Photo',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFF0F0F0),
+                  child: Icon(Icons.camera_alt_rounded, color: Colors.black87),
+                ),
+                title: const Text('Camera'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFF0F0F0),
+                  child: Icon(Icons.photo_library_rounded, color: Colors.black87),
+                ),
+                title: const Text('Gallery'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              if (_avatarUrl != null)
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFFDE8E8),
+                    child: Icon(Icons.delete_rounded, color: Colors.red),
+                  ),
+                  title: const Text('Remove Photo',
+                      style: TextStyle(color: Colors.red)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() => _avatarUrl = null);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: source,
+      maxWidth: 512,
+      imageQuality: 80,
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() => _isUploadingImage = true);
+
+    try {
+      final user = ref.read(currentUserProvider).value;
+      final repo = ref.read(userRepositoryProvider);
+      final url = await repo.uploadProfileImage(user?.id ?? '', picked.path);
+      if (!mounted) return;
+      setState(() {
+        _avatarUrl = url;
+        _isUploadingImage = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploadingImage = false);
+      _showSnack('Failed to upload image. Please try again.');
+    }
+  }
+
   Future<void> _saveChanges() async {
     // Unfocus keyboard before saving
     FocusScope.of(context).unfocus();
@@ -88,6 +187,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         location: _locationController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
         gender: _selectedGender,
+        imageUrl: _avatarUrl,
       );
 
       final saved =
@@ -187,32 +287,54 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           children: [
             // Avatar
             Center(
-              child: Stack(
-                children: [
-                  UserAvatar(
-                    imageUrl: _avatarUrl,
-                    name: _nameController.text,
-                    size: 100,
-                    isCircle: true,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: primaryColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
+              child: GestureDetector(
+                onTap: _isUploadingImage ? null : _showImagePickerSheet,
+                child: Stack(
+                  children: [
+                    UserAvatar(
+                      imageUrl: _avatarUrl,
+                      name: _nameController.text,
+                      size: 100,
+                      isCircle: true,
+                    ),
+                    if (_isUploadingImage)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.camera_alt_rounded,
-                        color: Colors.white,
-                        size: 16,
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: primaryColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 40),

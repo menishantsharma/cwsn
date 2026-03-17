@@ -7,6 +7,7 @@ final userRepositoryProvider = Provider<UserRepository>(
 
 abstract class UserRepository {
   Future<User> updateUserProfile(User updatedUser);
+  Future<String> uploadProfileImage(String userId, String filePath);
 }
 
 class FakeUserRepository implements UserRepository {
@@ -15,5 +16,11 @@ class FakeUserRepository implements UserRepository {
     await Future.delayed(const Duration(seconds: 1));
     return updatedUser;
   }
+
+  @override
+  Future<String> uploadProfileImage(String userId, String filePath) async {
+    // Simulate upload delay; real backend would return a remote URL.
+    await Future.delayed(const Duration(seconds: 1));
+    return filePath;
+  }
 }
- 

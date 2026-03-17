@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +22,15 @@ class UserAvatar extends StatelessWidget {
 
   bool get _hasImage => imageUrl != null && imageUrl!.isNotEmpty;
 
+  bool get _isLocalFile => _hasImage && imageUrl!.startsWith('/');
+
   String get _initial => name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+  ImageProvider? get _imageProvider {
+    if (!_hasImage) return null;
+    if (_isLocalFile) return FileImage(File(imageUrl!));
+    return CachedNetworkImageProvider(imageUrl!);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +42,7 @@ class UserAvatar extends StatelessWidget {
         backgroundColor: _hasImage
             ? Colors.grey.shade100
             : primaryColor.withValues(alpha: 0.1),
-        backgroundImage: _hasImage
-            ? CachedNetworkImageProvider(imageUrl!)
-            : null,
+        backgroundImage: _imageProvider,
         child: !_hasImage
             ? Text(
                 _initial,
@@ -62,11 +69,13 @@ class UserAvatar extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: _hasImage
-            ? CachedNetworkImage(
-                imageUrl: imageUrl!,
-                fit: BoxFit.cover,
-                errorWidget: (_, _, _) => _buildInitial(primaryColor),
-              )
+            ? _isLocalFile
+                ? Image.file(File(imageUrl!), fit: BoxFit.cover)
+                : CachedNetworkImage(
+                    imageUrl: imageUrl!,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, _, _) => _buildInitial(primaryColor),
+                  )
             : _buildInitial(primaryColor),
       ),
     );
