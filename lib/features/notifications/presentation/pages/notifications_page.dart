@@ -1,6 +1,8 @@
 import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
+import 'package:cwsn/core/widgets/empty_state_widget.dart';
+import 'package:cwsn/core/widgets/error_state_widget.dart';
 import 'package:cwsn/core/widgets/guest_placeholder.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/notifications/models/notification_model.dart';
@@ -22,10 +24,10 @@ class NotificationsPage extends ConsumerWidget {
 
     if (user.isGuest) {
       return Scaffold(
-        appBar: const AppTopBar(title: 'Notifications', showBackButton: false),
+        appBar: const AppTopBar(title: 'Alerts', showBackButton: false),
         body: GuestPlaceholder(
-          title: "No Notifications",
-          message: "Please login to see your updates and messages.",
+          title: 'No Notifications',
+          message: 'Please login to see your updates and messages.',
           onLoginPressed: () => ref.read(currentUserProvider.notifier).logout(),
         ),
       );
@@ -36,13 +38,13 @@ class NotificationsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
       appBar: AppTopBar(
-        title: 'Notifications',
+        title: 'Alerts',
         showBackButton: false,
         actions: [
           if (notificationsAsync.value?.any((n) => !n.isRead) ?? false)
             IconButton(
               tooltip: 'Mark all as read',
-              icon: const Icon(Icons.done_all_rounded, color: Colors.black87),
+              icon: const Icon(Icons.done_all_rounded, size: 22),
               onPressed: () {
                 HapticFeedback.mediumImpact();
                 ref.read(notificationsProvider.notifier).markAllAsRead();
@@ -53,42 +55,59 @@ class NotificationsPage extends ConsumerWidget {
       body: notificationsAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator.adaptive()),
-        error: (err, _) => Center(child: Text('Failed to load: $err')),
-        data: (notifications) {
-          if (notifications.isEmpty) {
-            return _EmptyNotificationsState(
-              isCaregiver: user.activeRole == UserRole.caregiver,
-            );
-          }
-
-          return RefreshIndicator.adaptive(
-            onRefresh: () => ref.read(notificationsProvider.notifier).refresh(),
-            child: ListView.separated(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: notifications.length,
-              separatorBuilder: (_, _) =>
-                  Divider(height: 1, indent: 80, color: Colors.grey.shade100),
-              itemBuilder: (context, index) {
-                final item = notifications[index];
-                return NotificationTile(
-                  notification: item,
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    ref
-                        .read(notificationsProvider.notifier)
-                        .markAsRead(item.id);
-                    _handleNavigation(context, item);
+        error: (_, _) => ErrorStateWidget(
+          message: 'Failed to load notifications',
+          onRetry: () => ref.read(notificationsProvider.notifier).refresh(),
+        ),
+        data: (notifications) => RefreshIndicator.adaptive(
+          onRefresh: () =>
+              ref.read(notificationsProvider.notifier).refresh(),
+          child: notifications.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  children: [
+                    SizedBox(
+                        height: MediaQuery.sizeOf(context).height * 0.25),
+                    EmptyStateWidget(
+                      icon: user.activeRole == UserRole.caregiver
+                          ? Icons.work_outline_rounded
+                          : Icons.notifications_none_rounded,
+                      iconSize: 56,
+                      title: 'All Caught Up!',
+                      subtitle: user.activeRole == UserRole.caregiver
+                          ? 'No new service requests yet.'
+                          : 'No new updates for you.',
+                    ),
+                  ],
+                )
+              : ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 16),
+                  itemCount: notifications.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  itemBuilder: (_, index) {
+                    final item = notifications[index];
+                    return NotificationTile(
+                      key: ValueKey(item.id),
+                      notification: item,
+                      onTap: () => _act(context, ref, item),
+                    );
                   },
-                );
-              },
-            ),
-          );
-        },
+                ),
+        ),
       ),
     );
+  }
+
+  void _act(BuildContext context, WidgetRef ref, NotificationItem item) {
+    HapticFeedback.lightImpact();
+    ref.read(notificationsProvider.notifier).markAsRead(item.id);
+    _handleNavigation(context, item);
   }
 
   void _handleNavigation(BuildContext context, NotificationItem item) {
@@ -97,52 +116,8 @@ class NotificationsPage extends ConsumerWidget {
         if (item.relatedId != null) {
           context.pushNamed(AppRoutes.caregiverProfile, extra: item.relatedId);
         }
-        break;
       default:
         break;
     }
-  }
-}
-
-class _EmptyNotificationsState extends StatelessWidget {
-  final bool isCaregiver;
-  const _EmptyNotificationsState({required this.isCaregiver});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isCaregiver
-                  ? Icons.work_outline_rounded
-                  : Icons.notifications_none_rounded,
-              size: 48,
-              color: Colors.grey.shade300,
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'All caught up!',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isCaregiver
-                ? 'No new service requests yet.'
-                : 'No new updates for you.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade500),
-          ),
-        ],
-      ),
-    );
   }
 }

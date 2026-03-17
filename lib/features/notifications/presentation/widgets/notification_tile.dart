@@ -14,128 +14,144 @@ class NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isUnread = !notification.isRead;
+    final primary = Theme.of(context).primaryColor;
+    final unread = !notification.isRead;
+    final hasImage =
+        notification.imageUrl != null && notification.imageUrl!.isNotEmpty;
 
-    return Material(
-      color: Colors.white,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.grey.shade100),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child:
-                      notification.imageUrl != null &&
-                          notification.imageUrl!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: notification.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, _, _) => _buildFallbackIcon(),
-                        )
-                      : _buildFallbackIcon(),
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            notification.title,
-                            style: TextStyle(
-                              fontWeight: isUnread
-                                  ? FontWeight.w800
-                                  : FontWeight.w600,
-                              fontSize: 15,
-                              color: Colors.black87,
-                              letterSpacing: -0.2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _formatTime(notification.timestamp),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isUnread
-                                ? const Color(0xFFE53935)
-                                : Colors.grey.shade500,
-                            fontWeight: isUnread
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      notification.subtitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isUnread ? Colors.black87 : Colors.grey.shade600,
-                        height: 1.3,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              if (isUnread)
-                Padding(
-                  padding: const EdgeInsets.only(left: 12, top: 6),
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFE53935),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-            ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: unread ? primary.withValues(alpha: 0.03) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: unread
+                ? primary.withValues(alpha: 0.1)
+                : Colors.grey.shade100,
           ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon / image
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: hasImage
+                    ? Colors.grey.shade50
+                    : _typeColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: hasImage
+                    ? CachedNetworkImage(
+                        imageUrl: notification.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, _, _) => _icon,
+                      )
+                    : _icon,
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Text content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          notification.title,
+                          style: TextStyle(
+                            fontWeight: unread
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            fontSize: 14,
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (unread)
+                        Container(
+                          width: 7,
+                          height: 7,
+                          margin: const EdgeInsets.only(right: 4),
+                          decoration: BoxDecoration(
+                            color: primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      Text(
+                        _formatTime(notification.timestamp),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    notification.subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: unread
+                          ? Colors.grey.shade700
+                          : Colors.grey.shade500,
+                      height: 1.35,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildFallbackIcon() {
-    return Icon(
-      Icons.notifications_outlined,
-      color: Colors.grey.shade400,
-      size: 24,
-    );
+  Color get _typeColor {
+    return switch (notification.type) {
+      NotificationType.message => Colors.blue,
+      NotificationType.requestReceived => Colors.orange,
+      NotificationType.requestAccepted => Colors.green,
+      NotificationType.alert => Colors.red,
+      NotificationType.system => Colors.purple,
+      NotificationType.unknown => Colors.grey,
+    };
   }
 
+  IconData get _typeIcon {
+    return switch (notification.type) {
+      NotificationType.message => Icons.chat_bubble_outline_rounded,
+      NotificationType.requestReceived => Icons.person_add_alt_1_rounded,
+      NotificationType.requestAccepted => Icons.check_circle_outline_rounded,
+      NotificationType.alert => Icons.warning_amber_rounded,
+      NotificationType.system => Icons.settings_outlined,
+      NotificationType.unknown => Icons.notifications_outlined,
+    };
+  }
+
+  Widget get _icon => Icon(_typeIcon, color: _typeColor, size: 22);
+
   String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final difference = now.difference(time);
-
-    if (difference.inMinutes < 1) return 'Just now';
-    if (difference.inHours < 1) return '${difference.inMinutes}m';
-    if (difference.inDays < 1) return '${difference.inHours}h';
-    if (difference.inDays < 7) return '${difference.inDays}d';
-
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'now';
+    if (diff.inHours < 1) return '${diff.inMinutes}m';
+    if (diff.inDays < 1) return '${diff.inHours}h';
+    if (diff.inDays < 7) return '${diff.inDays}d';
     const months = [
       'Jan',
       'Feb',
