@@ -15,59 +15,50 @@ class AcceptedRequestsPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      appBar: const AppTopBar(title: 'Request History'),
+      appBar: const AppTopBar(title: 'History'),
       body: requestsAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator.adaptive()),
-        error: (error, _) => ErrorStateWidget(
-          message: 'Failed to load request history',
+        error: (_, _) => ErrorStateWidget(
+          message: 'Failed to load history',
           onRetry: () =>
               ref.read(requestHistoryProvider.notifier).refresh(),
         ),
-        data: (requests) {
-          return RefreshIndicator.adaptive(
-            onRefresh: () =>
-                ref.read(requestHistoryProvider.notifier).refresh(),
-            child: requests.isEmpty
-                ? _buildEmptyScrollable(context)
-                : ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 20,
-                    ),
-                    itemCount: requests.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final request = requests[index];
-                      return AcceptedRequestTile(
-                        key: ValueKey(request.id),
-                        request: request,
-                      );
-                    },
+        data: (requests) => RefreshIndicator.adaptive(
+          onRefresh: () =>
+              ref.read(requestHistoryProvider.notifier).refresh(),
+          child: requests.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
                   ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildEmptyScrollable(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
-      ),
-      children: [
-        SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-        const EmptyStateWidget(
-          icon: Icons.history_rounded,
-          iconSize: 64,
-          title: 'No Request History',
-          subtitle: 'Accepted and declined requests will appear here.',
+                  children: [
+                    SizedBox(
+                        height: MediaQuery.sizeOf(context).height * 0.25),
+                    const EmptyStateWidget(
+                      icon: Icons.history_rounded,
+                      iconSize: 56,
+                      title: 'No History Yet',
+                      subtitle:
+                          'Accepted and declined requests will appear here.',
+                    ),
+                  ],
+                )
+              : ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 16),
+                  itemCount: requests.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (_, index) => AcceptedRequestTile(
+                    key: ValueKey(requests[index].id),
+                    request: requests[index],
+                  ),
+                ),
         ),
-      ],
+      ),
     );
   }
 }

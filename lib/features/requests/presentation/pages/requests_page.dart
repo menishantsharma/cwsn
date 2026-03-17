@@ -16,122 +16,102 @@ class RequestsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final requestsAsync = ref.watch(pendingRequestsProvider);
 
-    ref.listen(pendingRequestsProvider, (previous, next) {
+    ref.listen(pendingRequestsProvider, (_, next) {
       if (next.hasError && !next.isLoading) {
-        _showFeedback(
-          context,
-          "Action failed. The request has been restored.",
-          isError: true,
-        );
+        _feedback(context, 'Action failed. Request restored.', isError: true);
       }
     });
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
       appBar: AppTopBar(
-        title: 'Service Requests',
+        title: 'Requests',
         actions: [
           IconButton(
-            tooltip: 'Request History',
-            icon: const Icon(Icons.history_rounded),
-            onPressed: () =>
-                context.pushNamed(AppRoutes.acceptedRequests),
+            tooltip: 'History',
+            icon: const Icon(Icons.history_rounded, size: 22),
+            onPressed: () => context.pushNamed(AppRoutes.acceptedRequests),
           ),
         ],
       ),
       body: requestsAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator.adaptive()),
-
-        error: (error, _) => ErrorStateWidget(
+        error: (_, _) => ErrorStateWidget(
           message: 'Failed to load requests',
           onRetry: () => ref.read(pendingRequestsProvider.notifier).refresh(),
         ),
-
-        data: (requests) {
-          return RefreshIndicator.adaptive(
-            onRefresh: () =>
-                ref.read(pendingRequestsProvider.notifier).refresh(),
-            child: requests.isEmpty
-                ? _buildEmptyScrollable(context)
-                : ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 20,
-                    ),
-                    itemCount: requests.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final request = requests[index];
-                      return RequestTile(
-                        key: ValueKey(request.id),
-                        request: request,
-                        onAccept: () =>
-                            _handleAction(context, ref, request.id, true),
-                        onReject: () =>
-                            _handleAction(context, ref, request.id, false),
-                      );
-                    },
+        data: (requests) => RefreshIndicator.adaptive(
+          onRefresh: () =>
+              ref.read(pendingRequestsProvider.notifier).refresh(),
+          child: requests.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
                   ),
-          );
-        },
+                  children: [
+                    SizedBox(
+                        height: MediaQuery.sizeOf(context).height * 0.25),
+                    const EmptyStateWidget(
+                      icon: Icons.inbox_outlined,
+                      iconSize: 56,
+                      title: 'No Pending Requests',
+                      subtitle: 'New bookings will appear here.',
+                    ),
+                  ],
+                )
+              : ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  itemCount: requests.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (_, index) {
+                    final r = requests[index];
+                    return RequestTile(
+                      key: ValueKey(r.id),
+                      request: r,
+                      onAccept: () => _act(context, ref, r.id, true),
+                      onReject: () => _act(context, ref, r.id, false),
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }
 
-  void _handleAction(
-    BuildContext context,
-    WidgetRef ref,
-    String id,
-    bool accepted,
-  ) {
+  void _act(BuildContext context, WidgetRef ref, String id, bool accepted) {
     HapticFeedback.mediumImpact();
-
-    _showFeedback(context, accepted ? "Request Accepted" : "Request Declined", accepted: accepted);
-
+    _feedback(
+      context,
+      accepted ? 'Request accepted' : 'Request declined',
+      accepted: accepted,
+    );
     ref.read(pendingRequestsProvider.notifier).handleAction(id, accepted);
   }
 
-  void _showFeedback(
+  void _feedback(
     BuildContext context,
     String message, {
     bool isError = false,
     bool accepted = false,
   }) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.clearSnackBars();
-    messenger.showSnackBar(
+    final m = ScaffoldMessenger.of(context)..clearSnackBars();
+    m.showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        content: Text(message,
+            style: const TextStyle(fontWeight: FontWeight.w600)),
         backgroundColor: isError
             ? Colors.black87
-            : (accepted ? Colors.green.shade700 : Colors.red.shade700),
+            : (accepted ? Colors.green.shade600 : Colors.redAccent),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         duration: const Duration(seconds: 2),
       ),
-    );
-  }
-
-  Widget _buildEmptyScrollable(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
-      ),
-      children: [
-        SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-        const EmptyStateWidget(
-          icon: Icons.inbox_outlined,
-          iconSize: 64,
-          title: 'No Pending Requests',
-          subtitle: 'New bookings will appear here.',
-        ),
-      ],
     );
   }
 }
