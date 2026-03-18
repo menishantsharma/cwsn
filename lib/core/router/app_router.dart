@@ -114,7 +114,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.switchingPath,
         name: AppRoutes.switching,
-        builder: (_, _) => const SwitchingScreen(),
+        pageBuilder: (_, _) => CustomTransitionPage(
+          child: const SwitchingScreen(),
+          transitionDuration: const Duration(milliseconds: 300),
+          reverseTransitionDuration: const Duration(milliseconds: 300),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // Scale up + fade in — feels like an overlay/mode switch,
+            // not a regular page navigation.
+            final scale = Tween<double>(begin: 0.92, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            );
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(scale: scale, child: child),
+            );
+          },
+        ),
       ),
 
       // ── Tabbed shell — branches generated from NavConfig ──────────
@@ -126,9 +141,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           return CustomTransitionPage(
             key: ValueKey('shell-$role'),
             child: MainShell(navigationShell: navigationShell),
-            transitionsBuilder: (context, anim, _, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 400),
+            transitionDuration: const Duration(milliseconds: 350),
+            reverseTransitionDuration: const Duration(milliseconds: 350),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              final scale = Tween<double>(begin: 0.95, end: 1.0).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              );
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(scale: scale, child: child),
+              );
+            },
           );
         },
         branches: NavConfig.allItems

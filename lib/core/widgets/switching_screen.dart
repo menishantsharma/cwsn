@@ -33,7 +33,7 @@ class _SwitchingScreenState extends ConsumerState<SwitchingScreen> {
   }
 
   Future<void> _startSwitchingProcess() async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 1800));
 
     if (!mounted) return;
 

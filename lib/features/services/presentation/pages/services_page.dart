@@ -3,6 +3,7 @@ import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/core/widgets/error_state_widget.dart';
 import 'package:cwsn/core/widgets/modern_refresh_indicator.dart';
 import 'package:cwsn/core/router/app_routes.dart';
+import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/services/presentation/providers/services_provider.dart';
 import 'package:cwsn/features/services/presentation/widgets/horizontal_service_row.dart';
 import 'package:cwsn/features/services/presentation/widgets/horizontal_service_row_skeleton.dart';
@@ -30,6 +31,10 @@ class ServicesPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final role = ref.watch(
+      // ignore: avoid_dynamic_calls
+      currentUserProvider.select((s) => s.value?.activeRole),
+    );
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
       appBar: AppTopBar(
@@ -43,7 +48,7 @@ class ServicesPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: _ServicesBody(),
+      body: _ServicesBody(key: ValueKey(role)),
     );
   }
 }
@@ -53,7 +58,7 @@ class ServicesPage extends ConsumerWidget {
 /// Extracted so [ServicesPage] stays lean and this widget can be
 /// unit-tested / widget-tested independently.
 class _ServicesBody extends ConsumerWidget {
-  const _ServicesBody();
+  const _ServicesBody({super.key});
 
   // Number of skeleton rows shown during the initial load.
   static const int _skeletonRowCount = 3;
