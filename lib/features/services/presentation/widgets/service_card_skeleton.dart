@@ -4,25 +4,16 @@ import 'package:shimmer/shimmer.dart';
 
 /// Skeleton placeholder for a single [ServiceCard] while data loads.
 ///
-/// ## Design
-/// Mirrors the exact dimensions of [ServiceCard] (width: 148, same border
-/// radius) so the layout does not shift when real cards replace skeletons.
-/// Uses the theme's tonal surface colours so it adapts to light/dark mode
-/// without hardcoded greys.  No box shadow — consistent with the card aesthetic.
-///
-/// ## How to extend
-/// To add a title-line skeleton at the bottom (matching the gradient overlay),
-/// add a [Positioned] widget inside the [Stack] below, anchored to `bottom: 14`.
+/// Mirrors the horizontal layout of the real card: text lines on the left,
+/// square thumbnail block on the right.
 class ServiceCardSkeleton extends StatelessWidget {
-  /// Width kept in sync with [ServiceCard._cardWidth].
-  static const double _cardWidth = 148.0;
-  static const double _borderRadius = 18.0;
+  static const double _cardWidth = 200.0;
+  static const double _borderRadius = 16.0;
 
   const ServiceCardSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Pull theme-aware shimmer colours so they work in light and dark mode.
     final baseColor = context.colorScheme.surfaceContainerHighest;
     final highlightColor = context.colorScheme.surfaceContainerHigh;
 
@@ -31,44 +22,59 @@ class ServiceCardSkeleton extends StatelessWidget {
       highlightColor: highlightColor,
       child: Container(
         width: _cardWidth,
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          // Shimmer needs an opaque fill colour to animate over.
-          color: baseColor,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(_borderRadius),
-          // Intentionally no boxShadow — matches the real ServiceCard.
         ),
-        child: Stack(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // ── Simulated title lines at the bottom ───────────────────────
-            Positioned(
-              bottom: 14,
-              left: 12,
-              right: 12,
+            // ── Text lines ────────────────────────────────────────────────
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Line 1 — wider, simulates the first word of the title.
                   Container(
-                    height: 10,
-                    width: 90,
+                    height: 11,
                     decoration: BoxDecoration(
-                      // White is required: shimmer animates by compositing
-                      // over the base/highlight gradient.
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  // Line 2 — narrower, simulates a second shorter word.
+                  const SizedBox(height: 6),
                   Container(
-                    height: 10,
-                    width: 60,
+                    height: 11,
+                    width: 80,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Explore chip placeholder
+                  Container(
+                    height: 22,
+                    width: 64,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // ── Thumbnail block ───────────────────────────────────────────
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
           ],

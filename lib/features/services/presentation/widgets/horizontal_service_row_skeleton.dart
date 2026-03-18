@@ -50,7 +50,7 @@ class HorizontalServiceRowSkeleton extends StatelessWidget {
         // ── Horizontal card row placeholder ────────────────────────────────
         // Height matches [HorizontalServiceRow]'s SizedBox height exactly.
         SizedBox(
-          height: 180,
+          height: 108,
           child: ListView.separated(
             // Non-scrollable: skeleton is purely visual, not interactive.
             physics: const NeverScrollableScrollPhysics(),

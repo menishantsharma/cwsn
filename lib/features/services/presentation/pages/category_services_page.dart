@@ -54,13 +54,13 @@ class _CategoryServicesBody extends ConsumerWidget {
   final String sectionTitle;
 
   // Grid layout constants — tweak here to affect the whole page.
-  static const int _columns = 2;
-  static const double _spacing = 14.0;
+  static const int _columns = 1;
+  static const double _spacing = 12.0;
   static const double _padding = 16.0;
 
   // Aspect ratio for each card cell: width / height.
-  // Lower = taller cards.  0.85 gives compact, uncluttered tiles.
-  static const double _aspectRatio = 0.85;
+  // ~2.0 matches the new horizontal card layout (wide, short).
+  static const double _aspectRatio = 3.2;
 
   const _CategoryServicesBody({required this.sectionTitle});
 
@@ -149,7 +149,7 @@ class _CategoryGrid extends StatelessWidget {
           final item = items[index];
           return ServiceCard(
             item: item,
-            // TODO: swap for item.id-based route once detail pages exist.
+            width: double.infinity,
             onTap: () => context.pushNamed(AppRoutes.specialNeeds),
           );
         },

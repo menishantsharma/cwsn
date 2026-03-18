@@ -191,13 +191,10 @@ class _SearchGridSkeleton extends StatelessWidget {
 class _ResultsGrid extends StatelessWidget {
   final List<ServiceItem> items;
 
-  // Match the horizontal-scroll card width so the fixed-width SizedBox
-  // inside [ServiceCard] fills each grid cell correctly.
-  static const int _columns = 2;
-  static const double _spacing = 16.0;
-  // Aspect ratio tuned so the card height matches its natural proportions
-  // when the width is determined by a 2-column grid.
-  static const double _aspectRatio = 0.75;
+  static const int _columns = 1;
+  static const double _spacing = 12.0;
+  // Wide and short to match the horizontal card layout.
+  static const double _aspectRatio = 3.8;
 
   const _ResultsGrid({required this.items});
 

@@ -5,28 +5,20 @@ import 'package:flutter/material.dart';
 
 /// A tappable card representing a single [ServiceItem].
 ///
-/// ## Design
-/// Uses a full-bleed image with a bottom gradient overlay for the title,
-/// a subtle `outlineVariant` border, and no box shadow — keeping the
-/// aesthetic clean and uncluttered on any background.
-///
-/// ## How to extend
-/// - Add a `badge` parameter (e.g. `Widget? badge`) and position it at
-///   `Alignment.topRight` inside the [Stack] to show "New" or "Popular" tags.
-/// - Pass `item.id` to the `onTap` callback to navigate to a detail page.
+/// Layout: text-first — service name and a subtle arrow on the left,
+/// a small rounded image thumbnail on the right. The image is an accent,
+/// not the hero. Gives a breathable, readable feel in both the horizontal
+/// scroll list and the category grid.
 class ServiceCard extends StatelessWidget {
-  /// The service data to display.
   final ServiceItem item;
-
-  /// Called when the user taps the card.
   final VoidCallback onTap;
 
-  static const double _defaultWidth = 148.0;
-  static const double _borderRadius = 18.0;
+  static const double _defaultWidth = 200.0;
+  static const double _borderRadius = 16.0;
 
   /// Width of the card. Defaults to [_defaultWidth] for the horizontal
   /// scroll list. Pass `double.infinity` when placing the card inside a
-  /// grid cell that already constrains the width (e.g. search results).
+  /// grid cell (e.g. category page or search results).
   final double? width;
 
   const ServiceCard({
@@ -38,110 +30,117 @@ class ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = context.colorScheme.primary;
+
     return SizedBox(
       width: width ?? _defaultWidth,
       child: Material(
-        // Use the theme's tonal surface so the card integrates with both
-        // light and dark themes without a hardcoded colour.
-        color: context.colorScheme.surfaceContainerLow,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(_borderRadius),
-        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(_borderRadius),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // ── Background image ─────────────────────────────────────────
-              _ServiceImage(imgUrl: item.imgUrl),
-
-              // ── Title gradient overlay ────────────────────────────────────
-              _TitleOverlay(title: item.title),
-
-              // ── Subtle border drawn on top of everything ──────────────────
-              // Rendered as a DecoratedBox so it respects clip and stays sharp.
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(_borderRadius),
-                  border: Border.all(
-                    // outlineVariant is a low-contrast, theme-aware border tone.
-                    color: context.colorScheme.outlineVariant,
-                    width: 1,
-                  ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(_borderRadius),
+              border: Border.all(
+                color: context.colorScheme.outlineVariant.withValues(
+                  alpha: 0.6,
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // ── Text side ───────────────────────────────────────────────
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        item.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          height: 1.35,
+                          letterSpacing: -0.2,
+                          color: Color(0xFF111111),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // ── "Explore" chip ─────────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Explore',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: primary,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 10,
+                              color: primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-// ── Private sub-widgets ────────────────────────────────────────────────────────
-// Extracted to keep [ServiceCard.build] scannable at a glance.
+                const SizedBox(width: 12),
 
-/// Fills the card with a [CachedNetworkImage], showing a skeleton-toned
-/// placeholder while loading and a neutral icon on error.
-class _ServiceImage extends StatelessWidget {
-  final String imgUrl;
-  const _ServiceImage({required this.imgUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return CachedNetworkImage(
-      imageUrl: imgUrl,
-      fit: BoxFit.cover,
-      // Placeholder matches the card's tonal surface to avoid a jarring flash.
-      placeholder: (_, _) => ColoredBox(
-        color: context.colorScheme.surfaceContainerHighest,
-      ),
-      errorWidget: (_, _, _) => ColoredBox(
-        color: context.colorScheme.surfaceContainerHighest,
-        child: Center(
-          child: Icon(
-            Icons.image_not_supported_outlined,
-            color: context.colorScheme.outline,
-            size: 28,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A bottom-anchored gradient band that ensures the white title text is always
-/// legible regardless of the image content beneath it.
-class _TitleOverlay extends StatelessWidget {
-  final String title;
-  const _TitleOverlay({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        width: double.infinity,
-        // Generous top padding grows the gradient fade zone for visual depth.
-        padding: const EdgeInsets.fromLTRB(12, 40, 12, 14),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            // Transparent → rich black so any image stays readable.
-            colors: [Colors.transparent, Color(0xCC000000)],
-          ),
-        ),
-        child: Text(
-          title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-            height: 1.3,
-            letterSpacing: 0.1,
+                // ── Image thumbnail ─────────────────────────────────────────
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CachedNetworkImage(
+                      imageUrl: item.imgUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, _) => ColoredBox(
+                        color: context.colorScheme.surfaceContainerHighest,
+                      ),
+                      errorWidget: (_, _, _) => ColoredBox(
+                        color: context.colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          color: context.colorScheme.outline,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -53,7 +53,7 @@ class HorizontalServiceRow extends StatelessWidget {
         const SizedBox(height: 16),
 
         SizedBox(
-          height: 180,
+          height: 108,
           child: ListView.separated(
             physics: const BouncingScrollPhysics(),
             scrollDirection: Axis.horizontal,
