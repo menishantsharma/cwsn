@@ -21,20 +21,25 @@ class ServiceCard extends StatelessWidget {
   /// Called when the user taps the card.
   final VoidCallback onTap;
 
-  // Card dimensions — kept as named constants for easy global tweaks.
-  static const double _cardWidth = 148.0;
+  static const double _defaultWidth = 148.0;
   static const double _borderRadius = 18.0;
+
+  /// Width of the card. Defaults to [_defaultWidth] for the horizontal
+  /// scroll list. Pass `double.infinity` when placing the card inside a
+  /// grid cell that already constrains the width (e.g. search results).
+  final double? width;
 
   const ServiceCard({
     super.key,
     required this.item,
     required this.onTap,
+    this.width,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: _cardWidth,
+      width: width ?? _defaultWidth,
       child: Material(
         // Use the theme's tonal surface so the card integrates with both
         // light and dark themes without a hardcoded colour.

@@ -2,11 +2,13 @@ import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/core/widgets/error_state_widget.dart';
 import 'package:cwsn/core/widgets/modern_refresh_indicator.dart';
+import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/features/services/presentation/providers/services_provider.dart';
 import 'package:cwsn/features/services/presentation/widgets/horizontal_service_row.dart';
 import 'package:cwsn/features/services/presentation/widgets/horizontal_service_row_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// The top-level Services page.
 ///
@@ -30,7 +32,17 @@ class ServicesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      appBar: const AppTopBar(title: 'Services', showBackButton: false),
+      appBar: AppTopBar(
+        title: 'Services',
+        showBackButton: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search_rounded),
+            tooltip: 'Search services',
+            onPressed: () => context.pushNamed(AppRoutes.serviceSearch),
+          ),
+        ],
+      ),
       body: _ServicesBody(),
     );
   }

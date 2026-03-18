@@ -13,6 +13,17 @@ abstract class ServiceRepository {
   ///
   /// Throws a [StateError] if no section with that title exists.
   Future<List<ServiceItem>> getServicesByCategory(String sectionTitle);
+
+  /// Searches across all categories and returns items whose title contains
+  /// [query] (case-insensitive).
+  ///
+  /// Callers should guard against an empty [query] before calling, but it
+  /// is safe to call regardless — returns `[]` immediately.
+  ///
+  /// ## Replacing with a real API
+  /// Swap the in-memory filter for a network call (e.g. `GET /services?q=query`).
+  /// The providers and UI that call this method stay completely untouched.
+  Future<List<ServiceItem>> searchServices(String query);
 }
 
 class FakeServiceRepository implements ServiceRepository {
@@ -35,5 +46,17 @@ class FakeServiceRepository implements ServiceRepository {
           ),
         )
         .items;
+  }
+
+  @override
+  Future<List<ServiceItem>> searchServices(String query) async {
+    if (query.trim().isEmpty) return [];
+    await _delay();
+    final q = query.trim().toLowerCase();
+    // Flatten all sections, then filter by title substring match.
+    return mockServiceSections
+        .expand((section) => section.items)
+        .where((item) => item.title.toLowerCase().contains(q))
+        .toList();
   }
 }

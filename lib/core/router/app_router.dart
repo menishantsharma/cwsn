@@ -10,6 +10,7 @@ import 'package:cwsn/features/caregivers/presentation/pages/caregivers_list_page
 import 'package:cwsn/features/requests/presentation/pages/accepted_requests_page.dart';
 import 'package:cwsn/features/services/models/service_model.dart';
 import 'package:cwsn/features/services/presentation/pages/category_services_page.dart';
+import 'package:cwsn/features/services/presentation/pages/service_search_screen.dart';
 import 'package:cwsn/features/settings/presentation/pages/add_child_page.dart';
 import 'package:cwsn/features/settings/presentation/pages/add_service_page.dart';
 import 'package:cwsn/features/special_needs/presentation/pages/special_needs_page.dart';
@@ -189,6 +190,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => CategoryServicesPage(
           section: state.extra! as ServiceSection,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.serviceSearchPath,
+        name: AppRoutes.serviceSearch,
+        builder: (_, _) => const ServiceSearchScreen(),
       ),
     ],
   );
