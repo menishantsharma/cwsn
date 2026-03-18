@@ -1,8 +1,7 @@
 import 'package:cwsn/core/constants/app_constants.dart';
-import 'package:cwsn/core/widgets/bottom_sheet_drag_handle.dart';
 import 'package:cwsn/features/caregivers/models/caregiver_filter.dart';
+import 'package:cwsn/features/caregivers/models/caregiver_sort.dart';
 import 'package:cwsn/features/caregivers/presentation/providers/caregiver_providers.dart';
-import 'package:cwsn/features/services/presentation/providers/services_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,262 +16,424 @@ class CaregiverFilterSheet extends ConsumerStatefulWidget {
 class _CaregiverFilterSheetState extends ConsumerState<CaregiverFilterSheet> {
   late String? _selectedGender;
   late Set<String> _selectedLanguages;
-  late Set<String> _selectedServices;
   late bool? _isAvailable;
+  late CaregiverSortOption _selectedSort;
 
-  final _languages = AppConstants.supportedLanguages.take(4).toList();
+  final _languages = AppConstants.supportedLanguages.take(5).toList();
 
   @override
   void initState() {
     super.initState();
-    final current = ref.read(caregiverFilterProvider);
-    _selectedGender = current.gender;
-    _selectedLanguages = current.languages.toSet();
-    _selectedServices = current.services.toSet();
-    _isAvailable = current.isAvailable;
+    final filter = ref.read(caregiverFilterProvider);
+    _selectedGender = filter.gender;
+    _selectedLanguages = filter.languages.toSet();
+    _isAvailable = filter.isAvailable;
+    _selectedSort = ref.read(caregiverSortProvider);
   }
 
-  void _applyFilters() {
-    ref.read(caregiverFilterProvider.notifier).update(CaregiverFilter(
-      gender: _selectedGender,
-      languages: _selectedLanguages.toList(),
-      services: _selectedServices.toList(),
-      isAvailable: _isAvailable,
-    ));
+  void _apply() {
+    ref.read(caregiverFilterProvider.notifier).update(
+          CaregiverFilter(
+            gender: _selectedGender,
+            languages: _selectedLanguages.toList(),
+            isAvailable: _isAvailable,
+          ),
+        );
+    ref.read(caregiverSortProvider.notifier).update(_selectedSort);
     Navigator.pop(context);
   }
 
-  void _resetFilters() {
+  void _reset() {
     setState(() {
       _selectedGender = null;
       _selectedLanguages.clear();
-      _selectedServices.clear();
       _isAvailable = null;
+      _selectedSort = CaregiverSortOption.recommended;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).primaryColor;
-    final masterNames = ref.watch(masterServiceNamesProvider);
+    final colors = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+        maxHeight: MediaQuery.sizeOf(context).height * 0.88,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const BottomSheetDragHandle(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Drag handle ──────────────────────────────────────────
+          Container(
+            width: 36,
+            height: 4,
+            margin: const EdgeInsets.only(top: 12, bottom: 4),
+            decoration: BoxDecoration(
+              color: colors.outlineVariant,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
 
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Filters',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          // ── Header ───────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 8, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Sort & Filter',
+                    style: text.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                  TextButton(
-                    onPressed: _resetFilters,
-                    child: Text(
-                      'Reset',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.bold,
-                      ),
+                ),
+                TextButton(
+                  onPressed: _reset,
+                  child: Text(
+                    'Reset all',
+                    style: text.labelLarge?.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Scrollable body ──────────────────────────────────────
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Sort By ──────────────────────────────────────
+                  _SectionLabel(label: 'Sort By', colors: colors, text: text),
+                  const SizedBox(height: 12),
+                  _SortGrid(
+                    selected: _selectedSort,
+                    onChanged: (v) => setState(() => _selectedSort = v),
+                    colors: colors,
+                    text: text,
+                  ),
+                  const SizedBox(height: 28),
+
+                  // ── Gender ───────────────────────────────────────
+                  _SectionLabel(label: 'Gender', colors: colors, text: text),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    children: ['Male', 'Female'].map((g) {
+                      final selected = _selectedGender == g;
+                      return _Chip(
+                        label: g,
+                        selected: selected,
+                        colors: colors,
+                        text: text,
+                        onTap: () => setState(
+                          () => _selectedGender = selected ? null : g,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 28),
+
+                  // ── Language ─────────────────────────────────────
+                  _SectionLabel(label: 'Language', colors: colors, text: text),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: _languages.map((lang) {
+                      final selected = _selectedLanguages.contains(lang);
+                      return _Chip(
+                        label: lang,
+                        selected: selected,
+                        colors: colors,
+                        text: text,
+                        onTap: () => setState(
+                          () => selected
+                              ? _selectedLanguages.remove(lang)
+                              : _selectedLanguages.add(lang),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 28),
+
+                  // ── Availability ─────────────────────────────────
+                  _SectionLabel(
+                    label: 'Availability',
+                    colors: colors,
+                    text: text,
+                  ),
+                  const SizedBox(height: 12),
+                  _AvailabilityToggle(
+                    value: _isAvailable == true,
+                    colors: colors,
+                    text: text,
+                    onChanged: (v) =>
+                        setState(() => _isAvailable = v ? true : null),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Apply button ─────────────────────────────────────────
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              24,
+              0,
+              24,
+              24 + MediaQuery.paddingOf(context).bottom,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                onPressed: _apply,
+                style: FilledButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  textStyle: text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                child: const Text('Apply'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Sort grid (2×2 tappable cards) ───────────────────────────────────────────
+
+class _SortGrid extends StatelessWidget {
+  final CaregiverSortOption selected;
+  final ValueChanged<CaregiverSortOption> onChanged;
+  final ColorScheme colors;
+  final TextTheme text;
+
+  const _SortGrid({
+    required this.selected,
+    required this.onChanged,
+    required this.colors,
+    required this.text,
+  });
+
+  static const _options = [
+    (CaregiverSortOption.recommended, Icons.thumb_up_outlined, 'Recommended'),
+    (CaregiverSortOption.experience, Icons.work_history_outlined, 'Experience'),
+    (CaregiverSortOption.nameAsc, Icons.sort_by_alpha_rounded, 'Name A–Z'),
+    (CaregiverSortOption.nameDesc, Icons.sort_rounded, 'Name Z–A'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 2.8,
+      children: _options.map((opt) {
+        final (option, icon, label) = opt;
+        final isSelected = selected == option;
+        return GestureDetector(
+          onTap: () => onChanged(option),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            decoration: BoxDecoration(
+              color: isSelected ? colors.primaryContainer : colors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? colors.primary : colors.outlineVariant,
+                width: 1.5,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: isSelected
+                      ? colors.onPrimaryContainer
+                      : colors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: text.labelMedium?.copyWith(
+                    fontWeight:
+                        isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? colors.onPrimaryContainer
+                        : colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Shared pill chip ──────────────────────────────────────────────────────────
+
+class _Chip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final ColorScheme colors;
+  final TextTheme text;
+  final VoidCallback onTap;
+
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.colors,
+    required this.text,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected ? colors.primaryContainer : colors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: selected ? colors.primary : colors.outlineVariant,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: text.labelLarge?.copyWith(
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? colors.onPrimaryContainer : colors.onSurface,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Availability toggle card ──────────────────────────────────────────────────
+
+class _AvailabilityToggle extends StatelessWidget {
+  final bool value;
+  final ColorScheme colors;
+  final TextTheme text;
+  final ValueChanged<bool> onChanged;
+
+  const _AvailabilityToggle({
+    required this.value,
+    required this.colors,
+    required this.text,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: value ? colors.primaryContainer : colors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: value ? colors.primary : colors.outlineVariant,
+            width: 1.5,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(
+              Icons.check_circle_rounded,
+              size: 20,
+              color: value ? colors.primary : colors.outlineVariant,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Available only',
+                    style: text.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: value
+                          ? colors.onPrimaryContainer
+                          : colors.onSurface,
+                    ),
+                  ),
+                  Text(
+                    'Show caregivers accepting requests',
+                    style: text.bodySmall?.copyWith(
+                      color: value
+                          ? colors.onPrimaryContainer.withValues(alpha: 0.7)
+                          : colors.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-
-              // Gender
-              const Text(
-                'Gender',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                children: ['Male', 'Female']
-                    .map(
-                      (gender) => ChoiceChip(
-                        label: Text(
-                          gender,
-                          style: TextStyle(
-                            fontWeight: _selectedGender == gender
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                        selected: _selectedGender == gender,
-                        selectedColor: primary.withValues(alpha: 0.1),
-                        checkmarkColor: primary,
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        onSelected: (selected) => setState(
-                          () => _selectedGender = selected ? gender : null,
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 24),
-
-              // Language
-              const Text(
-                'Language',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: _languages
-                    .map(
-                      (lang) => FilterChip(
-                        label: Text(
-                          lang,
-                          style: TextStyle(
-                            fontWeight: _selectedLanguages.contains(lang)
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                        selected: _selectedLanguages.contains(lang),
-                        selectedColor: primary.withValues(alpha: 0.1),
-                        checkmarkColor: primary,
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        onSelected: (selected) => setState(
-                          () => selected
-                              ? _selectedLanguages.add(lang)
-                              : _selectedLanguages.remove(lang),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 24),
-
-              // Services / Specialties
-              const Text(
-                'Specialties',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              masterNames.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator.adaptive(strokeWidth: 2),
-                    ),
-                  ),
-                ),
-                error: (_, _) => Text(
-                  'Failed to load specialties',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
-                ),
-                data: (names) => Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: names
-                      .map(
-                        (svc) => FilterChip(
-                          label: Text(
-                            svc,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: _selectedServices.contains(svc)
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                          selected: _selectedServices.contains(svc),
-                          selectedColor: primary.withValues(alpha: 0.1),
-                          checkmarkColor: primary,
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            side: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          onSelected: (selected) => setState(
-                            () => selected
-                                ? _selectedServices.add(svc)
-                                : _selectedServices.remove(svc),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Availability
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: SwitchListTile.adaptive(
-                  title: const Text(
-                    'Available only',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                  subtitle: Text(
-                    'Show only caregivers accepting requests',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                  value: _isAvailable == true,
-                  activeTrackColor: primary,
-                  onChanged: (val) => setState(
-                    () => _isAvailable = val ? true : null,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Apply button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  onPressed: _applyFilters,
-                  child: const Text(
-                    'Apply Filters',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+            Switch.adaptive(
+              value: value,
+              activeThumbColor: colors.onPrimary,
+              activeTrackColor: colors.primary,
+              onChanged: onChanged,
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Section label ─────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  final ColorScheme colors;
+  final TextTheme text;
+
+  const _SectionLabel({
+    required this.label,
+    required this.colors,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: text.titleSmall?.copyWith(
+        fontWeight: FontWeight.w800,
+        color: colors.onSurface,
+        letterSpacing: 0.2,
       ),
     );
   }

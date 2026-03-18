@@ -2,7 +2,6 @@ import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/core/widgets/error_state_widget.dart';
-import 'package:cwsn/features/caregivers/models/caregiver_sort.dart';
 import 'package:cwsn/features/caregivers/presentation/providers/caregiver_providers.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_card.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_filter_sheet.dart';
@@ -13,81 +12,64 @@ import 'package:go_router/go_router.dart';
 class CaregiversListPage extends ConsumerWidget {
   const CaregiversListPage({super.key});
 
+  void _openFilterSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const CaregiverFilterSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final caregiversAsync = ref.watch(caregiversListProvider);
     final filter = ref.watch(caregiverFilterProvider);
-    final sort = ref.watch(caregiverSortProvider);
-    final primary = Theme.of(context).primaryColor;
+    final colors = Theme.of(context).colorScheme;
+
+    final badgeCount = filter.activeCount;
+    final hasActive = badgeCount > 0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppTopBar(
         title: 'Caregivers',
         actions: [
-          // Sort popup
-          PopupMenuButton<CaregiverSortOption>(
-            icon: const Icon(Icons.sort_rounded),
-            initialValue: sort,
-            onSelected: (option) {
-              ref.read(caregiverSortProvider.notifier).update(option);
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: CaregiverSortOption.recommended,
-                child: Text('Most Recommended'),
-              ),
-              PopupMenuItem(
-                value: CaregiverSortOption.experience,
-                child: Text('Most Experienced'),
-              ),
-              PopupMenuItem(
-                value: CaregiverSortOption.nameAsc,
-                child: Text('Name (A-Z)'),
-              ),
-              PopupMenuItem(
-                value: CaregiverSortOption.nameDesc,
-                child: Text('Name (Z-A)'),
-              ),
-            ],
-          ),
-          // Filter icon with badge
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.filter_list_rounded),
-                onPressed: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => const CaregiverFilterSheet(),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.tune_rounded),
+                  tooltip: 'Sort & Filter',
+                  onPressed: () => _openFilterSheet(context),
                 ),
-              ),
-              if (!filter.isEmpty)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    width: 18,
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color: primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${filter.activeCount}',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                if (hasActive)
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$badgeCount',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: colors.onPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -113,8 +95,10 @@ class CaregiversListPage extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 20,
+              ),
               itemCount: users.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
