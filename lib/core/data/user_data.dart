@@ -14,6 +14,7 @@ final caregivers = [
     firstName: 'Amit Kumar',
     imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
     gender: Gender.male,
+    phoneNumber: '+91 98765 43210',
     caregiverProfile: CaregiverProfile(
       about: 'Experienced caregiver with a passion for helping others.',
       services: [
@@ -46,6 +47,7 @@ final caregivers = [
     firstName: 'Priya Singh',
     imageUrl: 'https://randomuser.me/api/portraits/women/1.jpg',
     gender: Gender.female,
+    phoneNumber: '+91 91234 56789',
     caregiverProfile: CaregiverProfile(
       about: 'Compassionate caregiver with 3 years of experience.',
       services: [
@@ -77,6 +79,7 @@ final caregivers = [
     firstName: 'Rahul Verma',
     imageUrl: 'https://randomuser.me/api/portraits/men/2.jpg',
     gender: Gender.male,
+    phoneNumber: '+91 87654 32109',
     caregiverProfile: CaregiverProfile(
       about: 'Reliable caregiver specializing in elderly care.',
       services: [

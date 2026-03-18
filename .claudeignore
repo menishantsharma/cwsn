@@ -1,0 +1,20 @@
+# Build and cache directories
+build/
+.dart_tool/
+.fvm/
+
+# iOS & macOS heavy dependencies
+ios/Pods/
+ios/.symlinks/
+macos/Pods/
+
+# Android specific
+android/.gradle/
+
+# Windows & Linux ephemeral
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+
+# Auto-generated Dart files (Crucial if using Riverpod Generator or Freezed)
+*.g.dart
+*.freezed.dart
