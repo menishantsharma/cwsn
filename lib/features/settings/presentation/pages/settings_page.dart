@@ -66,6 +66,7 @@ class SettingsPage extends ConsumerWidget {
       backgroundColor: const Color(0xFFFBFBFB),
       appBar: const AppTopBar(title: 'Profile', showBackButton: false),
       body: ListView(
+        key: PageStorageKey(isCaregiverMode),
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         children: [
