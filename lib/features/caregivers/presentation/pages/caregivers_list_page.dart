@@ -5,6 +5,7 @@ import 'package:cwsn/core/widgets/error_state_widget.dart';
 import 'package:cwsn/core/widgets/modern_refresh_indicator.dart';
 import 'package:cwsn/features/caregivers/presentation/providers/caregiver_providers.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_card.dart';
+import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_card_skeleton.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_filter_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,8 +76,7 @@ class CaregiversListPage extends ConsumerWidget {
         ],
       ),
       body: caregiversAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator.adaptive()),
+        loading: () => const CaregiverListSkeleton(),
         error: (error, _) => ErrorStateWidget(
           message: 'Failed to load caregivers',
           onRetry: () => ref.invalidate(caregiversListProvider),

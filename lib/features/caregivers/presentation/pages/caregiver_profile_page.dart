@@ -5,6 +5,7 @@ import 'package:cwsn/core/widgets/user_avatar.dart';
 import 'package:cwsn/features/caregivers/presentation/providers/caregiver_action_state_provider.dart';
 import 'package:cwsn/features/caregivers/presentation/providers/caregiver_providers.dart';
 import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_action_zone.dart';
+import 'package:cwsn/features/caregivers/presentation/widgets/caregiver_profile_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,8 +26,7 @@ class CaregiverProfilePage extends ConsumerWidget {
       backgroundColor: const Color(0xFFFBFBFB),
       appBar: const AppTopBar(title: 'Caregiver Profile'),
       body: profileAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator.adaptive()),
+        loading: () => const CaregiverProfileSkeleton(),
         error: (err, _) => const Center(child: Text('Failed to load profile')),
         data: (user) {
           final caregiver = user.caregiverProfile!;

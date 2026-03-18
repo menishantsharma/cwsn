@@ -4,6 +4,7 @@ import 'package:cwsn/core/widgets/error_state_widget.dart';
 import 'package:cwsn/core/widgets/modern_refresh_indicator.dart';
 import 'package:cwsn/features/requests/presentation/providers/requests_provider.dart';
 import 'package:cwsn/features/requests/presentation/widgets/accepted_request_tile.dart';
+import 'package:cwsn/features/requests/presentation/widgets/request_tile_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,8 +19,7 @@ class AcceptedRequestsPage extends ConsumerWidget {
       backgroundColor: const Color(0xFFFBFBFB),
       appBar: const AppTopBar(title: 'History'),
       body: requestsAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator.adaptive()),
+        loading: () => const RequestHistoryListSkeleton(),
         error: (_, _) => ErrorStateWidget(
           message: 'Failed to load history',
           onRetry: () =>

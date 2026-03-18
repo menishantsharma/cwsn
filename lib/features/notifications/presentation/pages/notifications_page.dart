@@ -9,6 +9,7 @@ import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/notifications/models/notification_model.dart';
 import 'package:cwsn/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:cwsn/features/notifications/presentation/widgets/notification_tile.dart';
+import 'package:cwsn/features/notifications/presentation/widgets/notification_tile_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,8 +55,7 @@ class NotificationsPage extends ConsumerWidget {
         ],
       ),
       body: notificationsAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator.adaptive()),
+        loading: () => const NotificationsListSkeleton(),
         error: (_, _) => ErrorStateWidget(
           message: 'Failed to load notifications',
           onRetry: () => ref.read(notificationsProvider.notifier).refresh(),
