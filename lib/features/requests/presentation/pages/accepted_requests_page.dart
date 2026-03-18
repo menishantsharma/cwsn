@@ -1,6 +1,7 @@
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/core/widgets/error_state_widget.dart';
+import 'package:cwsn/core/widgets/modern_refresh_indicator.dart';
 import 'package:cwsn/features/requests/presentation/providers/requests_provider.dart';
 import 'package:cwsn/features/requests/presentation/widgets/accepted_request_tile.dart';
 import 'package:flutter/material.dart';
@@ -24,39 +25,27 @@ class AcceptedRequestsPage extends ConsumerWidget {
           onRetry: () =>
               ref.read(requestHistoryProvider.notifier).refresh(),
         ),
-        data: (requests) => RefreshIndicator.adaptive(
+        data: (requests) => ModernRefreshIndicatorList(
           onRefresh: () =>
               ref.read(requestHistoryProvider.notifier).refresh(),
-          child: requests.isEmpty
-              ? ListView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  children: [
-                    SizedBox(
-                        height: MediaQuery.sizeOf(context).height * 0.25),
-                    const EmptyStateWidget(
-                      icon: Icons.history_rounded,
-                      iconSize: 56,
-                      title: 'No History Yet',
-                      subtitle:
-                          'Accepted and declined requests will appear here.',
-                    ),
-                  ],
-                )
-              : ListView.separated(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 16),
-                  itemCount: requests.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (_, index) => AcceptedRequestTile(
-                    key: ValueKey(requests[index].id),
-                    request: requests[index],
-                  ),
-                ),
+          itemCount: requests.length,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          emptyWidget: Column(
+            children: [
+              SizedBox(height: MediaQuery.sizeOf(context).height * 0.25),
+              const EmptyStateWidget(
+                icon: Icons.history_rounded,
+                iconSize: 56,
+                title: 'No History Yet',
+                subtitle: 'Accepted and declined requests will appear here.',
+              ),
+            ],
+          ),
+          itemBuilder: (_, index) => AcceptedRequestTile(
+            key: ValueKey(requests[index].id),
+            request: requests[index],
+          ),
         ),
       ),
     );

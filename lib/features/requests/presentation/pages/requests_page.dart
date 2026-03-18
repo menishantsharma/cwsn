@@ -2,6 +2,7 @@ import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
 import 'package:cwsn/core/widgets/empty_state_widget.dart';
 import 'package:cwsn/core/widgets/error_state_widget.dart';
+import 'package:cwsn/core/widgets/modern_refresh_indicator.dart';
 import 'package:cwsn/features/requests/presentation/providers/requests_provider.dart';
 import 'package:cwsn/features/requests/presentation/widgets/request_tile.dart';
 import 'package:flutter/material.dart';
@@ -41,43 +42,32 @@ class RequestsPage extends ConsumerWidget {
           message: 'Failed to load requests',
           onRetry: () => ref.read(pendingRequestsProvider.notifier).refresh(),
         ),
-        data: (requests) => RefreshIndicator.adaptive(
+        data: (requests) => ModernRefreshIndicatorList(
           onRefresh: () =>
               ref.read(pendingRequestsProvider.notifier).refresh(),
-          child: requests.isEmpty
-              ? ListView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  children: [
-                    SizedBox(
-                        height: MediaQuery.sizeOf(context).height * 0.25),
-                    const EmptyStateWidget(
-                      icon: Icons.inbox_outlined,
-                      iconSize: 56,
-                      title: 'No Pending Requests',
-                      subtitle: 'New bookings will appear here.',
-                    ),
-                  ],
-                )
-              : ListView.separated(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  itemCount: requests.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (_, index) {
-                    final r = requests[index];
-                    return RequestTile(
-                      key: ValueKey(r.id),
-                      request: r,
-                      onAccept: () => _act(context, ref, r.id, true),
-                      onReject: () => _act(context, ref, r.id, false),
-                    );
-                  },
-                ),
+          itemCount: requests.length,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          emptyWidget: Column(
+            children: [
+              SizedBox(height: MediaQuery.sizeOf(context).height * 0.25),
+              const EmptyStateWidget(
+                icon: Icons.inbox_outlined,
+                iconSize: 56,
+                title: 'No Pending Requests',
+                subtitle: 'New bookings will appear here.',
+              ),
+            ],
+          ),
+          itemBuilder: (_, index) {
+            final r = requests[index];
+            return RequestTile(
+              key: ValueKey(r.id),
+              request: r,
+              onAccept: () => _act(context, ref, r.id, true),
+              onReject: () => _act(context, ref, r.id, false),
+            );
+          },
         ),
       ),
     );
@@ -102,8 +92,10 @@ class RequestsPage extends ConsumerWidget {
     final m = ScaffoldMessenger.of(context)..clearSnackBars();
     m.showSnackBar(
       SnackBar(
-        content: Text(message,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+        content: Text(
+          message,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         backgroundColor: isError
             ? Colors.black87
             : (accepted ? Colors.green.shade600 : Colors.redAccent),
