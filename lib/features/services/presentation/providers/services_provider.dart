@@ -14,6 +14,16 @@ final masterServiceListProvider =
   return ref.watch(serviceRepositoryProvider).getServicesList();
 });
 
+/// Items for a single category, keyed by section title (auto-disposed).
+///
+/// Usage: `ref.watch(categoryServicesProvider('Therapy Services'))`
+final categoryServicesProvider = FutureProvider.autoDispose
+    .family<List<ServiceItem>, String>((ref, sectionTitle) {
+  return ref
+      .watch(serviceRepositoryProvider)
+      .getServicesByCategory(sectionTitle);
+});
+
 /// Flat list of all unique service names from the master catalog.
 final masterServiceNamesProvider = FutureProvider<List<String>>((ref) async {
   final sections = await ref.watch(masterServiceListProvider.future);
