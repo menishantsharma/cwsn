@@ -1,13 +1,9 @@
-import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/theme/app_theme.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
-import 'package:cwsn/features/services/models/service_model.dart';
+import 'package:cwsn/features/services/models/service_search_result.dart';
 import 'package:cwsn/features/services/presentation/providers/services_provider.dart';
-import 'package:cwsn/features/services/presentation/widgets/service_card.dart';
-import 'package:cwsn/features/services/presentation/widgets/service_card_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 /// Full-screen search experience for the services catalog.
 ///
@@ -135,20 +131,12 @@ class _SearchBody extends ConsumerWidget {
     if (query.isEmpty) return const _InitialPrompt();
 
     return switch (resultsAsync) {
-      // ── Loading ────────────────────────────────────────────────────────────
-      // Skeleton mirrors the results grid exactly — 2 columns, same spacing.
-      AsyncLoading() => const _SearchGridSkeleton(),
-
-      // ── Error ──────────────────────────────────────────────────────────────
+      AsyncLoading() => const _SearchListSkeleton(),
       AsyncError() => _ErrorView(
         onRetry: () => ref.invalidate(serviceSearchResultsProvider),
       ),
-
-      // ── No results ─────────────────────────────────────────────────────────
       AsyncData(:final value) when value.isEmpty => _NoResultsView(query: query),
-
-      // ── Results ────────────────────────────────────────────────────────────
-      AsyncData(:final value) => _ResultsGrid(items: value),
+      AsyncData(:final value) => _ResultsList(items: value),
     };
   }
 }
@@ -157,53 +145,36 @@ class _SearchBody extends ConsumerWidget {
 
 /// Shimmer placeholder that exactly mirrors [_ResultsGrid]'s layout so there
 /// is zero layout shift when real cards arrive.
-class _SearchGridSkeleton extends StatelessWidget {
-  const _SearchGridSkeleton();
-
-  static const int _cellCount = 6;
+class _SearchListSkeleton extends StatelessWidget {
+  const _SearchListSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
+    return ListView.separated(
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: _ResultsGrid._columns,
-        mainAxisSpacing: _ResultsGrid._spacing,
-        crossAxisSpacing: _ResultsGrid._spacing,
-        childAspectRatio: _ResultsGrid._aspectRatio,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 5,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (_, _) => Container(
+        height: 120,
+        decoration: BoxDecoration(
+          color: context.colorScheme.onSurface.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
-      itemCount: _cellCount,
-      // Each cell is a full-bleed ServiceCardSkeleton. ServiceCardSkeleton
-      // has a fixed width so we wrap it in SizedBox.expand so the grid
-      // cell controls sizing, identical to how ServiceCard is used below.
-      itemBuilder: (_, _) => SizedBox.expand(child: ServiceCardSkeleton()),
     );
   }
 }
 
-// ── Results grid ───────────────────────────────────────────────────────────────
-
-/// Scrollable grid reusing the exact [ServiceCard] from the main Services page.
-///
-/// Using [ServiceCard] directly ensures pixel-perfect visual consistency —
-/// same image treatment, same gradient overlay, same border radius.
-class _ResultsGrid extends StatelessWidget {
-  final List<ServiceItem> items;
-
-  static const int _columns = 1;
-  static const double _spacing = 12.0;
-  // Wide and short to match the horizontal card layout.
-  static const double _aspectRatio = 3.8;
-
-  const _ResultsGrid({required this.items});
+class _ResultsList extends StatelessWidget {
+  final List<ServiceSearchResult> items;
+  const _ResultsList({required this.items});
 
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // ── Result count chip ──────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
@@ -215,31 +186,170 @@ class _ResultsGrid extends StatelessWidget {
             ),
           ),
         ),
-
-        // ── Grid ──────────────────────────────────────────────────────────
         SliverPadding(
           padding: const EdgeInsets.all(16),
-          sliver: SliverGrid(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final item = items[index];
-                return ServiceCard(
-                  item: item,
-                  // double.infinity lets the grid cell width override the
-                  // card's default fixed width of 148.
-                  width: double.infinity,
-                  // TODO: swap for item.id-based route once detail pages exist.
-                  onTap: () => context.pushNamed(AppRoutes.specialNeeds),
-                );
-              },
-              childCount: items.length,
+          sliver: SliverList.separated(
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, index) =>
+                _CaregiverResultCard(result: items[index]),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CaregiverResultCard extends StatelessWidget {
+  final ServiceSearchResult result;
+  const _CaregiverResultCard({required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colorScheme;
+    final tt = context.textTheme;
+    final profile = result.caregiverProfile;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  result.title,
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (result.categoryName != null) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    result.categoryName!,
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (profile != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: cs.primaryContainer,
+                  child: Text(
+                    profile.name.isNotEmpty
+                        ? profile.name[0].toUpperCase()
+                        : '?',
+                    style: tt.titleSmall?.copyWith(
+                      color: cs.onPrimaryContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.name,
+                        style: tt.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        profile.qualifications,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurface.withValues(alpha: 0.55),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: _columns,
-              mainAxisSpacing: _spacing,
-              crossAxisSpacing: _spacing,
-              childAspectRatio: _aspectRatio,
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _MetaChip(
+                  icon: Icons.location_on_outlined,
+                  label: profile.regionName,
+                ),
+                _MetaChip(
+                  icon: Icons.swap_horiz_rounded,
+                  label: result.serviceType,
+                ),
+                _MetaChip(
+                  icon: Icons.payment_outlined,
+                  label: result.paymentType,
+                ),
+                if (profile.upvoteCount > 0)
+                  _MetaChip(
+                    icon: Icons.thumb_up_outlined,
+                    label: '${profile.upvoteCount}',
+                  ),
+              ],
             ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _MetaChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: cs.onSurface.withValues(alpha: 0.45)),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: context.textTheme.labelSmall?.copyWith(
+            color: cs.onSurface.withValues(alpha: 0.55),
           ),
         ),
       ],

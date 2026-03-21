@@ -96,6 +96,7 @@ class _CategoryServicesBody extends ConsumerWidget {
               spacing: _spacing,
               padding: _padding,
               aspectRatio: _aspectRatio,
+              sectionTitle: sectionTitle,
               onRefresh: () =>
                   ref.refresh(categoryServicesProvider(sectionTitle).future),
             ),
@@ -113,6 +114,7 @@ class _CategoryGrid extends StatelessWidget {
   final double padding;
   final double aspectRatio;
   final Future<void> Function() onRefresh;
+  final String sectionTitle;
 
   const _CategoryGrid({
     required this.items,
@@ -121,6 +123,7 @@ class _CategoryGrid extends StatelessWidget {
     required this.padding,
     required this.aspectRatio,
     required this.onRefresh,
+    required this.sectionTitle,
   });
 
   @override
@@ -150,7 +153,10 @@ class _CategoryGrid extends StatelessWidget {
           return ServiceCard(
             item: item,
             width: double.infinity,
-            onTap: () => context.pushNamed(AppRoutes.specialNeeds),
+            onTap: () => context.pushNamed(
+              AppRoutes.specialNeeds,
+              extra: sectionTitle,
+            ),
           );
         },
       ),

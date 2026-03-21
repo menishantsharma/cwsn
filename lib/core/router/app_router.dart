@@ -1,5 +1,6 @@
 import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/router/nav_config.dart';
+import 'package:cwsn/features/caregivers/models/caregiver_list_args.dart';
 import 'package:cwsn/core/widgets/main_shell.dart';
 import 'package:cwsn/core/widgets/switching_screen.dart';
 import 'package:cwsn/features/auth/presentation/pages/login_page.dart';
@@ -174,12 +175,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.specialNeedsPath,
         name: AppRoutes.specialNeeds,
-        builder: (_, _) => const SpecialNeedsPage(),
+        builder: (_, state) => SpecialNeedsPage(
+          serviceTitle: state.extra as String?,
+        ),
       ),
       GoRoute(
         path: AppRoutes.caregiversListPath,
         name: AppRoutes.caregiversList,
-        builder: (_, _) => const CaregiversListPage(),
+        builder: (_, state) => CaregiversListPage(
+          args: state.extra as CaregiverListArgs?,
+        ),
       ),
       GoRoute(
         path: AppRoutes.caregiverProfilePath,

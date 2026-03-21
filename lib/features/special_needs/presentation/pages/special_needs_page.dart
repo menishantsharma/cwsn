@@ -1,12 +1,17 @@
 import 'package:cwsn/core/router/app_routes.dart';
 import 'package:cwsn/core/widgets/app_top_bar.dart';
+import 'package:cwsn/features/caregivers/models/caregiver_list_args.dart';
+import 'package:cwsn/features/special_needs/presentation/providers/special_needs_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cwsn/features/special_needs/presentation/providers/special_needs_provider.dart';
 
 class SpecialNeedsPage extends ConsumerWidget {
-  const SpecialNeedsPage({super.key});
+  /// The service title selected on the previous screen.
+  /// Passed through to the caregivers list so it can filter by context.
+  final String? serviceTitle;
+
+  const SpecialNeedsPage({super.key, this.serviceTitle});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,7 +47,13 @@ class SpecialNeedsPage extends ConsumerWidget {
                 ),
               ),
               child: ListTile(
-                onTap: () => context.pushNamed(AppRoutes.caregiversList),
+                onTap: () => context.pushNamed(
+                  AppRoutes.caregiversList,
+                  extra: CaregiverListArgs(
+                    specialNeed: item,
+                    serviceTitle: serviceTitle,
+                  ),
+                ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 6,

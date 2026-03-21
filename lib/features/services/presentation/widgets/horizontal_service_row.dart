@@ -62,7 +62,10 @@ class HorizontalServiceRow extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 16),
             itemBuilder: (_, index) => ServiceCard(
               item: section.items[index],
-              onTap: () => context.pushNamed(AppRoutes.specialNeeds),
+              onTap: () => context.pushNamed(
+                AppRoutes.specialNeeds,
+                extra: section.title,
+              ),
             ),
           ),
         ),

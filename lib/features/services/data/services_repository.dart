@@ -1,7 +1,9 @@
 import 'package:cwsn/core/network/api_client.dart';
+import 'package:cwsn/features/caregivers/models/backend_caregiver_filter.dart';
 import 'package:cwsn/features/services/data/services_data.dart';
 import 'package:cwsn/features/services/models/remote_service_model.dart';
 import 'package:cwsn/features/services/models/service_model.dart';
+import 'package:cwsn/features/services/models/service_search_result.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final serviceRepositoryProvider = Provider<ServiceRepository>(
@@ -10,19 +12,19 @@ final serviceRepositoryProvider = Provider<ServiceRepository>(
 
 abstract class ServiceRepository {
   Future<List<ServiceSection>> getServicesList();
-
-  /// Returns all [ServiceItem]s for a single category identified by [sectionTitle].
   Future<List<ServiceItem>> getServicesByCategory(String sectionTitle);
+  Future<List<ServiceSearchResult>> searchServices(String query);
 
-  /// Searches across all categories and returns items whose title contains
-  /// [query] (case-insensitive).
-  Future<List<ServiceItem>> searchServices(String query);
+  /// Returns caregivers offering services under [categoryName].
+  /// Resolves the name to a category ID via `/api/common/categories/`,
+  /// then calls `?category=<id>` — exact match, no false positives.
+  /// Optional [filter] adds extra query params (service_type, payment_type, etc).
+  Future<List<ServiceSearchResult>> getCaregiversByCategory(
+    String categoryName, {
+    BackendCaregiverFilter? filter,
+  });
 }
 
-/// Live implementation that fetches from `GET /api/services/services/`.
-///
-/// Groups the flat service list by [RemoteService.categoryName] so the UI
-/// receives the same [List<ServiceSection>] shape it already expects.
 class RealServiceRepository implements ServiceRepository {
   final ApiClient _client;
   const RealServiceRepository(this._client);
@@ -30,22 +32,17 @@ class RealServiceRepository implements ServiceRepository {
   @override
   Future<List<ServiceSection>> getServicesList() async {
     final data = await _client.get('/api/services/services/');
-
     if (data is! List) return [];
-
     final remoteServices = data
         .whereType<Map<String, dynamic>>()
         .map(RemoteService.fromJson)
         .where((s) => s.isActive)
         .toList();
-
     return _groupByCategory(remoteServices);
   }
 
   @override
-  Future<List<ServiceItem>> getServicesByCategory(
-    String sectionTitle,
-  ) async {
+  Future<List<ServiceItem>> getServicesByCategory(String sectionTitle) async {
     final sections = await getServicesList();
     return sections
         .firstWhere(
@@ -58,47 +55,89 @@ class RealServiceRepository implements ServiceRepository {
   }
 
   @override
-  Future<List<ServiceItem>> searchServices(String query) async {
+  Future<List<ServiceSearchResult>> searchServices(String query) async {
     if (query.trim().isEmpty) return [];
-
-    final data = await _client.get(
-      '/api/services/services/',
-      queryParameters: {'search': query.trim()},
-    );
-
+    final data = await _client.get('/api/services/services/');
     if (data is! List) return [];
-
+    final q = query.trim().toLowerCase();
     return data
         .whereType<Map<String, dynamic>>()
-        .map(RemoteService.fromJson)
-        .where((s) => s.isActive)
-        .map(_toServiceItem)
+        .map(ServiceSearchResult.fromJson)
+        .where(
+          (s) =>
+              s.caregiverProfile != null &&
+              (s.title.toLowerCase().contains(q) ||
+                  (s.categoryName?.toLowerCase().contains(q) ?? false) ||
+                  (s.caregiverProfile?.qualifications
+                          .toLowerCase()
+                          .contains(q) ??
+                      false)),
+        )
         .toList();
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  @override
+  Future<List<ServiceSearchResult>> getCaregiversByCategory(
+    String categoryName, {
+    BackendCaregiverFilter? filter,
+  }) async {
+    if (categoryName.trim().isEmpty) return [];
+
+    // Step 1 — resolve category name → ID
+    final catData = await _client.get('/api/common/categories/');
+    int? categoryId;
+    if (catData is List) {
+      for (final c in catData.whereType<Map<String, dynamic>>()) {
+        if ((c['name'] as String?)?.toLowerCase() ==
+            categoryName.trim().toLowerCase()) {
+          categoryId = c['id'] as int?;
+          break;
+        }
+      }
+    }
+
+    // Step 2 — fetch services filtered by category ID + optional filter params
+    final queryParams = <String, String>{
+      if (categoryId != null) 'category': categoryId.toString(),
+      ...?filter?.toQueryParams(),
+    };
+
+    final data = await _client.get(
+      '/api/services/services/',
+      queryParameters: queryParams,
+    );
+    if (data is! List) return [];
+
+    // Deduplicate: one card per caregiver
+    final seen = <int>{};
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(ServiceSearchResult.fromJson)
+        .where((s) {
+          final cid = s.caregiverProfile?.id;
+          if (cid == null) return false;
+          return seen.add(cid);
+        })
+        .toList();
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   List<ServiceSection> _groupByCategory(List<RemoteService> services) {
     final Map<String, List<ServiceItem>> grouped = {};
-
     for (final service in services) {
       final category = service.categoryName ?? 'Other';
       grouped.putIfAbsent(category, () => []).add(_toServiceItem(service));
     }
-
     return grouped.entries
         .map((e) => ServiceSection(title: e.key, items: e.value))
         .toList();
   }
 
-  ServiceItem _toServiceItem(RemoteService s) => ServiceItem(
-        id: s.id.toString(),
-        title: s.title,
-        imgUrl: s.image ?? '',
-      );
+  ServiceItem _toServiceItem(RemoteService s) =>
+      ServiceItem(id: s.id.toString(), title: s.title, imgUrl: s.image ?? '');
 }
 
-/// Fallback fake implementation — used in tests or when backend is unavailable.
 class FakeServiceRepository implements ServiceRepository {
   Future<void> _delay() => Future.delayed(const Duration(seconds: 2));
 
@@ -122,13 +161,18 @@ class FakeServiceRepository implements ServiceRepository {
   }
 
   @override
-  Future<List<ServiceItem>> searchServices(String query) async {
+  Future<List<ServiceSearchResult>> searchServices(String query) async {
     if (query.trim().isEmpty) return [];
     await _delay();
-    final q = query.trim().toLowerCase();
-    return mockServiceSections
-        .expand((section) => section.items)
-        .where((item) => item.title.toLowerCase().contains(q))
-        .toList();
+    return [];
+  }
+
+  @override
+  Future<List<ServiceSearchResult>> getCaregiversByCategory(
+    String categoryName, {
+    BackendCaregiverFilter? filter,
+  }) async {
+    await _delay();
+    return [];
   }
 }
