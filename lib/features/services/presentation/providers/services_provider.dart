@@ -1,5 +1,6 @@
 import 'package:cwsn/features/caregivers/models/backend_caregiver_filter.dart';
 import 'package:cwsn/features/services/data/services_repository.dart';
+import 'package:cwsn/features/services/models/caregiver_profile_model.dart';
 import 'package:cwsn/features/services/models/service_model.dart';
 import 'package:cwsn/features/services/models/service_search_result.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -73,6 +74,12 @@ final caregiversByCategoryProvider = FutureProvider.autoDispose
   return ref
       .watch(serviceRepositoryProvider)
       .getCaregiversByCategory(categoryName, filter: filter);
+});
+
+/// Fetches a single caregiver profile by ID from the backend.
+final caregiverProfileByIdProvider =
+    FutureProvider.autoDispose.family<CaregiverProfile, int>((ref, id) {
+  return ref.watch(serviceRepositoryProvider).getCaregiverProfileById(id);
 });
 
 /// Flat list of all unique service names from the master catalog.

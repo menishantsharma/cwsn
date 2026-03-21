@@ -13,9 +13,11 @@ class CaregiverProfile with _$CaregiverProfile {
     required int age,
     required String gender,
     required String qualifications,
+    @Default('') String recommendations,
     @Default(0) int upvoteCount,
     @Default([]) List<String> languages,
     @Default('') String regionName,
+    @Default('') String contactNo,
   }) = _CaregiverProfile;
 
   factory CaregiverProfile.fromJson(Map<String, dynamic> json) =>

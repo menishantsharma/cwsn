@@ -223,8 +223,18 @@ class _BackendCaregiversPage extends ConsumerWidget {
                     vertical: 20,
                   ),
                   separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (_, index) =>
-                      _BackendCaregiverCard(result: sorted[index]),
+                  itemBuilder: (context, index) => _BackendCaregiverCard(
+                    result: sorted[index],
+                    onTap: () {
+                      final id = sorted[index].caregiverProfile?.id;
+                      if (id != null) {
+                        context.pushNamed(
+                          AppRoutes.backendCaregiverProfile,
+                          extra: id,
+                        );
+                      }
+                    },
+                  ),
                 );
         },
       ),
@@ -261,7 +271,8 @@ class _BackendCaregiversPage extends ConsumerWidget {
 
 class _BackendCaregiverCard extends StatelessWidget {
   final ServiceSearchResult result;
-  const _BackendCaregiverCard({required this.result});
+  final VoidCallback? onTap;
+  const _BackendCaregiverCard({required this.result, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +288,10 @@ class _BackendCaregiverCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.grey.shade100),
       ),
-      child: Padding(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
@@ -367,6 +381,7 @@ class _BackendCaregiverCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

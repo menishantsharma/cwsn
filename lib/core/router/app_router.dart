@@ -6,6 +6,7 @@ import 'package:cwsn/core/widgets/switching_screen.dart';
 import 'package:cwsn/features/auth/presentation/pages/login_page.dart';
 import 'package:cwsn/features/auth/presentation/pages/role_selection_page.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
+import 'package:cwsn/features/caregivers/presentation/pages/backend_caregiver_profile_page.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregiver_profile_page.dart';
 import 'package:cwsn/features/caregivers/presentation/pages/caregivers_list_page.dart';
 import 'package:cwsn/features/requests/presentation/pages/accepted_requests_page.dart';
@@ -223,6 +224,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.serviceSearchPath,
         name: AppRoutes.serviceSearch,
         builder: (_, _) => const ServiceSearchScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.backendCaregiverProfilePath,
+        name: AppRoutes.backendCaregiverProfile,
+        builder: (_, state) => BackendCaregiverProfilePage(
+          caregiverId: state.extra! as int,
+        ),
       ),
     ],
   );

@@ -1,3 +1,4 @@
+import 'package:cwsn/core/models/user_model.dart';
 import 'package:cwsn/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cwsn/features/caregivers/data/caregiver_repository.dart';
 import 'package:cwsn/features/requests/models/request_model.dart';
@@ -8,7 +9,9 @@ enum ActionZoneState { unauthenticated, none, pending, accepted }
 final actionZoneStateProvider = FutureProvider.autoDispose
     .family<ActionZoneState, String>((ref, caregiverId) async {
       final user = ref.watch(currentUserProvider).value;
-      if (user == null || user.isGuest) return ActionZoneState.unauthenticated;
+      if (user == null || user.isGuest || user.activeRole != UserRole.parent) {
+        return ActionZoneState.unauthenticated;
+      }
 
       final repo = ref.watch(caregiverRepositoryProvider);
       final status = await repo.getRequestStatus(

@@ -26,9 +26,11 @@ mixin _$CaregiverProfile {
   int get age => throw _privateConstructorUsedError;
   String get gender => throw _privateConstructorUsedError;
   String get qualifications => throw _privateConstructorUsedError;
+  String get recommendations => throw _privateConstructorUsedError;
   int get upvoteCount => throw _privateConstructorUsedError;
   List<String> get languages => throw _privateConstructorUsedError;
   String get regionName => throw _privateConstructorUsedError;
+  String get contactNo => throw _privateConstructorUsedError;
 
   /// Serializes this CaregiverProfile to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -53,9 +55,11 @@ abstract class $CaregiverProfileCopyWith<$Res> {
     int age,
     String gender,
     String qualifications,
+    String recommendations,
     int upvoteCount,
     List<String> languages,
     String regionName,
+    String contactNo,
   });
 }
 
@@ -79,9 +83,11 @@ class _$CaregiverProfileCopyWithImpl<$Res, $Val extends CaregiverProfile>
     Object? age = null,
     Object? gender = null,
     Object? qualifications = null,
+    Object? recommendations = null,
     Object? upvoteCount = null,
     Object? languages = null,
     Object? regionName = null,
+    Object? contactNo = null,
   }) {
     return _then(
       _value.copyWith(
@@ -105,6 +111,10 @@ class _$CaregiverProfileCopyWithImpl<$Res, $Val extends CaregiverProfile>
                 ? _value.qualifications
                 : qualifications // ignore: cast_nullable_to_non_nullable
                       as String,
+            recommendations: null == recommendations
+                ? _value.recommendations
+                : recommendations // ignore: cast_nullable_to_non_nullable
+                      as String,
             upvoteCount: null == upvoteCount
                 ? _value.upvoteCount
                 : upvoteCount // ignore: cast_nullable_to_non_nullable
@@ -116,6 +126,10 @@ class _$CaregiverProfileCopyWithImpl<$Res, $Val extends CaregiverProfile>
             regionName: null == regionName
                 ? _value.regionName
                 : regionName // ignore: cast_nullable_to_non_nullable
+                      as String,
+            contactNo: null == contactNo
+                ? _value.contactNo
+                : contactNo // ignore: cast_nullable_to_non_nullable
                       as String,
           )
           as $Val,
@@ -138,9 +152,11 @@ abstract class _$$CaregiverProfileImplCopyWith<$Res>
     int age,
     String gender,
     String qualifications,
+    String recommendations,
     int upvoteCount,
     List<String> languages,
     String regionName,
+    String contactNo,
   });
 }
 
@@ -163,9 +179,11 @@ class __$$CaregiverProfileImplCopyWithImpl<$Res>
     Object? age = null,
     Object? gender = null,
     Object? qualifications = null,
+    Object? recommendations = null,
     Object? upvoteCount = null,
     Object? languages = null,
     Object? regionName = null,
+    Object? contactNo = null,
   }) {
     return _then(
       _$CaregiverProfileImpl(
@@ -189,6 +207,10 @@ class __$$CaregiverProfileImplCopyWithImpl<$Res>
             ? _value.qualifications
             : qualifications // ignore: cast_nullable_to_non_nullable
                   as String,
+        recommendations: null == recommendations
+            ? _value.recommendations
+            : recommendations // ignore: cast_nullable_to_non_nullable
+                  as String,
         upvoteCount: null == upvoteCount
             ? _value.upvoteCount
             : upvoteCount // ignore: cast_nullable_to_non_nullable
@@ -200,6 +222,10 @@ class __$$CaregiverProfileImplCopyWithImpl<$Res>
         regionName: null == regionName
             ? _value.regionName
             : regionName // ignore: cast_nullable_to_non_nullable
+                  as String,
+        contactNo: null == contactNo
+            ? _value.contactNo
+            : contactNo // ignore: cast_nullable_to_non_nullable
                   as String,
       ),
     );
@@ -216,9 +242,11 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
     required this.age,
     required this.gender,
     required this.qualifications,
+    this.recommendations = '',
     this.upvoteCount = 0,
     final List<String> languages = const [],
     this.regionName = '',
+    this.contactNo = '',
   }) : _languages = languages;
 
   factory _$CaregiverProfileImpl.fromJson(Map<String, dynamic> json) =>
@@ -236,6 +264,9 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
   final String qualifications;
   @override
   @JsonKey()
+  final String recommendations;
+  @override
+  @JsonKey()
   final int upvoteCount;
   final List<String> _languages;
   @override
@@ -249,10 +280,13 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
   @override
   @JsonKey()
   final String regionName;
+  @override
+  @JsonKey()
+  final String contactNo;
 
   @override
   String toString() {
-    return 'CaregiverProfile(id: $id, name: $name, age: $age, gender: $gender, qualifications: $qualifications, upvoteCount: $upvoteCount, languages: $languages, regionName: $regionName)';
+    return 'CaregiverProfile(id: $id, name: $name, age: $age, gender: $gender, qualifications: $qualifications, recommendations: $recommendations, upvoteCount: $upvoteCount, languages: $languages, regionName: $regionName, contactNo: $contactNo)';
   }
 
   @override
@@ -266,6 +300,8 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
             (identical(other.gender, gender) || other.gender == gender) &&
             (identical(other.qualifications, qualifications) ||
                 other.qualifications == qualifications) &&
+            (identical(other.recommendations, recommendations) ||
+                other.recommendations == recommendations) &&
             (identical(other.upvoteCount, upvoteCount) ||
                 other.upvoteCount == upvoteCount) &&
             const DeepCollectionEquality().equals(
@@ -273,7 +309,9 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
               _languages,
             ) &&
             (identical(other.regionName, regionName) ||
-                other.regionName == regionName));
+                other.regionName == regionName) &&
+            (identical(other.contactNo, contactNo) ||
+                other.contactNo == contactNo));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -285,9 +323,11 @@ class _$CaregiverProfileImpl implements _CaregiverProfile {
     age,
     gender,
     qualifications,
+    recommendations,
     upvoteCount,
     const DeepCollectionEquality().hash(_languages),
     regionName,
+    contactNo,
   );
 
   /// Create a copy of CaregiverProfile
@@ -314,9 +354,11 @@ abstract class _CaregiverProfile implements CaregiverProfile {
     required final int age,
     required final String gender,
     required final String qualifications,
+    final String recommendations,
     final int upvoteCount,
     final List<String> languages,
     final String regionName,
+    final String contactNo,
   }) = _$CaregiverProfileImpl;
 
   factory _CaregiverProfile.fromJson(Map<String, dynamic> json) =
@@ -333,11 +375,15 @@ abstract class _CaregiverProfile implements CaregiverProfile {
   @override
   String get qualifications;
   @override
+  String get recommendations;
+  @override
   int get upvoteCount;
   @override
   List<String> get languages;
   @override
   String get regionName;
+  @override
+  String get contactNo;
 
   /// Create a copy of CaregiverProfile
   /// with the given fields replaced by the non-null parameter values.

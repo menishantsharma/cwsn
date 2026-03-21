@@ -1,6 +1,7 @@
 import 'package:cwsn/core/network/api_client.dart';
 import 'package:cwsn/features/caregivers/models/backend_caregiver_filter.dart';
 import 'package:cwsn/features/services/data/services_data.dart';
+import 'package:cwsn/features/services/models/caregiver_profile_model.dart';
 import 'package:cwsn/features/services/models/remote_service_model.dart';
 import 'package:cwsn/features/services/models/service_model.dart';
 import 'package:cwsn/features/services/models/service_search_result.dart';
@@ -23,6 +24,9 @@ abstract class ServiceRepository {
     String categoryName, {
     BackendCaregiverFilter? filter,
   });
+
+  /// Fetches a single caregiver profile by ID from `/api/users/caregiver-profiles/<id>/`.
+  Future<CaregiverProfile> getCaregiverProfileById(int id);
 }
 
 class RealServiceRepository implements ServiceRepository {
@@ -134,6 +138,15 @@ class RealServiceRepository implements ServiceRepository {
         .toList();
   }
 
+  @override
+  Future<CaregiverProfile> getCaregiverProfileById(int id) async {
+    final data = await _client.get('/api/users/caregiver-profiles/$id/');
+    if (data is! Map<String, dynamic>) {
+      throw StateError('Unexpected response for caregiver profile $id');
+    }
+    return CaregiverProfile.fromJson(data);
+  }
+
   ServiceItem _toServiceItem(RemoteService s) =>
       ServiceItem(id: s.id.toString(), title: s.title, imgUrl: s.image ?? '');
 }
@@ -174,5 +187,11 @@ class FakeServiceRepository implements ServiceRepository {
   }) async {
     await _delay();
     return [];
+  }
+
+  @override
+  Future<CaregiverProfile> getCaregiverProfileById(int id) async {
+    await _delay();
+    throw UnimplementedError('FakeServiceRepository: no mock profile for $id');
   }
 }

@@ -14,11 +14,13 @@ _$CaregiverProfileImpl _$$CaregiverProfileImplFromJson(
   age: (json['age'] as num).toInt(),
   gender: json['gender'] as String,
   qualifications: json['qualifications'] as String,
+  recommendations: json['recommendations'] as String? ?? '',
   upvoteCount: (json['upvote_count'] as num?)?.toInt() ?? 0,
   languages:
       (json['languages'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
   regionName: json['region_name'] as String? ?? '',
+  contactNo: json['contact_no'] as String? ?? '',
 );
 
 Map<String, dynamic> _$$CaregiverProfileImplToJson(
@@ -29,7 +31,9 @@ Map<String, dynamic> _$$CaregiverProfileImplToJson(
   'age': instance.age,
   'gender': instance.gender,
   'qualifications': instance.qualifications,
+  'recommendations': instance.recommendations,
   'upvote_count': instance.upvoteCount,
   'languages': instance.languages,
   'region_name': instance.regionName,
+  'contact_no': instance.contactNo,
 };
