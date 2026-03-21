@@ -1,0 +1,11 @@
+django
+djangorestframework
+django-filter
+django-allauth
+dj-rest-auth
+requests
+Pillow
+Faker
+cryptography
+jwt
+psycopg2-binary

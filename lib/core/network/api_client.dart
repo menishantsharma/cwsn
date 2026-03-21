@@ -1,29 +1,93 @@
+import 'package:cwsn/core/constants/app_constants.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Provides the singleton [Dio] instance used across the app.
+final dioProvider = Provider<Dio>((ref) {
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: AppConstants.baseUrl,
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+      headers: {'Content-Type': 'application/json'},
+    ),
+  );
+  dio.interceptors.add(
+    LogInterceptor(requestBody: true, responseBody: true),
+  );
+  return dio;
+});
+
 /// Centralized API client that all repositories route through.
-///
-/// Currently wraps fake delays. When a real backend is ready, swap
-/// [FakeApiClient] for a real implementation that uses `http` or `dio`
-/// — repositories stay unchanged.
-final apiClientProvider = Provider<ApiClient>((ref) => FakeApiClient());
+final apiClientProvider = Provider<ApiClient>((ref) {
+  return DioApiClient(ref.watch(dioProvider));
+});
 
 abstract class ApiClient {
-  /// Simulates a network round-trip. Real implementation would make
-  /// an authenticated HTTP call and throw typed exceptions on failure.
-  Future<T> request<T>({
-    required Future<T> Function() action,
-    Duration timeout = const Duration(seconds: 15),
+  /// Makes a GET request to [path] and returns the decoded response body.
+  ///
+  /// Throws [UnauthorizedException], [ServerException], or
+  /// [ConnectionException] on failure.
+  Future<dynamic> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
   });
+
+  /// Makes a POST request to [path] with [data] as the request body.
+  Future<dynamic> post(String path, {Map<String, dynamic>? data});
 }
 
-/// Mock implementation that adds a configurable delay.
-class FakeApiClient implements ApiClient {
+/// Real implementation backed by Dio.
+class DioApiClient implements ApiClient {
+  final Dio _dio;
+  const DioApiClient(this._dio);
+
   @override
-  Future<T> request<T>({
-    required Future<T> Function() action,
-    Duration timeout = const Duration(seconds: 15),
+  Future<dynamic> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
   }) async {
-    return action();
+    try {
+      final response = await _dio.get<dynamic>(
+        path,
+        queryParameters: queryParameters,
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _mapDioError(e);
+    }
+  }
+
+  @override
+  Future<dynamic> post(String path, {Map<String, dynamic>? data}) async {
+    try {
+      final response = await _dio.post<dynamic>(path, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      throw _mapDioError(e);
+    }
+  }
+
+  Exception _mapDioError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.sendTimeout:
+        return const ConnectionException('Request timed out');
+      case DioExceptionType.connectionError:
+        return const ConnectionException('No internet connection');
+      case DioExceptionType.badResponse:
+        final status = e.response?.statusCode;
+        if (status == 401) {
+          return const UnauthorizedException();
+        }
+        return ServerException(
+          e.response?.statusMessage ?? 'Server error',
+          statusCode: status,
+        );
+      default:
+        return ServerException(e.message ?? 'Unknown error');
+    }
   }
 }
 
